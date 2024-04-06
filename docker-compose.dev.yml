@@ -1,0 +1,131 @@
+# Use the latest version of Docker Compose.
+version: "3.5"
+
+# Not all of our services need to be able to talk to each other. It is best to
+# keep them separated where we can.
+networks:
+
+  # Ultimately, we'll only expose the proxy service publicly. That means that
+  # all services that we need to be publicly accessible through the proxy need
+  # to be able to talk to the proxy.
+  proxied:
+
+  # Then there are those services that don't need to be publicly accessible and
+  # only communicate with other services. They go into the protected network.
+  protected:
+
+# We want to spawn several separate services from Docker images and manage all
+# of them from this file.
+services:
+
+  ##############################################################################
+  #
+  # Proxy
+  #   We use Nginx as a reverse proxy to direct requests to the ports of the
+  #   correct services. This way we can hide the application's inner network.
+  #
+  ##############################################################################
+  proxy:
+    container_name: base.proxy.development
+
+    # We can use the latest version of Nginx.
+    image: nginx:latest
+
+    # We want to expose at port 8006.
+    ports:
+      - 8006:80
+
+    # We can use volumes to copy our reverse proxy configuration into Nginx.
+    volumes:
+      # Use the development configuration to expose only what's necessary.
+      - ./proxy/development.conf:/etc/nginx/nginx.conf
+      - ./proxy/logs:/etc/nginx/error_log.log
+
+    # The proxy needs access to the publicly accessible services.
+    depends_on:
+      - client
+      - api
+
+    # We need access to all the services that should be exposed (partly)
+    # publicly.
+    networks:
+      - proxied
+
+  ##############################################################################
+  #
+  # Client
+  #   This is the service that serves all client-side files.
+  #
+  ##############################################################################
+  client:
+    container_name: base.client.development
+
+    # We always want to restart when things go wrong.
+    restart: always
+
+    # We want to build from the development dockerfile in the client directory.
+    build:
+      context: ./client/
+      dockerfile: development.dockerfile
+
+    # Pass on the environment variables to the client service.
+    environment:
+      # Tell the client where to reach the client and the API.
+      - API_URL=http://localhost:8006/api/
+      - CLIENT_URL=http://localhost:8006/
+
+    # We can expose the client service in the container network.
+    expose:
+      - "8000"
+
+    # We want to bind the changes inside the container to a local folder so that
+    # we can update the code in real time.
+    volumes:
+      - ./client:/client
+
+    # We need the reverse proxy to expose the client publicly, so we need to
+    # give it access to the client service.
+    networks:
+      - proxied
+
+  ##############################################################################
+  #
+  # API
+  #   This is the service that serves all server-side requests.
+  #
+  ##############################################################################
+  api:
+    container_name: base.api.development
+
+    # We always want to restart when things go wrong.
+    restart: always
+
+    # We want to build from the development dockerfile in the API directory.
+    build:
+      context: ./api/
+      dockerfile: development.dockerfile
+
+    # The api will need to some hosting information. Any external information
+    # that is not set in this file is expected to be supplied through
+    # environment variables.
+    environment:
+      # Tell the API where to reach the client and the API.
+      - API_URL=http://localhost:8006/api/
+      - CLIENT_URL=http://localhost:8006/
+
+    # We can expose the api service in the container network.
+    expose:
+      - "3000"
+
+    # We want to bind the changes inside the container to a local folder so that
+    # we can update the code in real time.
+    volumes:
+      - ./api:/api
+
+    # We need the reverse proxy to expose the API publicly, so we need to
+    # give it access to the API service. In addition, it needs to be able to
+    # communicate to the database, so it also requires access to the protected
+    # network.
+    networks:
+      - proxied
+      - protected

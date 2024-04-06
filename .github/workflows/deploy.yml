@@ -1,0 +1,63 @@
+##############################################################################
+#
+# Deploy
+#   This is the GitHub Action configuration file for deploying the application
+#   to the virtual private server. This action will automatically be performed
+#   whenever changes are pushed to the production branche.
+#
+##############################################################################
+
+# Name this GitHub Action.
+name: Deploy
+
+# Here we can define when we want this action to happen. We currently want this
+# specific action to run only when changes are pushed to the production branch.
+on:
+  push:
+    branches:
+    - production
+
+# Here we define what jobs this action must perform.
+jobs:
+
+  # We want this action to release the latest changes to the virtual private
+  # server that runs our code.
+  release:
+
+    # Here we determine which OS GitHub Actions should use. For convenience, we
+    # run these commands on Ubuntu.
+    runs-on: ubuntu-latest
+
+    # Here we can iterate the steps that we need to take to release the latest
+    # changes.
+    steps:
+
+    # This command checks out our repository so that we can access the latest
+    # files.
+    - uses: actions/checkout@v2
+
+    # First, we need to make sure that the virtual private server is updated to
+    # the latest version of the repository.
+    - name: Copy repository contents through SCP
+      uses: appleboy/scp-action@master
+      env:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USER }}
+        PORT: ${{ secrets.PORT }}
+        KEY: ${{ secrets.KEY }}
+      with:
+        source: "."
+        target: "/var/www/stocks-in-motion"
+
+    # Next, we need to execute some actions. We need to navigate to the right
+    # directory for our repository and rebuild the Docker Compose network.
+    - name: Execute remote command through SSH
+      uses: appleboy/ssh-action@master
+      with:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USER }}
+        PORT: ${{ secrets.PORT }}
+        KEY: ${{ secrets.KEY }}
+        script: |
+          cd /var/www/stocks-in-motion
+          docker-compose up -d --build
