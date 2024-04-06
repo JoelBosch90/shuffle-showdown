@@ -1,5 +1,4 @@
-# Use the latest version of Docker Compose.
-version: "3.5"
+version: "3.9"
 
 # Not all of our services need to be able to talk to each other. It is best to
 # keep them separated where we can.
@@ -26,30 +25,13 @@ services:
   #
   ##############################################################################
   proxy:
-    container_name: base.proxy.development
-
-    # We can use the latest version of Nginx.
-    image: nginx:latest
-
-    # We want to expose at port 8006.
-    ports:
-      - 8006:80
+    container_name: shuffle.proxy.development
 
     # We can use volumes to copy our reverse proxy configuration into Nginx.
     volumes:
       # Use the development configuration to expose only what's necessary.
       - ./proxy/development.conf:/etc/nginx/nginx.conf
       - ./proxy/logs:/etc/nginx/error_log.log
-
-    # The proxy needs access to the publicly accessible services.
-    depends_on:
-      - client
-      - api
-
-    # We need access to all the services that should be exposed (partly)
-    # publicly.
-    networks:
-      - proxied
 
   ##############################################################################
   #
@@ -58,25 +40,12 @@ services:
   #
   ##############################################################################
   client:
-    container_name: base.client.development
-
-    # We always want to restart when things go wrong.
-    restart: always
+    container_name: shuffle.client.development
 
     # We want to build from the development dockerfile in the client directory.
     build:
       context: ./client/
       dockerfile: development.dockerfile
-
-    # Pass on the environment variables to the client service.
-    environment:
-      # Tell the client where to reach the client and the API.
-      - API_URL=http://localhost:8006/api/
-      - CLIENT_URL=http://localhost:8006/
-
-    # We can expose the client service in the container network.
-    expose:
-      - "8000"
 
     # We want to bind the changes inside the container to a local folder so that
     # we can update the code in real time.
@@ -95,27 +64,12 @@ services:
   #
   ##############################################################################
   api:
-    container_name: base.api.development
-
-    # We always want to restart when things go wrong.
-    restart: always
+    container_name: shuffle.api.development
 
     # We want to build from the development dockerfile in the API directory.
     build:
       context: ./api/
       dockerfile: development.dockerfile
-
-    # The api will need to some hosting information. Any external information
-    # that is not set in this file is expected to be supplied through
-    # environment variables.
-    environment:
-      # Tell the API where to reach the client and the API.
-      - API_URL=http://localhost:8006/api/
-      - CLIENT_URL=http://localhost:8006/
-
-    # We can expose the api service in the container network.
-    expose:
-      - "3000"
 
     # We want to bind the changes inside the container to a local folder so that
     # we can update the code in real time.

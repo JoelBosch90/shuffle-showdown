@@ -1,5 +1,5 @@
 # Use the latest version of Docker Compose.
-version: "3.5"
+version: "3.9"
 
 # Not all of our services need to be able to talk to each other. It is best to
 # keep them separated where we can.
@@ -26,19 +26,19 @@ services:
   #
   ##############################################################################
   proxy:
-    container_name: base.proxy.production
+    container_name: shuffle.proxy.production
 
     # We can use the latest version of Nginx.
-    image: nginx:latest
+    image: nginx:1.25.4-alpine
 
-    # We want to expose at port 8006.
+    # We want to expose at port 8010.
     ports:
-      - 8006:80
+      - 8010:80
 
     # We can use volumes to copy our reverse proxy configuration into Nginx.
     volumes:
       # Use the production configuration to expose only what's necessary.
-      # - ./proxy/production.conf:/etc/nginx/nginx.conf                         - Temporarily commented out to use the static hello world instead.
+      # - ./proxy/production.conf:/etc/nginx/nginx.conf
       - ./proxy/logs:/etc/nginx/error_log.log
 
       # Temporary line to help Nginx serve the static files.
@@ -61,7 +61,7 @@ services:
   #
   ##############################################################################
   client:
-    container_name: base.client.production
+    container_name: shuffle.client.production
 
     # We always want to restart when things go wrong.
     restart: always
@@ -74,12 +74,12 @@ services:
     # Pass on the environment variables to the client service.
     environment:
       # Tell the client where to reach the client and the API.
-      - API_URL=http://localhost:8006/api/
-      - CLIENT_URL=http://localhost:8006/
+      - API_URL=http://localhost:8010/api/
+      - CLIENT_URL=http://localhost:8010/
 
     # We can expose the client service in the container network.
     expose:
-      - "8000"
+      - "80"
 
     # We need the reverse proxy to expose the client publicly, so we need to
     # give it access to the client service.
@@ -93,7 +93,7 @@ services:
   #
   ##############################################################################
   api:
-    container_name: base.api.production
+    container_name: shuffle.api.production
 
     # We always want to restart when things go wrong.
     restart: always
@@ -108,12 +108,12 @@ services:
     # environment variables.
     environment:
       # Tell the API where to reach the client and the API.
-      - API_URL=http://localhost:8006/api/
-      - CLIENT_URL=http://localhost:8006/
+      - API_URL=http://localhost:8010/api/
+      - CLIENT_URL=http://localhost:8010/
 
     # We can expose the api service in the container network.
     expose:
-      - "3000"
+      - "80"
 
     # We need the reverse proxy to expose the API publicly, so we need to
     # give it access to the API service. In addition, it needs to be able to
