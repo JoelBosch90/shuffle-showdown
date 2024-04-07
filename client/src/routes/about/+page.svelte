@@ -1,26 +1,29 @@
 <svelte:head>
 	<title>About</title>
-	<meta name="description" content="About this app" />
+	<meta name="description" content="About Shuffle Showdown" />
 </svelte:head>
 
 <div class="text-column">
-	<h1>About this app</h1>
+	<h1>About Shuffle Showdown</h1>
 
+	<p>Welcome to Shuffle Showdown, the ultimate music guessing game!</p>
 	<p>
-		This is a <a href="https://kit.svelte.dev">SvelteKit</a> app. You can make your own by typing the
-		following into your command line and following the prompts:
+		Shuffle Showdown is a web-based game where players compete in teams to guess songs from a
+		shuffled Spotify playlist. Each team takes turns listening to songs in random order, and they
+		must guess the name of the artist, the song title, and the release year. With its blend of music
+		trivia and playlist shuffling, Shuffle Showdown offers endless fun for music lovers of all ages.
 	</p>
 
-	<pre>npm create svelte@latest</pre>
+	<h3>Features:</h3>
+	<ul>
+		<li>Upload any Spotify playlist and start the game instantly.</li>
+		<li>Play with friends or family in teams and compete for the highest score.</li>
+		<li>Guess the artist, song title, and release year as songs play in a random order.</li>
+		<li>Engaging and intuitive user interface for seamless gameplay.</li>
+	</ul>
 
 	<p>
-		The page you're looking at is purely static HTML, with no client-side interactivity needed.
-		Because of that, we don't need to load any JavaScript. Try viewing the page's source, or opening
-		the devtools network panel and reloading.
-	</p>
-
-	<p>
-		The <a href="/sverdle">Sverdle</a> page illustrates SvelteKit's data loading and form handling. Try
-		using it with JavaScript disabled!
+		Get ready to put your music knowledge to the test and embark on a musical journey with Shuffle
+		Showdown!
 	</p>
 </div>

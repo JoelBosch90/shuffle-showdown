@@ -15,6 +15,6 @@ COPY --from=build /client/build build/
 COPY --from=build /client/node_modules node_modules/
 COPY --from=build /client/package.json ./
 
-EXPOSE 80
 ENV NODE_ENV=production
+EXPOSE 80
 CMD ["node", "build"]

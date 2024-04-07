@@ -57,7 +57,6 @@ services:
       # Tell the client where to reach the client and the API.
       - API_URL=http://localhost:8010/api/
       - CLIENT_URL=http://localhost:8010/
-      - HOST=localhost
       - PORT=80
 
     # We can expose the client service in the container network.
