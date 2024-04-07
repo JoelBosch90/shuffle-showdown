@@ -1,0 +1,19 @@
+/**
+ *  Basic styling for the body element.
+ */
+
+// Import fonts.
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+body
+{
+  // Reset the default browser margins.
+  margin: 0;
+
+  // Give the entire thing an interesting background color in case the window
+  // is too big for the app.
+  background-color: var(--white);
+
+  // Install the global font.
+  font-family: 'Source Sans Pro', sans-serif;
+}

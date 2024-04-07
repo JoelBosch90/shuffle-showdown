@@ -1,0 +1,30 @@
+/**
+ *  Basic styling for the input elements.
+ */
+input, textarea
+{
+  // Use a transparent background.
+  background: transparent;
+
+  // Set a clear border to distinguish the input field from the background.
+  border: 2px solid var(--purple);
+  border-radius: var(--border-radius);
+
+  padding: .5em;
+
+  // Get rid of the default outline.
+  outline: none;
+
+  // Make sure we inherit the local text styling.
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+
+  // Use an animation for hover and focus effects.
+  transition-duration: var(--animation-speed-quick);
+  transition-property: filter;
+
+  // Subtly light up the input field when the cursor hovers it or when it is
+  // selected to show that it is an interactive element.
+  &:hover, &:focus { filter: brightness(185%); }
+}

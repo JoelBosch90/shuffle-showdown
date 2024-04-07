@@ -15,7 +15,7 @@ func GetGame(context *gin.Context) {
 
 	databaseError := database.Where("id = ?", id).First(&game).Error
 	if databaseError != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": databaseError.Error()})
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
 

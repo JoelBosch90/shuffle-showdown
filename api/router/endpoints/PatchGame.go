@@ -16,7 +16,7 @@ func PatchGame(context *gin.Context) {
 	var input PatchGameInput
 	validationError := context.ShouldBindJSON(&input)
 	if validationError != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": validationError.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
@@ -26,7 +26,7 @@ func PatchGame(context *gin.Context) {
 
 	databaseError := database.Where("id = ?", id).First(&game).Error
 	if databaseError != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": databaseError.Error()})
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
 

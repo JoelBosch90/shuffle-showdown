@@ -1,0 +1,21 @@
+/**
+ *  This file sets all properties related to animations.
+ */
+:root
+{
+  // Set and select a default animation timing.
+  --animation-timing: ease-in-out;
+  transition-timing-function: var(--animation-timing);
+
+  // Set a few different animation speeds for different applications.
+  --animation-speed-quick: 200ms;
+  --animation-speed-slow: 500ms;
+
+  // Target users that prefer less motion.
+  @media (prefers-reduced-motion)
+  {
+    // Remove animations by setting all speeds to 0.
+    --animation-speed-quick: 0;
+    --animation-speed-slow: 0;
+  }
+}

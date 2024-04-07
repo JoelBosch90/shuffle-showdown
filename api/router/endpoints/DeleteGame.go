@@ -15,7 +15,7 @@ func DeleteGame(context *gin.Context) {
 
 	databaseError := database.Where("id = ?", id).First(&game).Error
 	if databaseError != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": databaseError.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
 
