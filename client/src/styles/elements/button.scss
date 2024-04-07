@@ -27,6 +27,14 @@ button
   transition-duration: var(--animation-speed-quick);
   transition-property: filter;
 
+  // Use a more block-style button with an opaque background color.
+  &.filled {
+    padding: 0.5rem 1rem;
+    color: var(--white);
+    background-color: var(--purple);
+    border-radius: var(--border-radius);
+  }
+
   // Subtly light up the button when the cursor hovers it or when it is selected
   // to show that it is an interactive element.
   &:hover, &:focus { filter: brightness(135%); }

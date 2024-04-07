@@ -1,16 +1,17 @@
 <script>
 	import { goto } from '$app/navigation';
 
+	let playlist = '';
+
 	const createGame = async () => {
-		const textarea = document.querySelector('textarea');
-		const playlist = parseInt(textarea?.value ?? '');
+		const playlistId = parseInt(playlist);
 
 		const response = await fetch('/api/v1/game', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({ playlist })
+			body: JSON.stringify({ playlist: playlistId })
 		});
 
 		if (!response.ok) return;
@@ -32,32 +33,13 @@
 <section>
 	<h1>Select your playlist</h1>
 
-	<textarea cols="1" placeholder="Paste your Spotify Playlist link here..." />
+	<input placeholder="Paste your Spotify Playlist link here..." bind:value={playlist} />
 
-	<button on:click={createGame}>Select playlist</button>
+	<button class="filled" on:click={createGame}>Select playlist</button>
 </section>
 
 <style lang="scss">
-	section {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-
-		textarea {
-			box-sizing: border-box;
-			width: 100%;
-			resize: none;
-			padding: 0.5rem;
-		}
-
-		button {
-			padding: 0.5rem 1rem;
-			color: var(--white);
-			background-color: var(--purple);
-			border-radius: var(--border-radius);
-		}
+	input {
+		width: 100%;
 	}
 </style>

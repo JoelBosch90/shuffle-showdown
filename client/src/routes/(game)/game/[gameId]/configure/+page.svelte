@@ -46,31 +46,18 @@
 <section>
 	<h1>Configure your game</h1>
 
-	<button on:click={() => configureGame(predefinedSettings[PredefinedGameMode.hard])}
+	<button class="filled" on:click={() => configureGame(predefinedSettings[PredefinedGameMode.hard])}
 		>Hard mode</button
 	>
 
-	<button on:click={() => configureGame(predefinedSettings[PredefinedGameMode.normal])}
+	<button
+		class="filled"
+		on:click={() => configureGame(predefinedSettings[PredefinedGameMode.normal])}
 		>Normal mode</button
 	>
 
-	<button on:click={gotoCustomGame}>Custom mode</button>
+	<button class="filled" on:click={gotoCustomGame}>Custom mode</button>
 </section>
 
 <style lang="scss">
-	section {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-
-		button {
-			padding: 0.5rem 1rem;
-			color: var(--white);
-			background-color: var(--purple);
-			border-radius: var(--border-radius);
-		}
-	}
 </style>

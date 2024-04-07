@@ -43,30 +43,8 @@
 		Release year required
 	</label>
 
-	<button on:click={configureGame}>Create game</button>
+	<button class="filled" on:click={configureGame}>Create game</button>
 </section>
 
 <style lang="scss">
-	section {
-		flex: 1;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-
-		textarea {
-			box-sizing: border-box;
-			width: 100%;
-			resize: none;
-			padding: 0.5rem;
-		}
-
-		button {
-			padding: 0.5rem 1rem;
-			color: var(--white);
-			background-color: var(--purple);
-			border-radius: var(--border-radius);
-		}
-	}
 </style>
