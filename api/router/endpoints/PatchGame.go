@@ -9,7 +9,9 @@ import (
 )
 
 type PatchGameInput struct {
-	PlayListID uint `json:"playlist"`
+	SongsToWin     uint `json:"songsToWin"`
+	TitleRequired  bool `json:"titleRequired"`
+	ArtistRequired bool `json:"artistRequired"`
 }
 
 func PatchGame(context *gin.Context) {
@@ -30,7 +32,12 @@ func PatchGame(context *gin.Context) {
 		return
 	}
 
-	database.Model(&game).Updates(models.Game{PlayListID: input.PlayListID})
+	database.Model(&game).Updates(models.Game{
+		SongsToWin:     input.SongsToWin,
+		TitleRequired:  input.TitleRequired,
+		ArtistRequired: input.ArtistRequired,
+		Configured:     true,
+	})
 
 	context.JSON(http.StatusOK, gin.H{"data": game})
 }

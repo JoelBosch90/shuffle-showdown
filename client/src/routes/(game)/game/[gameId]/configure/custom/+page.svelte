@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { gameConfigStore, type GameConfig } from '$lib/stores/gameConfigStore';
+	import { type GameConfig } from '$lib/types/GameConfig';
+	import { API } from '$lib/services/API';
 
 	const settings: GameConfig = {
 		gameId: $page.params.gameId,
@@ -12,9 +13,9 @@
 	};
 
 	const configureGame = async () => {
-		gameConfigStore.set(settings);
+		await API.patchGame(settings);
 
-		await goto(`/game/${settings.gameId}/start`);
+		await goto(`/game/${settings.gameId}/lobby`);
 	};
 </script>
 

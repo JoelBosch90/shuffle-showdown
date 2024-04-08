@@ -1,1 +1,0 @@
-export { gameConfigStore, type GameConfig } from "./gameConfigStore";

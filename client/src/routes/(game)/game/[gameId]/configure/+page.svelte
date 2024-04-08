@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { gameConfigStore, type GameConfig } from '$lib/stores/gameConfigStore';
+	import { type GameConfig } from '$lib/types/GameConfig';
+	import { API } from '$lib/services/API';
 
 	enum PredefinedGameMode {
 		normal = 'normal',
@@ -31,10 +32,9 @@
 	const configureGame = async (settings: GameSettings) => {
 		const gameId = $page.params.gameId;
 
-		const config = { ...settings, gameId };
-		gameConfigStore.set(config);
+		await API.patchGame({ ...settings, gameId });
 
-		await goto(`/game/${gameId}/start`);
+		await goto(`/game/${gameId}/lobby`);
 	};
 </script>
 

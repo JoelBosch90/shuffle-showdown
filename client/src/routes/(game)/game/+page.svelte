@@ -1,22 +1,13 @@
 <script>
 	import { goto } from '$app/navigation';
+	import { API } from '$lib/services/API';
 
 	let playlist = '';
 
 	const createGame = async () => {
 		const playlistId = parseInt(playlist);
 
-		const response = await fetch('/api/v1/game', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({ playlist: playlistId })
-		});
-
-		if (!response.ok) return;
-
-		const { data } = await response.json();
+		const { data } = await API.postGame(playlistId);
 
 		await goto(`/game/${data.id}/configure`);
 	};
@@ -40,6 +31,7 @@
 
 <style lang="scss">
 	input {
+		box-sizing: border-box;
 		width: 100%;
 	}
 </style>
