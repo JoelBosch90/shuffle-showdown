@@ -28,6 +28,8 @@ export class SocketConnection {
   private static onErrorCallbacks: Array<GenericCallback> = [];
   private static onMessageCallbacks: Array<MessageCallback> = [];
 
+  private static queuedMessages: Array<string> = [];
+
   public static start() {
     if (SocketConnection.connected || SocketConnection.connecting) return;
     if (!SocketConnection.initialized) SocketConnection.initialize();
@@ -52,8 +54,19 @@ export class SocketConnection {
     SocketConnection.connecting = false;
   }
 
-  public static send() {
+  public static send(message: string) {
+    if (!SocketConnection.connected && !SocketConnection.connecting) SocketConnection.start();
+    if (SocketConnection.connected && SocketConnection.connection) SocketConnection.connection.send(message);
+    else this.queuedMessages.push(message);
+  }
 
+  private static resendQueuedMessages() {
+    const messages = this.queuedMessages;
+
+    // Empty the array of queued messages.
+    this.queuedMessages.splice(0, this.queuedMessages.length);
+
+    messages.forEach(SocketConnection.send);
   }
 
   public static onOpen(callback: GenericCallback) {
@@ -64,6 +77,8 @@ export class SocketConnection {
     SocketConnection.connecting = false;
     SocketConnection.connected = true;
     SocketConnection.onOpenCallbacks.forEach(callback => callback(event));
+    
+    this.resendQueuedMessages();
   }
 
   public static onClose(callback: CloseCallback) {
