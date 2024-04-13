@@ -31,6 +31,10 @@ func PatchGame(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
+	if game.Configured {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Game already configured"})
+		return
+	}
 
 	database.Model(&game).Updates(models.Game{
 		SongsToWin:     input.SongsToWin,

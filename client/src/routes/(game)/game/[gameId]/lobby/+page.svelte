@@ -1,15 +1,16 @@
-<script>
+<script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { API } from '$lib/services/API';
+	import { API, type Game } from '$lib/services/API';
 
 	const gameId = $page.params.gameId;
+	let game: Game | null = null;
 
-	onMount(() => {
-		const gameConfig = API.getGame(gameId);
+	onMount(async () => {
+		game = await API.getGame(gameId);
 
-		if (!gameConfig) goto(`/game/${gameId}/configure`);
+		if (!game) goto(`/game/${gameId}/configure`);
 	});
 
 	const players = [];
@@ -26,6 +27,9 @@
 <section>
 	<h1>Game Lobby</h1>
 	<h3>Rules:</h3>
+	Each team will start with one random song on their timeline, and then take turns playing a random song
+	from the playlist. Try to place the song you hear in the correct spot on your timeline. The first team
+	to get {game?.songsToWin} songs in the correct spot wins!
 	<ul>
 		<li>Teams will take turns playing a random song from the playlist.</li>
 	</ul>

@@ -1,5 +1,14 @@
 import { type GameConfig } from '../types/GameConfig';
 
+export interface Game {
+  id: string;
+  playlistId: number;
+  songsToWin: number;
+  titleRequired: boolean;
+  artistRequired: boolean;
+  configured: boolean;
+}
+
 export class API {
 
   public static postGame = async (playlistId: number) => {
@@ -17,7 +26,11 @@ export class API {
   }
 
   public static getGame = async (gameId: string) => {
-    return fetch(`/api/v1/game/${gameId}`);
+    const response = await fetch(`/api/v1/game/${gameId}`);
+
+    if (!response.ok) throw Error("Failed to get game.");
+
+    return response.json() as Promise<Game>;
   }
 
   public static patchGame = async (settings: GameConfig) => {
