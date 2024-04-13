@@ -40,7 +40,7 @@
 #           Add a shortcut so that you can execute this file from anywhere and
 #           no longer need to write the extension:
 #
-#               sudo ln -s /path/to/project/shortcuts.sh /usr/bin/shuffle
+#               sudo ln -s $(pwd)/shortcuts.sh /usr/bin/shuffle
 #
 ################################################################################
 

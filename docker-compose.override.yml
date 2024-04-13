@@ -1,5 +1,3 @@
-version: "3.9"
-
 # We want to spawn several separate services from Docker images and manage all
 # of them from this file.
 services:

@@ -7,13 +7,44 @@
 	const gameId = $page.params.gameId;
 	let game: Game | null = null;
 
+	const players = [];
+
+  let connected = false;
+  let connection: WebSocket | undefined = undefined;
+
+  let messages: string[] = [];
+  const showMessage = (message: string) => {
+    messages = [ ...messages, message ];
+  };
+
+  const connectWebSocket = () => {
+    if (connected) return;
+
+    const protocol = window.location.protocol.endsWith('s:') ? 'wss:' : 'ws:';
+    connection = new WebSocket(`${protocol}//${window.location.host}/api/v1/ws`);
+
+    connection.addEventListener('open', (event) : void => {
+      connected = true;
+      showMessage('Connected.')
+    });
+
+    connection.addEventListener('close', (event) : void => {
+      connected = false;
+      showMessage('Disconnected.')
+    });
+
+    connection.addEventListener('message', (event) : void => {
+      showMessage(`Message received: ${event.data}`);
+    });
+  }
+
 	onMount(async () => {
 		game = await API.getGame(gameId);
 
 		if (!game) goto(`/game/${gameId}/configure`);
-	});
 
-	const players = [];
+    connectWebSocket();
+	});
 </script>
 
 <svelte:head>
@@ -33,6 +64,12 @@
 	<ul>
 		<li>Teams will take turns playing a random song from the playlist.</li>
 	</ul>
+
+  <ul>
+    {#each messages as message}
+      <li>{message}</li>
+    {/each}
+  </ul>
 </section>
 
 <style lang="scss">
