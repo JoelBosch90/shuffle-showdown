@@ -25,4 +25,13 @@ func WebSocket(context *gin.Context) {
 
 	defer connection.Close()
 	connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
+
+	// Simply echo messages for now.
+	for {
+		messageType, message, error := connection.ReadMessage()
+		if error != nil {
+			break
+		}
+		connection.WriteMessage(messageType, message)
+	}
 }

@@ -57,16 +57,16 @@ export class SocketConnection {
   public static send(message: string) {
     if (!SocketConnection.connected && !SocketConnection.connecting) SocketConnection.start();
     if (SocketConnection.connected && SocketConnection.connection) SocketConnection.connection.send(message);
-    else this.queuedMessages.push(message);
+    else SocketConnection.queuedMessages.push(message);
   }
 
-  private static resendQueuedMessages() {
-    const messages = this.queuedMessages;
+  private static sendQueuedMessages() {
+    const messages = structuredClone(SocketConnection.queuedMessages);
 
     // Empty the array of queued messages.
-    this.queuedMessages.splice(0, this.queuedMessages.length);
+    SocketConnection.queuedMessages.splice(0, SocketConnection.queuedMessages.length);
 
-    messages.forEach(SocketConnection.send);
+    messages.forEach((message) => SocketConnection.send(message));
   }
 
   public static onOpen(callback: GenericCallback) {
@@ -77,8 +77,8 @@ export class SocketConnection {
     SocketConnection.connecting = false;
     SocketConnection.connected = true;
     SocketConnection.onOpenCallbacks.forEach(callback => callback(event));
-    
-    this.resendQueuedMessages();
+
+    SocketConnection.sendQueuedMessages();
   }
 
   public static onClose(callback: CloseCallback) {

@@ -24,6 +24,7 @@
 
 		API.SocketConnection.onMessage(({ data }) => showMessage(data));
 		API.SocketConnection.start();
+		API.SocketConnection.send('Hello Server!');
 	});
 </script>
 
