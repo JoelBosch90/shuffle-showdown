@@ -1,4 +1,5 @@
 import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
+import { type GenericEventCallback, type CloseEventCallback, type MessageEventCallback } from '$lib/types/EventCallbacks';
 
 const RECOVERABLE_CLOSE_CODES = [
   WebSocketCloseCode.GOING_AWAY,
@@ -10,10 +11,6 @@ const RECOVERABLE_CLOSE_CODES = [
   WebSocketCloseCode.TRY_AGAIN_LATER,
 ];
 
-type GenericCallback = (event: Event) => void;
-type CloseCallback = (event: CloseEvent) => void;
-type MessageCallback = (event: MessageEvent) => void;
-
 export class SocketConnection {
   private static connected = false;
   private static connecting = false;
@@ -23,10 +20,10 @@ export class SocketConnection {
   private static connectionProtocol: string | undefined = undefined;
   private static connection: WebSocket | undefined = undefined;
 
-  private static onOpenCallbacks: Array<GenericCallback> = [];
-  private static onCloseCallbacks: Array<CloseCallback> = [];
-  private static onErrorCallbacks: Array<GenericCallback> = [];
-  private static onMessageCallbacks: Array<MessageCallback> = [];
+  private static onOpenCallbacks: Array<GenericEventCallback> = [];
+  private static onCloseCallbacks: Array<CloseEventCallback> = [];
+  private static onErrorCallbacks: Array<GenericEventCallback> = [];
+  private static onMessageCallbacks: Array<MessageEventCallback> = [];
 
   private static queuedMessages: Array<string> = [];
 
@@ -69,7 +66,7 @@ export class SocketConnection {
     messages.forEach((message) => SocketConnection.send(message));
   }
 
-  public static onOpen(callback: GenericCallback) {
+  public static onOpen(callback: GenericEventCallback) {
     SocketConnection.onOpenCallbacks.push(callback);
   }
 
@@ -81,7 +78,7 @@ export class SocketConnection {
     SocketConnection.sendQueuedMessages();
   }
 
-  public static onClose(callback: CloseCallback) {
+  public static onClose(callback: CloseEventCallback) {
     SocketConnection.onCloseCallbacks.push(callback);
   }
 
@@ -93,7 +90,7 @@ export class SocketConnection {
     if (event.code in RECOVERABLE_CLOSE_CODES) SocketConnection.start();
   }
 
-  public static onError(callback: GenericCallback) {
+  public static onError(callback: GenericEventCallback) {
     SocketConnection.onErrorCallbacks.push(callback);
   }
 
@@ -101,7 +98,7 @@ export class SocketConnection {
     SocketConnection.onErrorCallbacks.forEach(callback => callback(event));
   }
 
-  public static onMessage(callback: MessageCallback) {
+  public static onMessage(callback: MessageEventCallback) {
     SocketConnection.onMessageCallbacks.push(callback);
   }
 
