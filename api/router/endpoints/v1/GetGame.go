@@ -1,4 +1,4 @@
-package endpoints
+package v1
 
 import (
 	"api/database"
