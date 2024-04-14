@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+const BUFFER_SECONDS int64 = 60
+
 func getTokenFromDatabase() models.AccessToken {
 	var token models.AccessToken
 	database := database.Get()
@@ -13,9 +15,12 @@ func getTokenFromDatabase() models.AccessToken {
 	databaseError := database.Order("expires_at DESC").First(&token).Error
 	decryptedToken, decryptionError := Decrypt(token.AccessToken)
 
-	if databaseError == nil && decryptionError == nil && token.ExpiresAt.After(time.Now()) {
+	minuteAgo := time.Unix(time.Now().Unix()-BUFFER_SECONDS, 0)
+
+	if databaseError == nil && decryptionError == nil && token.ExpiresAt.After(minuteAgo) {
 		return models.AccessToken{
 			AccessToken: decryptedToken,
+			TokenType:   token.TokenType,
 			ExpiresAt:   token.ExpiresAt,
 		}
 	}
@@ -33,6 +38,7 @@ func storeTokenInDatabase(token models.AccessToken) {
 
 	encryptedAccessToken := models.AccessToken{
 		AccessToken: encryptedToken,
+		TokenType:   token.TokenType,
 		ExpiresAt:   token.ExpiresAt,
 	}
 

@@ -1,17 +1,17 @@
 package lib
 
-import(
+import (
 	"api/database/models"
-	"net/http"
 	"encoding/json"
+	"net/http"
 	"os"
 	"time"
 )
 
 type SpotifyAccessToken struct {
 	AccessToken string `json:"access_token"`
-	TokenType string `json:"token_type"`
-	ExpiresIn int64 `json:"expires_in"`
+	TokenType   string `json:"token_type"`
+	ExpiresIn   int64  `json:"expires_in"`
 }
 
 const SPOTIFY_TOKEN_REQUEST_URL = "https://accounts.spotify.com/api/token"
@@ -54,6 +54,7 @@ func RequestNewSpotifyAccessToken() (models.AccessToken, error) {
 	// Return the access token
 	return models.AccessToken{
 		AccessToken: accessToken.AccessToken,
-		ExpiresAt: time.Unix(expirationUnixTimestamp, 0),
+		TokenType:   accessToken.TokenType,
+		ExpiresAt:   time.Unix(expirationUnixTimestamp, 0),
 	}, nil
 }
