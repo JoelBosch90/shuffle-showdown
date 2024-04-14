@@ -15,22 +15,19 @@ func connect(name string) *gorm.DB {
 	}
 
 	database.LogMode(true)
-	database.AutoMigrate(&models.Game{}, &models.PlayList{})
 
 	return database
 }
 
 func addModels(database *gorm.DB) *gorm.DB {
-	database.AutoMigrate(&models.Game{}, &models.PlayList{})
+	database.AutoMigrate(&models.Game{}, &models.PlayList{}, &models.AccessToken{})
 
 	return database
 }
 
 func Get() *gorm.DB {
 	name := "shuffle"
-	database := connect(name)
-
-	addModels(database)
+	database := addModels(connect(name))
 
 	return database
 }

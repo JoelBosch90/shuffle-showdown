@@ -28,7 +28,7 @@ func WebSocket(context *gin.Context) {
 	defer connection.Close()
 	connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
 
-	token, tokenError := lib.RequestSpotifyAccessToken()
+	token, tokenError := lib.GetSpotifAccessToken()
 	if tokenError != nil {
 		log.Println(tokenError)
 		return

@@ -1,6 +1,7 @@
 package lib
 
 import(
+	"api/database/models"
 	"net/http"
 	"encoding/json"
 	"os"
@@ -13,24 +14,13 @@ type SpotifyAccessToken struct {
 	ExpiresIn int64 `json:"expires_in"`
 }
 
-type ExtendedSpotifyAccessToken struct {
-	AccessToken string `json:"access_token"`
-	ExpiresAt int64 `json:"expires_at"`
-}
-
 const SPOTIFY_TOKEN_REQUEST_URL = "https://accounts.spotify.com/api/token"
 
-var cachedToken ExtendedSpotifyAccessToken
-
-func RequestSpotifyAccessToken() (ExtendedSpotifyAccessToken, error) {
-	if cachedToken.AccessToken != "" && cachedToken.ExpiresAt < time.Now().Unix() {
-		return cachedToken, nil
-	}
-
+func RequestNewSpotifyAccessToken() (models.AccessToken, error) {
 	// Create a new HTTP request
 	request, requestError := http.NewRequest(http.MethodPost, SPOTIFY_TOKEN_REQUEST_URL, nil)
 	if requestError != nil {
-		return ExtendedSpotifyAccessToken{}, requestError
+		return models.AccessToken{}, requestError
 	}
 
 	// Add the required headers
@@ -47,7 +37,7 @@ func RequestSpotifyAccessToken() (ExtendedSpotifyAccessToken, error) {
 	client := &http.Client{}
 	response, responseError := client.Do(request)
 	if responseError != nil {
-		return ExtendedSpotifyAccessToken{}, responseError
+		return models.AccessToken{}, responseError
 	}
 
 	// Parse the response
@@ -55,15 +45,15 @@ func RequestSpotifyAccessToken() (ExtendedSpotifyAccessToken, error) {
 	decoder := json.NewDecoder(response.Body)
 	decodeError := decoder.Decode(&accessToken)
 	if decodeError != nil {
-		return ExtendedSpotifyAccessToken{}, decodeError
+		return models.AccessToken{}, decodeError
 	}
 
 	// Calculate the expiration time
 	expirationUnixTimestamp := time.Now().Unix() + accessToken.ExpiresIn
 
 	// Return the access token
-	return ExtendedSpotifyAccessToken{
+	return models.AccessToken{
 		AccessToken: accessToken.AccessToken,
-		ExpiresAt: expirationUnixTimestamp,
+		ExpiresAt: time.Unix(expirationUnixTimestamp, 0),
 	}, nil
 }
