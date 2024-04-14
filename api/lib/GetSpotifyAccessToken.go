@@ -15,9 +15,8 @@ func getTokenFromDatabase() models.AccessToken {
 	databaseError := database.Order("expires_at DESC").First(&token).Error
 	decryptedToken, decryptionError := Decrypt(token.AccessToken)
 
-	minuteAgo := time.Unix(time.Now().Unix()-BUFFER_SECONDS, 0)
-
-	if databaseError == nil && decryptionError == nil && token.ExpiresAt.After(minuteAgo) {
+	bufferedNow := time.Unix(time.Now().Unix()+BUFFER_SECONDS, 0)
+	if databaseError == nil && decryptionError == nil && token.ExpiresAt.After(bufferedNow) {
 		return models.AccessToken{
 			AccessToken: decryptedToken,
 			TokenType:   token.TokenType,
