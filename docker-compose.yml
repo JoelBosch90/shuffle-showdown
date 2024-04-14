@@ -53,9 +53,9 @@ services:
     # Pass on the environment variables to the client service.
     environment:
       # Tell the client where to reach the client and the API.
-      - API_URL=http://localhost:8010/api/
-      - CLIENT_URL=http://localhost:8010/
-      - PORT=80
+      API_URL: http://localhost:8010/api/
+      CLIENT_URL: http://localhost:8010/
+      PORT: 80
 
     # We can expose the client service in the container network.
     expose:
@@ -83,8 +83,10 @@ services:
     # environment variables.
     environment:
       # Tell the API where to reach the client and the API.
-      - API_URL=http://localhost:8010/api/
-      - CLIENT_URL=http://localhost:8010/
+      API_URL: http://localhost:8010/api/
+      CLIENT_URL: http://localhost:8010/
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
 
     # We can expose the api service in the container network.
     expose:

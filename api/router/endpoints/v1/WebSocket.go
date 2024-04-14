@@ -1,7 +1,9 @@
 package v1
 
 import (
+	"api/lib"
 	"net/http"
+	"log"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -25,6 +27,13 @@ func WebSocket(context *gin.Context) {
 
 	defer connection.Close()
 	connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
+
+	token, tokenError := lib.RequestSpotifyAccessToken()
+	if tokenError != nil {
+		log.Println(tokenError)
+		return
+	}
+	log.Println(token)
 
 	// Simply echo messages for now.
 	for {
