@@ -3,13 +3,15 @@ package v1
 import (
 	"api/database"
 	"api/database/models"
+	"api/lib"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type PostGameInput struct {
-	PlayListID uint `json:"playlist" binding:"required"`
+	PlayListId string `json:"playListId" binding:"required"`
 }
 
 func PostGame(context *gin.Context) {
@@ -20,8 +22,11 @@ func PostGame(context *gin.Context) {
 		return
 	}
 
+	log.Println("Creating game with playlist link: ", input.PlayListId)
+	lib.RequestSpotifyPlayListInfo(input.PlayListId)
+
 	database := database.Get()
-	game := models.Game{PlayListID: input.PlayListID}
+	game := models.Game{PlayListId: input.PlayListId}
 	databaseError := database.Create(&game).Error
 	if databaseError != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
