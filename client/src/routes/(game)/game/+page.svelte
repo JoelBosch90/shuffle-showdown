@@ -2,10 +2,10 @@
 	import { goto } from '$app/navigation';
 	import { API } from '$lib/services/API';
 
-	let playListId = '';
+	let playList = '';
 
 	const createGame = async () => {
-		const { data } = await API.postGame(playListId.split('/playlist/')[1].split('?')[0]);
+		const { data } = await API.postGame(playList);
 
 		await goto(`/game/${data.id}/configure`);
 	};
@@ -22,7 +22,7 @@
 <section>
 	<h1>Select your playlist</h1>
 
-	<input placeholder="Paste your Spotify Playlist link here..." bind:value={playListId} />
+	<input placeholder="Paste your Spotify Playlist link here..." bind:value={playList} />
 
 	<button class="filled" on:click={createGame}>Select playlist</button>
 </section>

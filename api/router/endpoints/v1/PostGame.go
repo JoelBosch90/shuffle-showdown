@@ -11,7 +11,7 @@ import (
 )
 
 type PostGameInput struct {
-	PlayListId string `json:"playListId" binding:"required"`
+	PlayList string `json:"playList" binding:"required"`
 }
 
 func PostGame(context *gin.Context) {
@@ -22,11 +22,16 @@ func PostGame(context *gin.Context) {
 		return
 	}
 
-	log.Println("Creating game with playlist link: ", input.PlayListId)
-	lib.RequestSpotifyPlayListInfo(input.PlayListId)
+	log.Println("Creating game with playlist link: ", input.PlayList)
+	playListId := lib.ExtractSpotifyPlayListId(input.PlayList)
+	_, playListError := lib.RequestSpotifyPlayListInfo(playListId)
+	if playListError != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing playlist"})
+		return
+	}
 
 	database := database.Get()
-	game := models.Game{PlayListId: input.PlayListId}
+	game := models.Game{PlayListId: playListId}
 	databaseError := database.Create(&game).Error
 	if databaseError != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
