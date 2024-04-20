@@ -1,4 +1,4 @@
-package lib
+package spotify
 
 import (
 	"api/database/models"
@@ -16,7 +16,7 @@ type SpotifyAccessToken struct {
 
 const SPOTIFY_TOKEN_REQUEST_URL = "https://accounts.spotify.com/api/token"
 
-func RequestNewSpotifyAccessToken() (models.AccessToken, error) {
+func RequestNewAccessToken() (models.AccessToken, error) {
 	// Create a new HTTP request
 	request, requestError := http.NewRequest(http.MethodPost, SPOTIFY_TOKEN_REQUEST_URL, nil)
 	if requestError != nil {

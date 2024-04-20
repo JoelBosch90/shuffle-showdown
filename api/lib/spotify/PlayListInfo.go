@@ -1,4 +1,4 @@
-package lib
+package spotify
 
 type ExternalUrls struct {
 	Spotify string `json:"spotify"`
@@ -96,7 +96,7 @@ type Item struct {
 	VideoThumbnail `json:"video_thumbnail"`
 }
 
-type SpotifyPlayListInfo struct {
+type PlayListInfo struct {
 	Collaborative bool   `json:"collaborative"`
 	Description   string `json:"description"`
 	ExternalUrls  `json:"external_urls"`

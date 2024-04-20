@@ -8,7 +8,7 @@ import (
 
 type OwnedEntity struct {
 	BaseEntity
-	ID uuid.UUID `json:"id" gorm:"type:uuid;primary_key"`
+	ID uuid.UUID `json:"id" gorm:"type:uuid;primary_key;"`
 }
 
 func (ownedEntity *OwnedEntity) BeforeCreate(scope *gorm.Scope) error {

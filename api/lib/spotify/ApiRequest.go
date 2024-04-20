@@ -1,4 +1,4 @@
-package lib
+package spotify
 
 import (
 	"net/http"
@@ -16,7 +16,7 @@ type Param struct {
 
 const SPOTIFY_API_URL = "https://api.spotify.com/"
 
-func SpotifyAPIRequest(method string, path string, headers []Header, params []Param) (*http.Response, error) {
+func ApiRequest(method string, path string, headers []Header, params []Param) (*http.Response, error) {
 	url := SPOTIFY_API_URL + path
 
 	// Create a new HTTP request
@@ -26,7 +26,7 @@ func SpotifyAPIRequest(method string, path string, headers []Header, params []Pa
 	}
 
 	// Get an access token
-	accessToken, accessTokenError := GetSpotifAccessToken()
+	accessToken, accessTokenError := GetAccessToken()
 	if accessTokenError != nil {
 		return nil, accessTokenError
 	}

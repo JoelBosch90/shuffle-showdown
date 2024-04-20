@@ -1,8 +1,9 @@
-package lib
+package spotify
 
 import (
 	"api/database"
 	"api/database/models"
+	"api/lib/security"
 	"time"
 )
 
@@ -13,7 +14,7 @@ func getTokenFromDatabase() models.AccessToken {
 	database := database.Get()
 
 	databaseError := database.Order("expires_at DESC").First(&token).Error
-	decryptedToken, decryptionError := Decrypt(token.AccessToken)
+	decryptedToken, decryptionError := security.Decrypt(token.AccessToken)
 
 	bufferedNow := time.Unix(time.Now().Unix()+BUFFER_SECONDS, 0)
 	if databaseError == nil && decryptionError == nil && token.ExpiresAt.After(bufferedNow) {
@@ -30,7 +31,7 @@ func getTokenFromDatabase() models.AccessToken {
 func storeTokenInDatabase(token models.AccessToken) {
 	database := database.Get()
 
-	encryptedToken, encryptionError := Encrypt(token.AccessToken)
+	encryptedToken, encryptionError := security.Encrypt(token.AccessToken)
 	if encryptionError != nil {
 		return
 	}
@@ -44,13 +45,13 @@ func storeTokenInDatabase(token models.AccessToken) {
 	database.Create(&encryptedAccessToken)
 }
 
-func GetSpotifAccessToken() (models.AccessToken, error) {
+func GetAccessToken() (models.AccessToken, error) {
 	token := getTokenFromDatabase()
 	if token.AccessToken != "" {
 		return token, nil
 	}
 
-	token, tokenError := RequestNewSpotifyAccessToken()
+	token, tokenError := RequestNewAccessToken()
 	if tokenError != nil {
 		return models.AccessToken{}, tokenError
 	}

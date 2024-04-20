@@ -1,9 +1,9 @@
 package v1
 
 import (
-	"api/lib"
-	"net/http"
+	"api/lib/spotify"
 	"log"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -28,7 +28,7 @@ func WebSocket(context *gin.Context) {
 	defer connection.Close()
 	connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
 
-	token, tokenError := lib.GetSpotifAccessToken()
+	token, tokenError := spotify.GetAccessToken()
 	if tokenError != nil {
 		log.Println(tokenError)
 		return

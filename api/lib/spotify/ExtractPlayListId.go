@@ -1,11 +1,11 @@
-package lib
+package spotify
 
 import (
 	"net/url"
 	"strings"
 )
 
-func ExtractSpotifyPlayListId(encodedUrl string) string {
+func ExtractPlayListId(encodedUrl string) string {
 	decodedUrl, decodingError := url.QueryUnescape(encodedUrl)
 	if decodingError != nil {
 		return encodedUrl
