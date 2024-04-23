@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func ExtractPlayListId(encodedUrl string) string {
+func ExtractPlaylistId(encodedUrl string) string {
 	decodedUrl, decodingError := url.QueryUnescape(encodedUrl)
 	if decodingError != nil {
 		return encodedUrl

@@ -4,14 +4,13 @@ import (
 	"api/database"
 	"api/lib/game"
 	"api/lib/spotify"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
 type PostGameInput struct {
-	PlayList    string `json:"playList" binding:"required"`
+	Playlist    string `json:"playlist" binding:"required"`
 	CountryCode string `json:"countryCode" binding:"required"`
 }
 
@@ -23,17 +22,15 @@ func PostGame(context *gin.Context) {
 		return
 	}
 
-	playListId := spotify.ExtractPlayListId(input.PlayList)
-	playList, playListError := spotify.RequestPlayListInfo(playListId, input.CountryCode)
-	if playListError != nil {
+	playlistId := spotify.ExtractPlaylistId(input.Playlist)
+	playlist, playlistError := spotify.RequestPlaylistInfo(playlistId, input.CountryCode)
+	if playlistError != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing playlist"})
 		return
 	}
 
-	log.Println("Playlist tracks: ", len(playList.Tracks.Items))
-
 	database := database.Get()
-	game, gameError := game.CreateGame(playList, database)
+	game, gameError := game.CreateGame(playlist, database)
 	if gameError != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 	}

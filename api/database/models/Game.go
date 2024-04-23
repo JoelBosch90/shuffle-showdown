@@ -2,9 +2,9 @@ package models
 
 type Game struct {
 	OwnedEntity
-	PlayListId     string `json:"playListId" gorm:"type:string;"`
-	SongsToWin     uint   `json:"songsToWin" gorm:"type:uint;"`
-	TitleRequired  bool   `json:"titleRequired" gorm:"type:bool;"`
-	ArtistRequired bool   `json:"artistRequired" gorm:"type:bool;"`
-	Configured     bool   `json:"configured" gorm:"type:bool;"`
+	PlaylistId     string `json:"playlistId" gorm:"column:playlist_id; type:string;"`
+	SongsToWin     uint   `json:"songsToWin" gorm:"column:songs_to_win; type:uint;"`
+	TitleRequired  bool   `json:"titleRequired" gorm:"column:title_required; type:bool;"`
+	ArtistRequired bool   `json:"artistRequired" gorm:"column:artist_required; type:bool;"`
+	Configured     bool   `json:"configured" gorm:"column:configured; type:bool;"`
 }

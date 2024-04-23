@@ -7,34 +7,34 @@ import (
 	"net/url"
 )
 
-func RequestPlayListInfo(playListId string, countryCode string) (spotifyModels.PlayList, error) {
-	path := "v1/playlists/" + url.QueryEscape(playListId)
+func RequestPlaylistInfo(playlistId string, countryCode string) (spotifyModels.Playlist, error) {
+	path := "v1/playlists/" + url.QueryEscape(playlistId)
 
 	headers := []Header{}
 	params := []Param{{Name: "market", Value: countryCode}}
-	playListResponse, playListRequestError := ApiRequest(http.MethodGet, path, headers, params)
-	if playListRequestError != nil {
-		return spotifyModels.PlayList{}, playListRequestError
+	playlistResponse, playlistRequestError := ApiRequest(http.MethodGet, path, headers, params)
+	if playlistRequestError != nil {
+		return spotifyModels.Playlist{}, playlistRequestError
 	}
 
 	// Parse the response
-	var playListInfo spotifyModels.PlayList
-	playListDecoder := json.NewDecoder(playListResponse.Body)
-	decodeError := playListDecoder.Decode(&playListInfo)
+	var playlistInfo spotifyModels.Playlist
+	playlistDecoder := json.NewDecoder(playlistResponse.Body)
+	decodeError := playlistDecoder.Decode(&playlistInfo)
 	if decodeError != nil {
-		return spotifyModels.PlayList{}, decodeError
+		return spotifyModels.Playlist{}, decodeError
 	}
 
-	if playListInfo.Tracks.Limit >= playListInfo.Tracks.Total {
-		return playListInfo, nil
+	if playlistInfo.Tracks.Limit >= playlistInfo.Tracks.Total {
+		return playlistInfo, nil
 	}
 
 	// Get the next page of tracks
-	additionalTrackItems, additionalTracksError := AddAdditionalTracks(&playListInfo, path, headers, params)
+	additionalTrackItems, additionalTracksError := AddAdditionalTracks(&playlistInfo, path, headers, params)
 	if additionalTracksError != nil {
-		return spotifyModels.PlayList{}, additionalTracksError
+		return spotifyModels.Playlist{}, additionalTracksError
 	}
-	playListInfo.Tracks.Items = append(playListInfo.Tracks.Items, additionalTrackItems...)
+	playlistInfo.Tracks.Items = append(playlistInfo.Tracks.Items, additionalTrackItems...)
 
-	return playListInfo, nil
+	return playlistInfo, nil
 }

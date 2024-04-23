@@ -8,9 +8,9 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func CreateGame(info spotifyModels.PlayList, database *gorm.DB) (models.Game, error) {
+func CreateGame(info spotifyModels.Playlist, database *gorm.DB) (models.Game, error) {
 	var lastSongAdded string = ""
-	game := models.Game{PlayListId: info.Id}
+	game := models.Game{PlaylistId: info.Id}
 
 	for _, item := range info.Tracks.Items {
 		if item.AddedAt > lastSongAdded {
@@ -23,14 +23,14 @@ func CreateGame(info spotifyModels.PlayList, database *gorm.DB) (models.Game, er
 		}
 	}
 
-	upsertPlayListError := databaseHelpers.Upsert(database, &models.PlayList{
+	upsertPlaylistError := databaseHelpers.Upsert(database, &models.Playlist{
 		ID:            info.Id,
 		Name:          info.Name,
 		LastSongAdded: lastSongAdded,
 		TracksTotal:   uint(info.Tracks.Total),
 	})
-	if upsertPlayListError != nil {
-		return models.Game{}, upsertPlayListError
+	if upsertPlaylistError != nil {
+		return models.Game{}, upsertPlaylistError
 	}
 
 	createGameError := database.Create(&game).Error

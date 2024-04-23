@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func AddAdditionalTracks(playListInfo *spotifyModels.PlayList, path string, playListHeaders []Header, playListParams []Param) ([]spotifyModels.Item, error) {
+func AddAdditionalTracks(playListInfo *spotifyModels.Playlist, path string, playListHeaders []Header, playListParams []Param) ([]spotifyModels.Item, error) {
 	allAdditionalTrackItems := []spotifyModels.Item{}
 	tracksParams := append(playListParams, Param{Name: "limit", Value: strconv.Itoa(playListInfo.Tracks.Limit)})
 	offset := playListInfo.Tracks.Offset + playListInfo.Tracks.Limit

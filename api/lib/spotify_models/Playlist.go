@@ -1,6 +1,6 @@
 package spotify_models
 
-type PlayList struct {
+type Playlist struct {
 	Collaborative bool   `json:"collaborative"`
 	Description   string `json:"description"`
 	ExternalUrls  `json:"external_urls"`
