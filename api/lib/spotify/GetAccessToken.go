@@ -9,31 +9,38 @@ import (
 
 const BUFFER_SECONDS int64 = 60
 
-func getTokenFromDatabase() models.AccessToken {
+func getTokenFromDatabase() (models.AccessToken, error) {
 	var token models.AccessToken
 	database := database.Get()
 
 	databaseError := database.Order("expires_at DESC").First(&token).Error
-	decryptedToken, decryptionError := security.Decrypt(token.AccessToken)
-
-	bufferedNow := time.Unix(time.Now().Unix()+BUFFER_SECONDS, 0)
-	if databaseError == nil && decryptionError == nil && token.ExpiresAt.After(bufferedNow) {
-		return models.AccessToken{
-			AccessToken: decryptedToken,
-			TokenType:   token.TokenType,
-			ExpiresAt:   token.ExpiresAt,
-		}
+	if databaseError != nil || token.AccessToken == "" {
+		return models.AccessToken{}, databaseError
 	}
 
-	return models.AccessToken{}
+	decryptedToken, decryptionError := security.Decrypt(token.AccessToken)
+	if decryptionError != nil {
+		return models.AccessToken{}, decryptionError
+	}
+
+	bufferedNow := time.Unix(time.Now().Unix()+BUFFER_SECONDS, 0)
+	if token.ExpiresAt.Before(bufferedNow) {
+		return models.AccessToken{}, nil
+	}
+
+	return models.AccessToken{
+		AccessToken: decryptedToken,
+		TokenType:   token.TokenType,
+		ExpiresAt:   token.ExpiresAt,
+	}, nil
 }
 
-func storeTokenInDatabase(token models.AccessToken) {
+func storeTokenInDatabase(token models.AccessToken) error {
 	database := database.Get()
 
 	encryptedToken, encryptionError := security.Encrypt(token.AccessToken)
 	if encryptionError != nil {
-		return
+		return encryptionError
 	}
 
 	encryptedAccessToken := models.AccessToken{
@@ -42,20 +49,21 @@ func storeTokenInDatabase(token models.AccessToken) {
 		ExpiresAt:   token.ExpiresAt,
 	}
 
-	database.Create(&encryptedAccessToken)
+	return database.Create(&encryptedAccessToken).Error
 }
 
 func GetAccessToken() (models.AccessToken, error) {
-	token := getTokenFromDatabase()
-	if token.AccessToken != "" {
-		return token, nil
+	// Ignore database errors as there might not be any tokens in the database.
+	databaseToken, _ := getTokenFromDatabase()
+	if databaseToken.AccessToken != "" {
+		return databaseToken, nil
 	}
 
-	token, tokenError := RequestNewAccessToken()
-	if tokenError != nil {
-		return models.AccessToken{}, tokenError
+	requestedToken, requestedTokenError := RequestNewAccessToken()
+	if requestedTokenError != nil {
+		return models.AccessToken{}, requestedTokenError
 	}
 
-	storeTokenInDatabase(token)
-	return token, nil
+	storeError := storeTokenInDatabase(requestedToken)
+	return requestedToken, storeError
 }

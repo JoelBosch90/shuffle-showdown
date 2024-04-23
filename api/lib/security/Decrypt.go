@@ -4,11 +4,9 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
-	"os"
 )
 
 func Decrypt(encrypted string) (string, error) {
-	key := []byte(os.Getenv("ENCRYPTION_KEY"))
 	ciphertext, base64Error := base64.URLEncoding.DecodeString(encrypted)
 	if base64Error != nil {
 		return "", base64Error
@@ -18,7 +16,7 @@ func Decrypt(encrypted string) (string, error) {
 		return "", nil
 	}
 
-	block, blockError := aes.NewCipher(key)
+	block, blockError := CreateCipherKey()
 	if blockError != nil {
 		return "", blockError
 	}

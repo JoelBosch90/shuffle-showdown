@@ -7,7 +7,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"io"
-	"os"
 )
 
 func generateIV() []byte {
@@ -22,10 +21,9 @@ func generateIV() []byte {
 }
 
 func Encrypt(secret string) (string, error) {
-	key := []byte(os.Getenv("ENCRYPTION_KEY"))
 	plaintext := []byte(secret)
 
-	block, blockError := aes.NewCipher(key)
+	block, blockError := CreateCipherKey()
 	if blockError != nil {
 		return "", blockError
 	}

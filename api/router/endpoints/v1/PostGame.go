@@ -4,6 +4,7 @@ import (
 	"api/database"
 	"api/lib/game"
 	"api/lib/spotify"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -23,14 +24,16 @@ func PostGame(context *gin.Context) {
 	}
 
 	playListId := spotify.ExtractPlayListId(input.PlayList)
-	info, playListError := spotify.RequestPlayListInfo(playListId, input.CountryCode)
+	playList, playListError := spotify.RequestPlayListInfo(playListId, input.CountryCode)
 	if playListError != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing playlist"})
 		return
 	}
 
+	log.Println("Playlist tracks: ", len(playList.Tracks.Items))
+
 	database := database.Get()
-	game, gameError := game.CreateGame(info, database)
+	game, gameError := game.CreateGame(playList, database)
 	if gameError != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 	}

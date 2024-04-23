@@ -1,28 +1,40 @@
 package spotify
 
 import (
+	spotifyModels "api/lib/spotify_models"
 	"encoding/json"
 	"net/http"
 	"net/url"
 )
 
-func RequestPlayListInfo(playListId string, countryCode string) (PlayListInfo, error) {
+func RequestPlayListInfo(playListId string, countryCode string) (spotifyModels.PlayList, error) {
 	path := "v1/playlists/" + url.QueryEscape(playListId)
 
 	headers := []Header{}
 	params := []Param{{Name: "market", Value: countryCode}}
-	response, requestError := ApiRequest(http.MethodGet, path, headers, params)
-	if requestError != nil {
-		return PlayListInfo{}, requestError
+	playListResponse, playListRequestError := ApiRequest(http.MethodGet, path, headers, params)
+	if playListRequestError != nil {
+		return spotifyModels.PlayList{}, playListRequestError
 	}
 
 	// Parse the response
-	var info PlayListInfo
-	decoder := json.NewDecoder(response.Body)
-	decodeError := decoder.Decode(&info)
+	var playListInfo spotifyModels.PlayList
+	playListDecoder := json.NewDecoder(playListResponse.Body)
+	decodeError := playListDecoder.Decode(&playListInfo)
 	if decodeError != nil {
-		return PlayListInfo{}, decodeError
+		return spotifyModels.PlayList{}, decodeError
 	}
 
-	return info, nil
+	if playListInfo.Tracks.Limit >= playListInfo.Tracks.Total {
+		return playListInfo, nil
+	}
+
+	// Get the next page of tracks
+	additionalTrackItems, additionalTracksError := AddAdditionalTracks(&playListInfo, path, headers, params)
+	if additionalTracksError != nil {
+		return spotifyModels.PlayList{}, additionalTracksError
+	}
+	playListInfo.Tracks.Items = append(playListInfo.Tracks.Items, additionalTrackItems...)
+
+	return playListInfo, nil
 }
