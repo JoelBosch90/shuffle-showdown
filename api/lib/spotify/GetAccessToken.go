@@ -5,6 +5,8 @@ import (
 	"api/database/models"
 	"api/lib/security"
 	"time"
+
+	uuid "github.com/satori/go.uuid"
 )
 
 const BUFFER_SECONDS int64 = 60
@@ -44,6 +46,7 @@ func storeTokenInDatabase(token models.AccessToken) error {
 	}
 
 	encryptedAccessToken := models.AccessToken{
+		Id:          uuid.NewV4(),
 		AccessToken: encryptedToken,
 		TokenType:   token.TokenType,
 		ExpiresAt:   token.ExpiresAt,
