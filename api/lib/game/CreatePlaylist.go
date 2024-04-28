@@ -9,10 +9,10 @@ import (
 )
 
 func CreatePlaylist(info spotifyModels.Playlist, database *gorm.DB) error {
-	var lastSongAdded string = ""
-
-	// TODO: Add tracks
-	// TODO: Add lastSongAdded
+	lastSongAdded, tracksError := CreateTracks(database, info.Tracks.Items)
+	if tracksError != nil {
+		return tracksError
+	}
 
 	upsertPlaylistError := databaseHelpers.Upsert(database, []interface{}{&models.Playlist{
 		Id:            info.Id,

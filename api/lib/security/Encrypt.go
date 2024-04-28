@@ -23,9 +23,9 @@ func generateIV() []byte {
 func Encrypt(secret string) (string, error) {
 	plaintext := []byte(secret)
 
-	block, blockError := CreateCipherKey()
-	if blockError != nil {
-		return "", blockError
+	key, keyError := CreateCipherKey()
+	if keyError != nil {
+		return "", keyError
 	}
 
 	iv := generateIV()
@@ -33,7 +33,7 @@ func Encrypt(secret string) (string, error) {
 		return "", errors.New("unable to generate an IV byte array")
 	}
 
-	encrypter := cipher.NewCFBEncrypter(block, iv)
+	encrypter := cipher.NewCFBEncrypter(key, iv)
 	ciphertext := make([]byte, len(plaintext))
 	encrypter.XORKeyStream(ciphertext, plaintext)
 

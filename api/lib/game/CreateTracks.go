@@ -8,11 +8,14 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-func CreateTracks(database *gorm.DB, tracks []spotifyModels.Track) error {
+func CreateTracks(database *gorm.DB, items []spotifyModels.Item) (string, error) {
 	var artistsToCreate []spotifyModels.Artist
 	var tracksToCreate []interface{}
+	var lastSongAdded string = ""
 
-	for _, track := range tracks {
+	for _, item := range items {
+		lastSongAdded = item.AddedAt
+		track := item.Track
 		artistsToCreate = append(artistsToCreate, track.Artists...)
 
 		releaseYear, releaseMonth, releaseDay := ConvertReleaseDateToIntegers(track.Album.ReleaseDate)
@@ -27,14 +30,14 @@ func CreateTracks(database *gorm.DB, tracks []spotifyModels.Track) error {
 
 	createArtistError := CreateArtists(database, artistsToCreate)
 	if createArtistError != nil {
-		return createArtistError
+		return lastSongAdded, createArtistError
 	}
 
 	// Try to update the existing record
 	upsertError := databaseHelpers.Upsert(database, tracksToCreate)
 	if upsertError != nil {
-		return upsertError
+		return lastSongAdded, upsertError
 	}
 
-	return nil
+	return lastSongAdded, nil
 }
