@@ -1,7 +1,7 @@
 package database_helpers
 
 import (
-	"log"
+	"errors"
 	"reflect"
 	"strings"
 	"time"
@@ -11,7 +11,7 @@ import (
 
 func isPrimaryKey(field reflect.StructField) bool {
 	gormTag := field.Tag.Get("gorm")
-	return strings.Contains(gormTag, "primary_key")
+	return strings.Contains(gormTag, "primaryKey")
 }
 
 func getPrimaryKeyFieldName(modelType reflect.Type) string {
@@ -46,25 +46,40 @@ func getModelTypeAndValue(instance interface{}) (reflect.Type, reflect.Value) {
 	return modelType, modelValue
 }
 
+func isDatabaseModel(field reflect.StructField) bool {
+	if field.Type.Kind() != reflect.Struct {
+		return false
+	}
+
+	// Check if the field is a Gorm model.
+	for index := 0; index < field.Type.NumField(); index++ {
+		if field.Type.Field(index).Type == reflect.TypeOf(gorm.Model{}) {
+			return true
+		}
+	}
+
+	return false
+}
+
 func getColumnValues(instance interface{}) []interface{} {
 	modelType, modelValue := getModelTypeAndValue(instance)
 
 	var columnValues []interface{}
 
-	for i := 0; i < modelType.NumField(); i++ {
-		field := modelType.Field(i)
+	for index := 0; index < modelType.NumField(); index++ {
+		field := modelType.Field(index)
 
-		// Skip unexported fields.
-		if field.PkgPath != "" {
+		// Skip unexported fields and database models because they
+		// should be associated with other tables later.
+		if field.PkgPath != "" || isDatabaseModel(field) {
 			continue
 		}
 
-		fieldValue := modelValue.Field(i).Interface()
+		fieldValue := modelValue.Field(index).Interface()
 
-		// Check if the field is a struct.
-		if modelType.Field(i).Type.Kind() == reflect.Struct {
-			structValues := getColumnValues(fieldValue)
-			columnValues = append(columnValues, structValues...)
+		// Slices  and Structs are most often used for many2many associations, so
+		// we skip them for now.
+		if field.Type.Kind() == reflect.Slice || field.Type.Kind() == reflect.Struct {
 			continue
 		}
 
@@ -75,25 +90,24 @@ func getColumnValues(instance interface{}) []interface{} {
 }
 
 func getColumnNames(instance interface{}) []string {
-	modelType, modelValue := getModelTypeAndValue(instance)
+	modelType, _ := getModelTypeAndValue(instance)
 
 	var columnNames []string
 
-	for i := 0; i < modelType.NumField(); i++ {
-		field := modelType.Field(i)
+	for index := 0; index < modelType.NumField(); index++ {
+		field := modelType.Field(index)
 
-		// Skip unexported fields.
+		// Skip unexported fields and database models because they
+		// should be associated with other tables later.
 		if field.PkgPath != "" {
 			continue
 		}
 
 		fieldName := field.Name
-		fieldValue := modelValue.Field(i).Interface()
 
-		// Check if the field is a struct.
-		if modelType.Field(i).Type.Kind() == reflect.Struct {
-			structColumns := getColumnNames(fieldValue)
-			columnNames = append(columnNames, structColumns...)
+		// Slices  and Structs are most often used for many2many associations, so
+		// we skip them for now.
+		if field.Type.Kind() == reflect.Slice || field.Type.Kind() == reflect.Struct {
 			continue
 		}
 
@@ -134,9 +148,9 @@ func getUpsertColumnParts(columnName string, primaryKeyName string, isLastColumn
 }
 
 func getUpsertQueryParts(exampleRow interface{}, primaryKeyName string) (string, string, string) {
-	var allColumnNames strings.Builder
-	var allColumnValuePlaceholders strings.Builder
-	var allColumnConflictHandlers strings.Builder
+	var allColumnNames string
+	var allColumnValuePlaceholders string
+	var allColumnConflictHandlers string
 
 	// Extract the column names from the first instance.
 	columnNames := getColumnNames(exampleRow)
@@ -153,20 +167,30 @@ func getUpsertQueryParts(exampleRow interface{}, primaryKeyName string) (string,
 
 		// Append the column name, value placeholder, and conflict handler
 		// to the query.
-		allColumnNames.WriteString(columnName)
-		allColumnValuePlaceholders.WriteString(valuePlaceholder)
-		allColumnConflictHandlers.WriteString(conflictHandler)
+		allColumnNames += columnName
+		allColumnValuePlaceholders += valuePlaceholder
+		allColumnConflictHandlers += conflictHandler
 	}
 
-	return allColumnNames.String(), allColumnValuePlaceholders.String(), allColumnConflictHandlers.String()
+	return allColumnNames, allColumnValuePlaceholders, allColumnConflictHandlers
+}
+
+func repeatColumnValuePlaceholders(columnValuePlaceholders string, rowAmount int) string {
+	repeatedColumnValuePlaceholders := ""
+	for index := 0; index < rowAmount; index++ {
+		repeatedColumnValuePlaceholders += columnValuePlaceholders
+		if index != rowAmount-1 {
+			repeatedColumnValuePlaceholders += ","
+		}
+	}
+
+	return repeatedColumnValuePlaceholders
 }
 
 func getRowValues(instances []interface{}) []interface{} {
 	// Also add the created_at and updated_at values to the column values.
 	now := time.Now()
 	sharedValues := []interface{}{now, now}
-
-	log.Println("instances", instances)
 
 	rows := []interface{}{}
 	for _, instance := range instances {
@@ -178,31 +202,110 @@ func getRowValues(instances []interface{}) []interface{} {
 		rows = append(rows, columnValues...)
 	}
 
-	log.Println("rows", rows)
-
 	return rows
 }
 
-func Upsert(database *gorm.DB, instances []interface{}) error {
-	if len(instances) == 0 {
-		return nil
+func linkAssociatedModel(database *gorm.DB, upsertedRow interface{}) error {
+	modelType := reflect.TypeOf(upsertedRow)
+
+	for index := 0; index < modelType.NumField(); index++ {
+		field := modelType.Field(index)
+		gormTag := field.Tag.Get("gorm")
+
+		// Check if the field is a many2many association.
+		if !strings.Contains(gormTag, "many2many") {
+			continue
+		}
+
+		// Use Gorm to add the new associations.
+		associationError := database.Model(upsertedRow).Association(field.Name).Append().Error
+		if associationError != nil {
+			return associationError
+		}
+	}
+
+	return nil
+}
+
+func linkAssociatedModels(database *gorm.DB, upsertedRows []interface{}) error {
+	for _, upsertedRow := range upsertedRows {
+		// Skip nil rows as it's possible that the row was not changed.
+		if upsertedRow == nil {
+			continue
+		}
+
+		associationError := linkAssociatedModel(database, upsertedRow)
+		if associationError != nil {
+			return associationError
+		}
+	}
+
+	return nil
+}
+
+func getModelInterface(modelType reflect.Type) reflect.Value {
+	// Create a slice of pointers to the model type.
+	sliceType := reflect.SliceOf(reflect.PointerTo(modelType))
+	slice := reflect.MakeSlice(sliceType, 0, 0)
+
+	// Return a pointer to the slice.
+	return reflect.New(slice.Type())
+}
+
+func convertResultsToInterfaces(results reflect.Value) []interface{} {
+	// Convert the results back to a slice of interfaces.
+	upsertedRows := make([]interface{}, results.Len())
+
+	for index := 0; index < results.Len(); index++ {
+		result := results.Index(index)
+		upsertedRows[index] = result.Elem().Interface()
+	}
+
+	return upsertedRows
+}
+
+func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
+	rowAmount := len(instances)
+	if rowAmount == 0 {
+		return []interface{}{}, nil
 	}
 
 	// Get the table name of the instance by reflection.
 	firstInstance := instances[0]
 	modelType := reflect.TypeOf(firstInstance).Elem()
 	tableName := strings.ToLower(modelType.Name()) + "s"
+
+	// Get the primary key name of the instance.
 	primaryKeyName := getPrimaryKeyFieldName(modelType)
+	if primaryKeyName == "" {
+		return []interface{}{}, errors.New("could not find primary key")
+	}
 
 	// Get the column names, value placeholders, and conflict handlers.
 	allColumnNames, allColumnValuePlaceholders, allConflictHandlers := getUpsertQueryParts(firstInstance, primaryKeyName)
 
-	var query strings.Builder
-	query.WriteString("INSERT INTO " + tableName + " (" + allColumnNames + ") ")
-	query.WriteString("VALUES (" + allColumnValuePlaceholders + ") ")
-	query.WriteString("ON CONFLICT (" + primaryKeyName + ") DO UPDATE SET " + allConflictHandlers + ";")
+	var query string
+	query += "INSERT INTO " + tableName + " (" + allColumnNames + ") "
+	query += "VALUES " + repeatColumnValuePlaceholders("("+allColumnValuePlaceholders+")", rowAmount) + " "
+	query += "ON CONFLICT (" + primaryKeyName + ") DO UPDATE SET " + allConflictHandlers + " "
+	query += "RETURNING *;"
 
-	database.Exec(query.String(), getRowValues(instances)...)
+	// Get a pointer with the correct model type to scan the results into.
+	resultsPointer := getModelInterface(modelType)
 
-	return nil
+	// Execute the query.
+	// TODO: Use prepared statements to prevent SQL injection.
+	database.Raw(query, getRowValues(instances)...).Scan(resultsPointer.Interface())
+
+	// Convert the results back to a slice of interfaces.
+	results := resultsPointer.Elem()
+	upsertedRows := convertResultsToInterfaces(results)
+
+	// Handle associations.
+	associationError := linkAssociatedModels(database, upsertedRows)
+	if associationError != nil {
+		return []interface{}{}, associationError
+	}
+
+	return upsertedRows, nil
 }

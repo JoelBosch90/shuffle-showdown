@@ -5,8 +5,9 @@ import "time"
 type Playlist struct {
 	CreatedAt     time.Time `json:"createdAt"`
 	UpdatedAt     time.Time `json:"updatedAt"`
-	Id            string    `json:"id" gorm:"column:id; type:string; primary_key;"`
-	Name          string    `json:"name" gorm:"column:name; type:string;"`
-	LastSongAdded string    `json:"lastSongAdded" gorm:"column:last_song_added; type:string;"`
-	TracksTotal   uint      `json:"tracksTotal" gorm:"column:tracks_total; type:uint;"`
+	Id            string    `json:"id" gorm:"type:string; primaryKey;"`
+	Name          string    `json:"name" gorm:"type:string;"`
+	LastSongAdded string    `json:"lastSongAdded" gorm:"type:string;"`
+	TracksTotal   uint      `json:"tracksTotal" gorm:"type:uint;"`
+	Tracks        []Track   `json:"tracks" gorm:"many2many:playlist_tracks;"`
 }
