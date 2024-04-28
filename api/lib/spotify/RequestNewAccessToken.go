@@ -3,6 +3,7 @@ package spotify
 import (
 	"api/database/models"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 	"time"
@@ -23,14 +24,24 @@ func RequestNewAccessToken() (models.AccessToken, error) {
 		return models.AccessToken{}, requestError
 	}
 
+	// Get the client ID and client secret from the environment
+	clientId := os.Getenv("SPOTIFY_CLIENT_ID")
+	if clientId == "" {
+		return models.AccessToken{}, errors.New("missing Spotify client ID")
+	}
+	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
+	if clientSecret == "" {
+		return models.AccessToken{}, errors.New("missing Spotify client secret")
+	}
+
 	// Add the required headers
 	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	// Add the query parameters
 	query := request.URL.Query()
 	query.Add("grant_type", "client_credentials")
-	query.Add("client_id", os.Getenv("SPOTIFY_CLIENT_ID"))
-	query.Add("client_secret", os.Getenv("SPOTIFY_CLIENT_SECRET"))
+	query.Add("client_id", clientId)
+	query.Add("client_secret", clientSecret)
 	request.URL.RawQuery = query.Encode()
 
 	// Send the request
