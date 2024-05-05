@@ -10,7 +10,7 @@ import (
 const CREATED_AT_COLUMN_NAME string = "created_at"
 const UPDATED_AT_COLUMN_NAME string = "updated_at"
 
-func getColumnParts(columnName string, primaryKeyName string, isLastColumn bool) (string, string, string) {
+func getColumnNamePlaceholderAndConflictHandler(columnName string, primaryKeyName string, isLastColumn bool) (string, string, string) {
 	name := columnName
 	valuePlaceholder := "?"
 	conflictHandler := ""
@@ -38,7 +38,8 @@ func getColumnParts(columnName string, primaryKeyName string, isLastColumn bool)
 	return name, valuePlaceholder, conflictHandler
 }
 
-func getQueryParts(exampleRow interface{}, primaryKeyName string) (string, string, string) {
+// Returns the column names, value placeholders, and conflict handlers for the query in a single loop.
+func getColumnNamesPlaceholdersAndConflictHandlers(exampleRow interface{}, primaryKeyName string) (string, string, string) {
 	var allColumnNames string
 	var allColumnValuePlaceholders string
 	var allColumnConflictHandlers string
@@ -59,7 +60,7 @@ func getQueryParts(exampleRow interface{}, primaryKeyName string) (string, strin
 
 		// Get the column name, value placeholder, and conflict handler.
 		isLastColumn := index == len(columnNames)-1
-		columnName, valuePlaceholder, conflictHandler := getColumnParts(columnName, primaryKeyName, isLastColumn)
+		columnName, valuePlaceholder, conflictHandler := getColumnNamePlaceholderAndConflictHandler(columnName, primaryKeyName, isLastColumn)
 
 		// Append the column name, value placeholder, and conflict handler
 		// to the query.
@@ -150,7 +151,7 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	primaryKeyName := GetPrimaryKeyFieldName(modelType)
 
 	// Get the column names, value placeholders, and conflict handlers.
-	allColumnNames, allColumnValuePlaceholders, allConflictHandlers := getQueryParts(firstInstance, primaryKeyName)
+	allColumnNames, allColumnValuePlaceholders, allConflictHandlers := getColumnNamesPlaceholdersAndConflictHandlers(firstInstance, primaryKeyName)
 
 	var query string
 	query += "INSERT INTO " + tableName + " (" + allColumnNames + ") "

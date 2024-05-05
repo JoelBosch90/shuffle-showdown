@@ -2,6 +2,7 @@ package game
 
 import (
 	"api/database/models"
+	spotify "api/lib/spotify"
 	spotifyModels "api/lib/spotify_models"
 
 	"github.com/jinzhu/gorm"
@@ -9,7 +10,7 @@ import (
 )
 
 func CreateGame(info spotifyModels.Playlist, database *gorm.DB) (models.Game, error) {
-	playlist, playlistError := CreatePlaylist(info, database)
+	playlist, playlistError := spotify.CreatePlaylist(info, database)
 	if playlistError != nil {
 		return models.Game{}, playlistError
 	}

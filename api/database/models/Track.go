@@ -13,4 +13,6 @@ type Track struct {
 	ReleaseMonth uint      `json:"releaseMonth" gorm:"type:uint;"`
 	ReleaseDay   uint      `json:"releaseDay" gorm:"type:uint;"`
 	Artists      []Artist  `json:"artists" gorm:"many2many:track_artists;"`
+	PreviewUrl   string    `json:"previewUrl" gorm:"type:string;"`
+	IsPlayable   bool      `json:"isPlayable" gorm:"type:bool;"`
 }

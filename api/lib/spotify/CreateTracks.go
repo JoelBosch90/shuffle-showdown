@@ -1,4 +1,4 @@
-package game
+package spotify
 
 import (
 	"api/database/models"
@@ -59,6 +59,8 @@ func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist)
 			ReleaseMonth: releaseMonth,
 			ReleaseDay:   releaseDay,
 			Artists:      artists,
+			PreviewUrl:   track.PreviewUrl,
+			IsPlayable:   track.IsPlayable,
 		})
 	}
 

@@ -1,4 +1,4 @@
-package game
+package spotify
 
 import (
 	"api/database/models"
