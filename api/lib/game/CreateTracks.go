@@ -19,8 +19,9 @@ func findArtistById(artists []models.Artist, id string) *models.Artist {
 	return nil
 }
 
-func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist) ([]interface{}, error) {
+func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist) ([]interface{}, []interface{}, error) {
 	var tracksToCreate []interface{}
+	var trackArtistsToCreate []interface{}
 
 	// Loop through the items to construct the tracks.
 	for _, item := range items {
@@ -42,6 +43,12 @@ func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist)
 			if artist != nil {
 				artists = append(artists, *artist)
 			}
+
+			// Also construct the links for the join table.
+			trackArtistsToCreate = append(trackArtistsToCreate, &models.TrackArtist{
+				TrackId:  track.Id,
+				ArtistId: artistId,
+			})
 		}
 
 		// Append the track to the tracksToCreate slice.
@@ -55,7 +62,7 @@ func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist)
 		})
 	}
 
-	return tracksToCreate, nil
+	return tracksToCreate, trackArtistsToCreate, nil
 }
 
 func assertTracks(upsertedTracks []interface{}) ([]models.Track, error) {
@@ -88,7 +95,7 @@ func CreateTracks(database *gorm.DB, items []spotifyModels.Item) (string, []mode
 	}
 
 	// Construct the tracks
-	tracksToCreate, constructError := constructTracks(items, createdArtists)
+	tracksToCreate, trackArtistsToCreate, constructError := constructTracks(items, createdArtists)
 	if constructError != nil || len(tracksToCreate) == 0 {
 		return lastSongAdded, []models.Track{}, constructError
 	}
@@ -97,6 +104,12 @@ func CreateTracks(database *gorm.DB, items []spotifyModels.Item) (string, []mode
 	upsertedTracks, upsertError := databaseHelpers.Upsert(database, tracksToCreate)
 	if upsertError != nil || len(upsertedTracks) == 0 {
 		return lastSongAdded, []models.Track{}, upsertError
+	}
+
+	// Upsert the track artists
+	_, trackArtistsUpsertError := databaseHelpers.Upsert(database, trackArtistsToCreate)
+	if trackArtistsUpsertError != nil {
+		return lastSongAdded, []models.Track{}, trackArtistsUpsertError
 	}
 
 	// Use type assertion to convert upsertedTracks to []models.Track

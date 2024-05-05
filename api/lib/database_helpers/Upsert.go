@@ -1,7 +1,6 @@
 package database_helpers
 
 import (
-	"errors"
 	"reflect"
 	"strings"
 	"time"
@@ -147,6 +146,28 @@ func getUpsertColumnParts(columnName string, primaryKeyName string, isLastColumn
 	return name, valuePlaceholder, conflictHandler
 }
 
+func hasField(model interface{}, fieldName string) bool {
+	modelType, _ := getModelTypeAndValue(model)
+
+	for index := 0; index < modelType.NumField(); index++ {
+		field := modelType.Field(index)
+
+		if field.Name == fieldName {
+			return true
+		}
+	}
+
+	return false
+}
+
+func hasCreatedAtField(model interface{}) bool {
+	return hasField(model, "CreatedAt")
+}
+
+func hasUpdatedAtField(model interface{}) bool {
+	return hasField(model, "UpdatedAt")
+}
+
 func getUpsertQueryParts(exampleRow interface{}, primaryKeyName string) (string, string, string) {
 	var allColumnNames string
 	var allColumnValuePlaceholders string
@@ -155,8 +176,13 @@ func getUpsertQueryParts(exampleRow interface{}, primaryKeyName string) (string,
 	// Extract the column names from the first instance.
 	columnNames := getColumnNames(exampleRow)
 
-	// Add the created_at and updated_at columns to the column names.
-	columnNames = append([]string{"created_at", "updated_at"}, columnNames...)
+	// Add the created_at and updated_at columns to the column names if the model has those fields.
+	if hasCreatedAtField(exampleRow) {
+		columnNames = append([]string{"created_at"}, columnNames...)
+	}
+	if hasUpdatedAtField(exampleRow) {
+		columnNames = append([]string{"updated_at"}, columnNames...)
+	}
 
 	// Loop through the column names and values to build the query.
 	for index, columnName := range columnNames {
@@ -188,14 +214,23 @@ func repeatColumnValuePlaceholders(columnValuePlaceholders string, rowAmount int
 }
 
 func getRowValues(instances []interface{}) []interface{} {
-	// Also add the created_at and updated_at values to the column values.
+	// Get the current time to use as the created_at and updated_at values.
 	now := time.Now()
-	sharedValues := []interface{}{now, now}
 
 	rows := []interface{}{}
 	for _, instance := range instances {
 		// Get the column values from the instance.
-		columnValues := sharedValues
+		columnValues := []interface{}{}
+
+		// Add created_at and updated_at values if the model has those fields.
+		if hasCreatedAtField(instance) {
+			columnValues = append(columnValues, now)
+		}
+		if hasUpdatedAtField(instance) {
+			columnValues = append(columnValues, now)
+		}
+
+		// Append the column values to the row values.
 		columnValues = append(columnValues, getColumnValues(instance)...)
 
 		// Append the column values to the row values.
@@ -203,44 +238,6 @@ func getRowValues(instances []interface{}) []interface{} {
 	}
 
 	return rows
-}
-
-func linkAssociatedModel(database *gorm.DB, upsertedRow interface{}) error {
-	modelType := reflect.TypeOf(upsertedRow)
-
-	for index := 0; index < modelType.NumField(); index++ {
-		field := modelType.Field(index)
-		gormTag := field.Tag.Get("gorm")
-
-		// Check if the field is a many2many association.
-		if !strings.Contains(gormTag, "many2many") {
-			continue
-		}
-
-		// Use Gorm to add the new associations.
-		associationError := database.Model(upsertedRow).Association(field.Name).Append().Error
-		if associationError != nil {
-			return associationError
-		}
-	}
-
-	return nil
-}
-
-func linkAssociatedModels(database *gorm.DB, upsertedRows []interface{}) error {
-	for _, upsertedRow := range upsertedRows {
-		// Skip nil rows as it's possible that the row was not changed.
-		if upsertedRow == nil {
-			continue
-		}
-
-		associationError := linkAssociatedModel(database, upsertedRow)
-		if associationError != nil {
-			return associationError
-		}
-	}
-
-	return nil
 }
 
 func getModelInterface(modelType reflect.Type) reflect.Value {
@@ -273,13 +270,10 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	// Get the table name of the instance by reflection.
 	firstInstance := instances[0]
 	modelType := reflect.TypeOf(firstInstance).Elem()
-	tableName := strings.ToLower(modelType.Name()) + "s"
+	tableName := PascalToSnake(modelType.Name()) + "s"
 
 	// Get the primary key name of the instance.
 	primaryKeyName := getPrimaryKeyFieldName(modelType)
-	if primaryKeyName == "" {
-		return []interface{}{}, errors.New("could not find primary key")
-	}
 
 	// Get the column names, value placeholders, and conflict handlers.
 	allColumnNames, allColumnValuePlaceholders, allConflictHandlers := getUpsertQueryParts(firstInstance, primaryKeyName)
@@ -287,7 +281,11 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	var query string
 	query += "INSERT INTO " + tableName + " (" + allColumnNames + ") "
 	query += "VALUES " + repeatColumnValuePlaceholders("("+allColumnValuePlaceholders+")", rowAmount) + " "
-	query += "ON CONFLICT (" + primaryKeyName + ") DO UPDATE SET " + allConflictHandlers + " "
+	if primaryKeyName == "" {
+		query += "ON CONFLICT DO NOTHING "
+	} else {
+		query += "ON CONFLICT (" + primaryKeyName + ") DO UPDATE SET " + allConflictHandlers + " "
+	}
 	query += "RETURNING *;"
 
 	// Get a pointer with the correct model type to scan the results into.
@@ -300,12 +298,6 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	// Convert the results back to a slice of interfaces.
 	results := resultsPointer.Elem()
 	upsertedRows := convertResultsToInterfaces(results)
-
-	// Handle associations.
-	associationError := linkAssociatedModels(database, upsertedRows)
-	if associationError != nil {
-		return []interface{}{}, associationError
-	}
 
 	return upsertedRows, nil
 }

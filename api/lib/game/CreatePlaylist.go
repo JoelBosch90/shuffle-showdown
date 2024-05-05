@@ -22,9 +22,23 @@ func CreatePlaylist(info spotifyModels.Playlist, database *gorm.DB) (models.Play
 		TracksTotal:   uint(info.Tracks.Total),
 		Tracks:        tracks,
 	}})
-
 	if upsertPlaylistError != nil || len(upsertedPlaylist) == 0 {
 		return models.Playlist{}, upsertPlaylistError
+	}
+
+	// Create links between the playlist and the tracks on the playlist.
+	playlistTrackLinks := []interface{}{}
+	for _, track := range tracks {
+		playlistTrackLinks = append(playlistTrackLinks, &models.PlaylistTrack{
+			PlaylistId: info.Id,
+			TrackId:    track.Id,
+		})
+	}
+
+	// Upsert the playlist track links.
+	_, upsertPlayListTrackLinksError := databaseHelpers.Upsert(database, playlistTrackLinks)
+	if upsertPlayListTrackLinksError != nil {
+		return models.Playlist{}, upsertPlayListTrackLinksError
 	}
 
 	// Use type assertion to convert upsertedPlaylist[0] to models.Playlist
