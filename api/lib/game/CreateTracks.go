@@ -2,7 +2,7 @@ package game
 
 import (
 	"api/database/models"
-	databaseHelpers "api/lib/database_helpers"
+	databaseHelpers "api/lib/database"
 	spotifyModels "api/lib/spotify_models"
 	"errors"
 

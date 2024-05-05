@@ -1,4 +1,4 @@
-package database_helpers
+package database
 
 import (
 	"strings"
