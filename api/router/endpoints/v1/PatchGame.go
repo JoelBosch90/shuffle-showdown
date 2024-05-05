@@ -8,10 +8,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PatchGameInput struct {
+type GameSettings struct {
 	SongsToWin     uint `json:"songsToWin"`
 	TitleRequired  bool `json:"titleRequired"`
 	ArtistRequired bool `json:"artistRequired"`
+}
+
+type PatchGameInput struct {
+	Settings GameSettings `json:"settings"`
+	PlayerId string       `json:"playerId"`
 }
 
 func PatchGame(context *gin.Context) {
@@ -22,13 +27,26 @@ func PatchGame(context *gin.Context) {
 		return
 	}
 
-	id := context.Param("id")
+	gameId := context.Param("id")
 	database := database.Get()
 	var game models.Game
 
-	databaseError := database.Where("id = ?", id).First(&game).Error
-	if databaseError != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+	cookie, cookieError := context.Cookie("playerSecret")
+	if cookieError != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid cookie"})
+		return
+	}
+
+	var player models.Player
+	playerError := database.Where("secret = ? AND id = ?", cookie, input.PlayerId).First(&player).Error
+	if playerError != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Game not owned by user"})
+		return
+	}
+
+	gameError := database.Where("id = ?", gameId).First(&game).Error
+	if gameError != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": "Game does not exist"})
 		return
 	}
 	if game.Configured {
@@ -37,9 +55,9 @@ func PatchGame(context *gin.Context) {
 	}
 
 	database.Model(&game).Updates(models.Game{
-		SongsToWin:     input.SongsToWin,
-		TitleRequired:  input.TitleRequired,
-		ArtistRequired: input.ArtistRequired,
+		SongsToWin:     input.Settings.SongsToWin,
+		TitleRequired:  input.Settings.TitleRequired,
+		ArtistRequired: input.Settings.ArtistRequired,
 		Configured:     true,
 	})
 
