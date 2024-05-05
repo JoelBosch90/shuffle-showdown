@@ -15,4 +15,6 @@ type Game struct {
 	TitleRequired  bool      `json:"titleRequired" gorm:"type:bool;"`
 	ArtistRequired bool      `json:"artistRequired" gorm:"type:bool;"`
 	Configured     bool      `json:"configured" gorm:"type:bool;"`
+	Owner          Player    `json:"owner" gorm:"foreignKey:OwnerId;"`
+	Players        []Player  `json:"players" gorm:"many2many:game_players;"`
 }

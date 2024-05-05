@@ -5,9 +5,9 @@
 	let playList = '';
 
 	const createGame = async () => {
-		const { data } = await API.postGame(playList);
+		const { game } = await API.postGame(playList);
 
-		await goto(`/game/${data.id}/configure`);
+		await goto(`/game/${game.id}/configure`);
 	};
 </script>
 

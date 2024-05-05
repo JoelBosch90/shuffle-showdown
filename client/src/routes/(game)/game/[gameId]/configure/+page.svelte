@@ -46,18 +46,45 @@
 <section>
 	<h1>Configure your game</h1>
 
-	<button class="filled" on:click={() => configureGame(predefinedSettings[PredefinedGameMode.hard])}
-		>Hard mode</button
-	>
+	<label>
+		<span>Your name</span><br/>
+		<input type="text" placeholder="David Bowie" />
+	</label>
 
-	<button
-		class="filled"
-		on:click={() => configureGame(predefinedSettings[PredefinedGameMode.normal])}
-		>Normal mode</button
-	>
 
-	<button class="filled" on:click={gotoCustomGame}>Custom mode</button>
+	<h3>Start the game in:</h3>
+
+	<div class="button-row">
+		<button class="filled" on:click={() => configureGame(predefinedSettings[PredefinedGameMode.hard])}>
+			Hard mode
+		</button>
+	
+		<button class="filled" on:click={() => configureGame(predefinedSettings[PredefinedGameMode.normal])}>
+			Normal mode
+		</button>
+	
+		<button class="filled" on:click={gotoCustomGame}>Custom mode</button>
+	</div>
 </section>
 
 <style lang="scss">
+	label, input {
+		box-sizing: border-box;
+		width: 100%;
+	}
+
+	label {
+		color: var(--purple);
+		font-weight: bold;
+
+		span {
+			margin-left: 1ch;
+		}
+	}
+
+	.button-row {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+	}
 </style>
