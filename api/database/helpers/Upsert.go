@@ -168,7 +168,6 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	resultsPointer := getModelInterface(modelType)
 
 	// Execute the query.
-	// TODO: Use prepared statements to prevent SQL injection.
 	database.Raw(query, getRowValues(instances)...).Scan(resultsPointer.Interface())
 
 	// Convert the results back to a slice of interfaces.

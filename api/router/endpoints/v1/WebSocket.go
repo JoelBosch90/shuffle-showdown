@@ -99,6 +99,8 @@ func WebSocket(context *gin.Context) {
 			}
 
 			log.Println("Player identified:", playerState.Player)
+		default:
+			continue
 		}
 
 		// log.Println(messageType, message)

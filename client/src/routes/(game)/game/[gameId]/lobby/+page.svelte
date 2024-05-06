@@ -22,6 +22,8 @@
 			goto('/game');
 		});
 
+		// TODO: Create player if we don't have one yet.
+
 		if (!game) goto(`/game/${gameId}/configure`);
 
 		API.SocketConnection.onMessage(({ data }) => showMessage(data));
