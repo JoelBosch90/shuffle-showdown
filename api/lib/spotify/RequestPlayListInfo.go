@@ -1,7 +1,7 @@
 package spotify
 
 import (
-	spotifyModels "api/lib/spotify_models"
+	spotifyModels "api/lib/spotify/models"
 	"encoding/json"
 	"net/http"
 	"net/url"

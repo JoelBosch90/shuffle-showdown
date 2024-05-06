@@ -2,6 +2,7 @@ import { type GameConfig } from '$lib/types/GameConfig';
 import getGame from './API/getGame';
 import patchGame from './API/patchGame';
 import postGame from './API/postGame';
+import patchPlayer from './API/patchPlayer';
 import { SocketConnection } from './API/SocketConnection';
 
 export class API {
@@ -35,6 +36,16 @@ export class API {
     }
 
     return patchGame(settings, playerId);
+  }
+
+  public static patchPlayer(playerName: string) {
+    const playerId = this.getPlayerId();
+
+    if (!playerId) {
+      throw new Error('No player ID found');
+    }
+
+    return patchPlayer(playerName, playerId);
   }
 
   public static getGame = getGame;

@@ -3,7 +3,7 @@ package game
 import (
 	"api/database/models"
 	spotify "api/lib/spotify"
-	spotifyModels "api/lib/spotify_models"
+	spotifyModels "api/lib/spotify/models"
 
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"

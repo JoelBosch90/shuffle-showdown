@@ -1,5 +1,6 @@
 import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
 import { type GenericEventCallback, type CloseEventCallback, type MessageEventCallback } from '$lib/types/EventCallbacks';
+import { API } from '../API';
 
 const RECOVERABLE_CLOSE_CODES = [
   WebSocketCloseCode.GOING_AWAY,
@@ -11,11 +12,18 @@ const RECOVERABLE_CLOSE_CODES = [
   WebSocketCloseCode.TRY_AGAIN_LATER,
 ];
 
+type Message = {
+  type: string,
+  payload: Record<string, unknown>,
+  playerId: string | null,
+};
+
 export class SocketConnection {
   private static connected = false;
   private static connecting = false;
   private static initialized = false;
 
+  private static lobby: string | undefined = undefined;
   private static host: string | undefined = undefined;
   private static connectionProtocol: string | undefined = undefined;
   private static connection: WebSocket | undefined = undefined;
@@ -25,18 +33,27 @@ export class SocketConnection {
   private static onErrorCallbacks: Array<GenericEventCallback> = [];
   private static onMessageCallbacks: Array<MessageEventCallback> = [];
 
-  private static queuedMessages: Array<string> = [];
+  private static queuedMessages: Array<Message> = [];
 
-  public static start() {
+  public static start(lobby?: string) {
     if (SocketConnection.connected || SocketConnection.connecting) return;
     if (!SocketConnection.initialized) SocketConnection.initialize();
+    if (lobby && lobby !== SocketConnection.lobby) SocketConnection.lobby = lobby;
+    if (!lobby) lobby = SocketConnection.lobby;
     SocketConnection.connecting = true;
-    SocketConnection.connection = new WebSocket(`${SocketConnection.connectionProtocol}//${SocketConnection.host}/api/v1/ws`);
+    SocketConnection.connection = new WebSocket(`${SocketConnection.connectionProtocol}//${SocketConnection.host}/api/v1/ws/${lobby}`);
 
     SocketConnection.connection.addEventListener('open', SocketConnection.baseOnOpen);
     SocketConnection.connection.addEventListener('close', SocketConnection.baseOnClose);
     SocketConnection.connection.addEventListener('error', SocketConnection.baseOnError);
     SocketConnection.connection.addEventListener('message', SocketConnection.baseOnMessage);
+
+    // Identify the player to the server.
+    SocketConnection.send({
+      type: 'join',
+      payload: {},
+      playerId: API.getPlayerId()
+    })
   }
 
   private static initialize() {
@@ -51,9 +68,9 @@ export class SocketConnection {
     SocketConnection.connecting = false;
   }
 
-  public static send(message: string) {
+  public static send(message: Message) {
     if (!SocketConnection.connected && !SocketConnection.connecting) SocketConnection.start();
-    if (SocketConnection.connected && SocketConnection.connection) SocketConnection.connection.send(message);
+    if (SocketConnection.connected && SocketConnection.connection) SocketConnection.connection.send(JSON.stringify(message));
     else SocketConnection.queuedMessages.push(message);
   }
 

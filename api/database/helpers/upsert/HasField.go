@@ -1,4 +1,4 @@
-package database
+package upsert
 
 func HasField(model interface{}, fieldName string) bool {
 	modelType := GetModelType(model)

@@ -10,6 +10,8 @@
 	}
 	type GameSettings = Omit<GameConfig, 'gameId'>;
 
+	let playerName = '';
+
 	const predefinedSettings: Record<PredefinedGameMode, GameSettings> = {
 		normal: {
 			songsToWin: 10,
@@ -32,7 +34,10 @@
 	const configureGame = async (settings: GameSettings) => {
 		const gameId = $page.params.gameId;
 
-		await API.patchGame({ ...settings, gameId });
+		await Promise.all([
+			API.patchGame({ ...settings, gameId }),
+			API.patchPlayer(playerName)
+		]);
 
 		await goto(`/game/${gameId}/lobby`);
 	};
@@ -48,7 +53,7 @@
 
 	<label>
 		<span>Your name</span><br/>
-		<input type="text" placeholder="David Bowie" />
+		<input type="text" placeholder="David Bowie" bind:value={playerName} />
 	</label>
 
 

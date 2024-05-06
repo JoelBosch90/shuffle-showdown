@@ -1,6 +1,7 @@
 package database
 
 import (
+	"api/database/helpers/upsert"
 	"reflect"
 	"time"
 
@@ -45,13 +46,13 @@ func getColumnNamesPlaceholdersAndConflictHandlers(exampleRow interface{}, prima
 	var allColumnConflictHandlers string
 
 	// Extract the column names from the first instance.
-	columnNames := GetModelColumnNames(exampleRow)
+	columnNames := upsert.GetModelColumnNames(exampleRow)
 
 	// Add the created_at and updated_at columns to the column names if the model has those fields.
-	if HasCreatedAtField(exampleRow) {
+	if upsert.HasCreatedAtField(exampleRow) {
 		columnNames = append([]string{CREATED_AT_COLUMN_NAME}, columnNames...)
 	}
-	if HasUpdatedAtField(exampleRow) {
+	if upsert.HasUpdatedAtField(exampleRow) {
 		columnNames = append([]string{UPDATED_AT_COLUMN_NAME}, columnNames...)
 	}
 
@@ -98,15 +99,15 @@ func getRowValues(instances []interface{}) []interface{} {
 		columnValues := []interface{}{}
 
 		// Add created_at and updated_at values if the model has those fields.
-		if HasCreatedAtField(instance) {
+		if upsert.HasCreatedAtField(instance) {
 			columnValues = append(columnValues, now)
 		}
-		if HasUpdatedAtField(instance) {
+		if upsert.HasUpdatedAtField(instance) {
 			columnValues = append(columnValues, now)
 		}
 
 		// Append the column values to the row values.
-		columnValues = append(columnValues, GetModelColumnValues(instance)...)
+		columnValues = append(columnValues, upsert.GetModelColumnValues(instance)...)
 
 		// Append the column values to the row values.
 		rows = append(rows, columnValues...)
@@ -145,10 +146,10 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	// Get the table name of the instance by reflection.
 	firstInstance := instances[0]
 	modelType := reflect.TypeOf(firstInstance).Elem()
-	tableName := PascalToSnake(modelType.Name()) + "s"
+	tableName := upsert.PascalToSnake(modelType.Name()) + "s"
 
 	// Get the primary key name of the instance.
-	primaryKeyName := GetPrimaryKeyFieldName(modelType)
+	primaryKeyName := upsert.GetPrimaryKeyFieldName(modelType)
 
 	// Get the column names, value placeholders, and conflict handlers.
 	allColumnNames, allColumnValuePlaceholders, allConflictHandlers := getColumnNamesPlaceholdersAndConflictHandlers(firstInstance, primaryKeyName)

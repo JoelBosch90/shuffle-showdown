@@ -6,6 +6,7 @@
 	import { type Game } from '$lib/types/Game';
 
 	const gameId = $page.params.gameId;
+	let url: string | null = null;
 	let game: Game | void | null = null;
 
 	const players = [];
@@ -16,6 +17,7 @@
 	};
 
 	onMount(async () => {
+		url = window.location.href;
 		game = await API.getGame(gameId).catch(() => {
 			goto('/game');
 		});
@@ -23,8 +25,7 @@
 		if (!game) goto(`/game/${gameId}/configure`);
 
 		API.SocketConnection.onMessage(({ data }) => showMessage(data));
-		API.SocketConnection.start();
-		API.SocketConnection.send('Hello Server!');
+		API.SocketConnection.start(gameId);
 	});
 </script>
 
@@ -39,13 +40,8 @@
 <section>
 	<h1>Game Lobby</h1>
 	<h3>Rules:</h3>
-	Each team will start with one random song on their timeline, and then take turns playing a random song
-	from the playlist. Try to place the song you hear in the correct spot on your timeline. The first team
-	to get {game?.songsToWin} songs in the correct spot wins!
-	<ul>
-		<li>Teams will take turns playing a random song from the playlist.</li>
-	</ul>
-
+	Share this link to let your friends join the game: <a href="{url}">{url}</a>
+	
 	<ul>
 		{#each messages as message}
 			<li>{message}</li>

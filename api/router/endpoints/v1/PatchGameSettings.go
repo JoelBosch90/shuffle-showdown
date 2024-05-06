@@ -14,13 +14,13 @@ type GameSettings struct {
 	ArtistRequired bool `json:"artistRequired"`
 }
 
-type PatchGameInput struct {
+type PatchGameSettingsInput struct {
 	Settings GameSettings `json:"settings"`
 	PlayerId string       `json:"playerId"`
 }
 
-func PatchGame(context *gin.Context) {
-	var input PatchGameInput
+func PatchGameSettings(context *gin.Context) {
+	var input PatchGameSettingsInput
 	validationError := context.ShouldBindJSON(&input)
 	if validationError != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
@@ -40,20 +40,17 @@ func PatchGame(context *gin.Context) {
 	var player models.Player
 	playerError := database.Where("secret = ? AND id = ?", cookie, input.PlayerId).First(&player).Error
 	if playerError != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Game not owned by user"})
+		context.JSON(http.StatusForbidden, gin.H{"error": "Game not owned by user"})
 		return
 	}
 
 	gameError := database.Where("id = ?", gameId).First(&game).Error
 	if gameError != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"error": "Game does not exist"})
-		return
-	}
-	if game.Configured {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Game already configured"})
+		context.JSON(http.StatusNotFound, gin.H{"error": "Game does not exist"})
 		return
 	}
 
+	// Update the game settings.
 	database.Model(&game).Updates(models.Game{
 		SongsToWin:     input.Settings.SongsToWin,
 		TitleRequired:  input.Settings.TitleRequired,

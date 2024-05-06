@@ -1,9 +1,9 @@
 package spotify
 
 import (
+	databaseHelpers "api/database/helpers"
 	"api/database/models"
-	databaseHelpers "api/lib/database"
-	spotifyModels "api/lib/spotify_models"
+	spotifyModels "api/lib/spotify/models"
 	"errors"
 
 	"github.com/jinzhu/gorm"
