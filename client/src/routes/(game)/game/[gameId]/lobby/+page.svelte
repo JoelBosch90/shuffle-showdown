@@ -19,7 +19,7 @@
 	};
 
 	onMount(async () => {
-		shareUrl = `${window.location.origin}/game/${gameId}/player`;
+		shareUrl = `${window.location.origin}/game/${gameId}/join`;
 		game = await API.getGame(gameId).catch(() => {
 			return goto('/game');
 		});
@@ -29,11 +29,11 @@
 		if (!game) goto(`/game/${gameId}/configure`);
 
 		player = await API.getPlayer().catch(() => {
-			return goto(`/game/${gameId}/player`);
+			return goto(`/game/${gameId}/join`);
 		});
 
 		if (!player) {
-			return goto(`/game/${gameId}/player`);
+			return goto(`/game/${gameId}/join`);
 		}
 
 		API.SocketConnection.onMessage(({ data }) => showMessage(data));
