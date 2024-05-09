@@ -57,7 +57,7 @@ func WebSocket(context *gin.Context) {
 		Game: &game,
 	}
 
-	// Simply echo messages for now.
+	// Listen for messages.
 	for {
 		var message ClientMessage
 		messageError := connection.ReadJSON(&message)
@@ -66,6 +66,7 @@ func WebSocket(context *gin.Context) {
 				Type:    "error",
 				Content: "Error reading message",
 			})
+			connection.Close()
 			continue
 		}
 
@@ -101,9 +102,5 @@ func WebSocket(context *gin.Context) {
 			connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
 			continue
 		}
-
-		// log.Println(messageType, message)
-
-		// connection.WriteMessage(messageType, message)
 	}
 }

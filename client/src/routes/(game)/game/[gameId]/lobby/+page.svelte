@@ -7,7 +7,7 @@
 	import { type Player } from '$lib/types/Player';
 
 	const gameId = $page.params.gameId;
-	let url: string | null = null;
+	let shareUrl: string | null = null;
 	let game: Game | void | null = null;
 	let player: Player | void | null = null;
 
@@ -19,7 +19,7 @@
 	};
 
 	onMount(async () => {
-		url = window.location.href;
+		shareUrl = `${window.location.origin}/game/${gameId}/player`;
 		game = await API.getGame(gameId).catch(() => {
 			return goto('/game');
 		});
@@ -52,7 +52,7 @@
 <section>
 	<h1>Game Lobby</h1>
 	<h3>Rules:</h3>
-	Share this link to let your friends join the game: <a href="{url}">{url}</a>
+	Share this link to let your friends join the game: <a href="{shareUrl}">{shareUrl}</a>
 	
 	<ul>
 		{#each messages as message}

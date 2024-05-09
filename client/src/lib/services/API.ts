@@ -51,11 +51,15 @@ export class API {
   public static async postPlayer(playerName: string) : Promise<Player> {
     const playerId = await this.getPlayerId();
 
-    // If we already have a playerId, we can reuse it an simply rename that player.
-    const call = playerId ? patchPlayer(playerName, playerId) : postPlayer(playerName);
-    const player = await call;
+    // If we don't have a player yet, create one.
+    if (!playerId) return this.setPlayer(await postPlayer(playerName));
 
-    return this.setPlayer(player);
+    // If we already have a player, try to reuse that id.
+    try {
+      return this.setPlayer(await patchPlayer(playerName, playerId));
+    } catch (error) {
+      return this.setPlayer(await postPlayer(playerName));
+    }
   }
 
   public static async patchPlayer(playerName: string) : Promise<Player> {

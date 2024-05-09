@@ -15,4 +15,6 @@ type Track struct {
 	Artists      []Artist  `json:"artists" gorm:"many2many:track_artists;"`
 	PreviewUrl   string    `json:"previewUrl" gorm:"type:string;"`
 	IsPlayable   bool      `json:"isPlayable" gorm:"type:bool;"`
+	// No need to expose which playlists this is included in.
+	Playlists []Playlist `json:"-" gorm:"many2many:playlist_tracks;"`
 }

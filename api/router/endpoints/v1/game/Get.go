@@ -3,6 +3,7 @@ package game
 import (
 	"api/database"
 	"api/database/models"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -13,11 +14,15 @@ func Get(context *gin.Context) {
 	database := database.Get()
 	var game models.Game
 
-	databaseError := database.Where("id = ?", id).First(&game).Error
+	databaseError := database.Preload("Owner").Preload("Playlist").Where("id = ?", id).First(&game).Error
 	if databaseError != nil {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
 		return
 	}
+
+	log.Println(game)
+	log.Println(game.Owner)
+	log.Println(game.Playlist)
 
 	context.JSON(http.StatusOK, gin.H{"game": game})
 }

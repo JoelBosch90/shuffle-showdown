@@ -22,6 +22,9 @@
 		
 		if (!game) goto(`/game`);
 
+		// Prefill the player's name if possible.
+		const player = await API.getPlayer();
+		if (player?.name) playerName = player?.name;
 	});
 </script>
 
