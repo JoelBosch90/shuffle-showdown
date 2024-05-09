@@ -1,0 +1,5 @@
+package websocket
+
+func CreateConnectionPool() {
+
+}

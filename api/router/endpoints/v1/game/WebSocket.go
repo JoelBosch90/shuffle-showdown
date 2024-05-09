@@ -3,32 +3,14 @@ package game
 import (
 	"api/database"
 	"api/database/models"
-	websocketHelpers "api/lib/websocket"
+	"api/lib/websocket"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
-	uuid "github.com/satori/go.uuid"
+	gorilla "github.com/gorilla/websocket"
 )
 
-var connnectionPool = make(map[*websocket.Conn]*PlayerState)
-
-type PlayerState struct {
-	Conn   *websocket.Conn
-	Game   *models.Game
-	Player *models.Player
-}
-
-type ServerMessage struct {
-	Type    string
-	Content string
-}
-
-type ClientMessage struct {
-	Type     string
-	Content  string
-	PlayerId uuid.UUID
-}
+var connnectionPool = make(map[*gorilla.Conn]*websocket.ConnectionState)
 
 func WebSocket(context *gin.Context) {
 	id := context.Param("id")
@@ -43,7 +25,7 @@ func WebSocket(context *gin.Context) {
 	}
 
 	// Upgrade the connection to a Websocket connection.
-	connection, error := websocketHelpers.Upgrade(context)
+	connection, error := websocket.Upgrade(context)
 	if error != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Could not upgrade to Websocket connection"})
 		return
@@ -52,17 +34,17 @@ func WebSocket(context *gin.Context) {
 	defer connection.Close()
 
 	// Add the connection to the connection pool.
-	connnectionPool[connection] = &PlayerState{
-		Conn: connection,
-		Game: &game,
+	connnectionPool[connection] = &websocket.ConnectionState{
+		Connection: connection,
+		Game:       &game,
 	}
 
 	// Listen for messages.
 	for {
-		var message ClientMessage
+		var message websocket.ClientMessage
 		messageError := connection.ReadJSON(&message)
 		if messageError != nil {
-			connection.WriteJSON(ServerMessage{
+			connection.WriteJSON(websocket.ServerMessage{
 				Type:    "error",
 				Content: "Error reading message",
 			})
@@ -79,7 +61,7 @@ func WebSocket(context *gin.Context) {
 			playerId := message.PlayerId.String()
 			secret, secretError := context.Cookie("playerSecret")
 			if secretError != nil {
-				connection.WriteJSON(ServerMessage{
+				connection.WriteJSON(websocket.ServerMessage{
 					Type:    "error",
 					Content: "Error identifying player",
 				})
@@ -90,16 +72,16 @@ func WebSocket(context *gin.Context) {
 			playerState.Player = &models.Player{}
 			databaseError := database.Where("id = ? AND secret = ?", playerId, secret).First(playerState.Player).Error
 			if databaseError != nil {
-				connection.WriteJSON(ServerMessage{
+				connection.WriteJSON(websocket.ServerMessage{
 					Type:    "error",
 					Content: "Unknown player",
 				})
 			}
 
-			connection.WriteMessage(websocket.TextMessage, []byte("Hello, "+playerState.Player.Name+"!"))
+			connection.WriteMessage(gorilla.TextMessage, []byte("Hello, "+playerState.Player.Name+"!"))
 		default:
 
-			connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
+			connection.WriteMessage(gorilla.TextMessage, []byte("Hello, client!"))
 			continue
 		}
 	}
