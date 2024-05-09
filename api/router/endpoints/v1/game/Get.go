@@ -1,4 +1,4 @@
-package v1
+package game
 
 import (
 	"api/database"
@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func DeleteGame(context *gin.Context) {
+func Get(context *gin.Context) {
 	id := context.Param("id")
 	database := database.Get()
 	var game models.Game
@@ -19,7 +19,5 @@ func DeleteGame(context *gin.Context) {
 		return
 	}
 
-	database.Delete(&game)
-
-	context.JSON(http.StatusOK, gin.H{"data": true})
+	context.JSON(http.StatusOK, gin.H{"game": game})
 }

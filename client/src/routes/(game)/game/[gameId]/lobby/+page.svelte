@@ -4,10 +4,12 @@
 	import { page } from '$app/stores';
 	import { API } from '$lib/services/API';
 	import { type Game } from '$lib/types/Game';
+	import { type Player } from '$lib/types/Player';
 
 	const gameId = $page.params.gameId;
 	let url: string | null = null;
 	let game: Game | void | null = null;
+	let player: Player | void | null = null;
 
 	const players = [];
 
@@ -19,12 +21,20 @@
 	onMount(async () => {
 		url = window.location.href;
 		game = await API.getGame(gameId).catch(() => {
-			goto('/game');
+			return goto('/game');
 		});
 
 		// TODO: Create player if we don't have one yet.
 
 		if (!game) goto(`/game/${gameId}/configure`);
+
+		player = await API.getPlayer().catch(() => {
+			return goto(`/game/${gameId}/player`);
+		});
+
+		if (!player) {
+			return goto(`/game/${gameId}/player`);
+		}
 
 		API.SocketConnection.onMessage(({ data }) => showMessage(data));
 		API.SocketConnection.start(gameId);

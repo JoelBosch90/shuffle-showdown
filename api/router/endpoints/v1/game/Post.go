@@ -1,4 +1,4 @@
-package v1
+package game
 
 import (
 	"api/database"
@@ -14,7 +14,7 @@ type PostGameInput struct {
 	CountryCode string `json:"countryCode" binding:"required"`
 }
 
-func PostGame(context *gin.Context) {
+func Post(context *gin.Context) {
 	var input PostGameInput
 	validationError := context.ShouldBindJSON(&input)
 	if validationError != nil {

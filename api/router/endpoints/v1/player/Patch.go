@@ -1,4 +1,4 @@
-package v1
+package player
 
 import (
 	"api/database"
@@ -8,12 +8,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type PatchPlayerNameInput struct {
-	PlayerName string `json:"playerName"`
+type PatchPlayerInput struct {
+	Name string `json:"name"`
 }
 
-func PatchPlayerName(context *gin.Context) {
-	var input PatchPlayerNameInput
+func Patch(context *gin.Context) {
+	var input PatchPlayerInput
 	validationError := context.ShouldBindJSON(&input)
 	if validationError != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
@@ -37,8 +37,8 @@ func PatchPlayerName(context *gin.Context) {
 
 	// Add the player name.
 	database.Model(&player).Updates(models.Player{
-		Name: input.PlayerName,
+		Name: input.Name,
 	})
 
-	context.JSON(http.StatusOK, gin.H{"data": player})
+	context.JSON(http.StatusOK, gin.H{"player": player})
 }

@@ -1,4 +1,6 @@
-export default async (playListString: string) => {
+import { type Game } from "$lib/types/Game";
+
+export default async (playListString: string) : Promise<Game> => {
   const playList = encodeURIComponent(playListString);
 
   // By lack of better methods without doing any external requests, we try to 
@@ -18,5 +20,7 @@ export default async (playListString: string) => {
   
   if (!response.ok) throw Error("Failed to create game.");
 
-  return response.json();
+  const { game } = await response.json();
+
+  return game;
 }

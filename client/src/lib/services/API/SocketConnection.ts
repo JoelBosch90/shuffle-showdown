@@ -48,12 +48,14 @@ export class SocketConnection {
     SocketConnection.connection.addEventListener('error', SocketConnection.baseOnError);
     SocketConnection.connection.addEventListener('message', SocketConnection.baseOnMessage);
 
-    // Identify the player to the server.
-    SocketConnection.send({
-      type: 'join',
-      payload: {},
-      playerId: API.getPlayerId()
-    })
+    API.getPlayer().then((player) => {
+      // Identify the player to the server.
+      SocketConnection.send({
+        type: 'join',
+        payload: {},
+        playerId: player?.id || null,
+      })
+    });
   }
 
   private static initialize() {

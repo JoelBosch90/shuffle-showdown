@@ -1,4 +1,4 @@
-package v1
+package game
 
 import (
 	"api/database"
@@ -19,7 +19,7 @@ type PatchGameSettingsInput struct {
 	PlayerId string       `json:"playerId"`
 }
 
-func PatchGameSettings(context *gin.Context) {
+func Patch(context *gin.Context) {
 	var input PatchGameSettingsInput
 	validationError := context.ShouldBindJSON(&input)
 	if validationError != nil {
@@ -58,5 +58,5 @@ func PatchGameSettings(context *gin.Context) {
 		Configured:     true,
 	})
 
-	context.JSON(http.StatusOK, gin.H{"data": game})
+	context.JSON(http.StatusOK, gin.H{"game": game})
 }

@@ -1,10 +1,9 @@
-package v1
+package game
 
 import (
 	"api/database"
 	"api/database/models"
 	websocketHelpers "api/lib/websocket"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -58,8 +57,6 @@ func WebSocket(context *gin.Context) {
 		Game: &game,
 	}
 
-	connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
-
 	// Simply echo messages for now.
 	for {
 		var message ClientMessage
@@ -98,8 +95,10 @@ func WebSocket(context *gin.Context) {
 				})
 			}
 
-			log.Println("Player identified:", playerState.Player)
+			connection.WriteMessage(websocket.TextMessage, []byte("Hello, "+playerState.Player.Name+"!"))
 		default:
+
+			connection.WriteMessage(websocket.TextMessage, []byte("Hello, client!"))
 			continue
 		}
 
