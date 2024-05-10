@@ -1,12 +1,19 @@
 package websocket
 
 import (
+	"api/lib/game"
+	"encoding/json"
+
 	uuid "github.com/satori/go.uuid"
 )
 
+type PlayerNames struct {
+	Players []string `json:"players"`
+}
+
 func HandleClientMessage(message ClientMessage, client *Client, pool *ConnectionPool) {
 	switch message.Type {
-	case string(ClientMessageTypeJoin):
+	case ClientMessageTypeJoin:
 
 		// Check if the player has already identified himself.
 		playerId, uuidError := uuid.FromString(message.PlayerId.String())
@@ -18,9 +25,29 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 			return
 		}
 
+		names, namesError := game.GetPlayerNames(client.Game)
+		if namesError != nil {
+			client.Notify(ServerMessage{
+				Type:    ServerMessageTypeError,
+				Content: "Could not read player names",
+			})
+			return
+		}
+
+		namesJson, jsonError := json.Marshal(&PlayerNames{
+			Players: names,
+		})
+		if jsonError != nil {
+			client.Notify(ServerMessage{
+				Type:    ServerMessageTypeError,
+				Content: "Could not read player names",
+			})
+			return
+		}
+
 		pool.Broadcast <- ServerMessage{
 			Type:    ServerMessageTypeJoined,
-			Content: "Welcome " + client.Player.Name + "!",
+			Content: string(namesJson),
 			Game:    client.Game,
 		}
 

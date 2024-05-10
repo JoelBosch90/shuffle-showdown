@@ -9,7 +9,7 @@ const (
 )
 
 type ClientMessage struct {
-	Type     string
+	Type     ClientMessageType
 	Content  string
 	PlayerId uuid.UUID
 }
