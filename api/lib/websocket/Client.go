@@ -2,7 +2,6 @@ package websocket
 
 import (
 	"api/database/models"
-	"log"
 	"time"
 
 	gorilla "github.com/gorilla/websocket"
@@ -55,7 +54,6 @@ func (client *Client) Read(pool *ConnectionPool) {
 		messageError := connection.ReadJSON(&message)
 
 		if messageError != nil {
-			log.Println("Erorr reading message")
 			connection.WriteJSON(ServerMessage{
 				Type:    "error",
 				Content: "Error reading message",

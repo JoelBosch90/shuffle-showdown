@@ -1,14 +1,10 @@
 package websocket
 
 import (
-	"log"
-
 	uuid "github.com/satori/go.uuid"
 )
 
 func HandleClientMessage(message ClientMessage, client *Client, pool *ConnectionPool) {
-	log.Println("Handling message", message, client.Player)
-
 	switch message.Type {
 	case "join":
 
