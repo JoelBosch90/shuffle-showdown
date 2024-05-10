@@ -7,18 +7,15 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	gorilla "github.com/gorilla/websocket"
 )
 
-var connnectionPool = make(map[*gorilla.Conn]*websocket.ConnectionState)
-
 func WebSocket(context *gin.Context) {
-	id := context.Param("id")
+	gameId := context.Param("id")
 	database := database.Get()
 	var game models.Game
 
 	// Get the game from the database.
-	databaseError := database.Where("id = ?", id).First(&game).Error
+	databaseError := database.Where("id = ?", gameId).First(&game).Error
 	if databaseError != nil {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
 		return
@@ -31,58 +28,35 @@ func WebSocket(context *gin.Context) {
 		return
 	}
 
-	defer connection.Close()
+	// Get the player's secret. They should have one.
+	secret, secretError := context.Cookie("playerSecret")
+	if secretError != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Unknown player"})
+		return
 
-	// Add the connection to the connection pool.
-	connnectionPool[connection] = &websocket.ConnectionState{
-		Connection: connection,
-		Game:       &game,
 	}
 
-	// Listen for messages.
-	for {
-		var message websocket.ClientMessage
-		messageError := connection.ReadJSON(&message)
-		if messageError != nil {
-			connection.WriteJSON(websocket.ServerMessage{
-				Type:    "error",
-				Content: "Error reading message",
-			})
-			connection.Close()
-			continue
-		}
-
-		switch message.Type {
-		case "join":
-			// Identify the player.
-			playerState := connnectionPool[connection]
-
-			// Check if the player has already identified himself.
-			playerId := message.PlayerId.String()
-			secret, secretError := context.Cookie("playerSecret")
-			if secretError != nil {
-				connection.WriteJSON(websocket.ServerMessage{
-					Type:    "error",
-					Content: "Error identifying player",
-				})
-				continue
-			}
-
-			// Store the player in the player state.
-			playerState.Player = &models.Player{}
-			databaseError := database.Where("id = ? AND secret = ?", playerId, secret).First(playerState.Player).Error
-			if databaseError != nil {
-				connection.WriteJSON(websocket.ServerMessage{
-					Type:    "error",
-					Content: "Unknown player",
-				})
-			}
-
-			connection.WriteMessage(gorilla.TextMessage, []byte("Hello, "+playerState.Player.Name+"!"))
-		default:
-
-			connection.WriteMessage(gorilla.TextMessage, []byte("Hello, client!"))
-			continue
-		}
+	// Get the player by the cookie secret.
+	player := &models.Player{}
+	playerError := database.Where("secret = ?", secret).First(player).Error
+	if playerError != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "Unknown player"})
+		return
 	}
+
+	// Create a new client for this connection.
+	client := &websocket.Client{
+		Connection:       connection,
+		OutgoingMessages: make(chan websocket.ServerMessage, 256),
+		Game:             &game,
+		Player:           player,
+	}
+
+	// Add this client to the connection pool.
+	connectionPool := websocket.GetConnectionPool()
+	connectionPool.Register <- client
+
+	// Start routines to read from and write to this client.
+	go client.Read(connectionPool)
+	go client.Write(connectionPool)
 }

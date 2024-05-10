@@ -23,7 +23,7 @@ export class SocketConnection {
   private static connecting = false;
   private static initialized = false;
 
-  private static lobby: string | undefined = undefined;
+  private static gameId: string | undefined = undefined;
   private static host: string | undefined = undefined;
   private static connectionProtocol: string | undefined = undefined;
   private static connection: WebSocket | undefined = undefined;
@@ -35,13 +35,13 @@ export class SocketConnection {
 
   private static queuedMessages: Array<Message> = [];
 
-  public static start(lobby?: string) {
+  public static start(gameId?: string) {
     if (SocketConnection.connected || SocketConnection.connecting) return;
     if (!SocketConnection.initialized) SocketConnection.initialize();
-    if (lobby && lobby !== SocketConnection.lobby) SocketConnection.lobby = lobby;
-    if (!lobby) lobby = SocketConnection.lobby;
+    if (gameId && gameId !== SocketConnection.gameId) SocketConnection.gameId = gameId;
+    if (!gameId) gameId = SocketConnection.gameId;
     SocketConnection.connecting = true;
-    SocketConnection.connection = new WebSocket(`${SocketConnection.connectionProtocol}//${SocketConnection.host}/api/v1/ws/${lobby}`);
+    SocketConnection.connection = new WebSocket(`${SocketConnection.connectionProtocol}//${SocketConnection.host}/api/v1/ws/${gameId}`);
 
     SocketConnection.connection.addEventListener('open', SocketConnection.baseOnOpen);
     SocketConnection.connection.addEventListener('close', SocketConnection.baseOnClose);
