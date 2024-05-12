@@ -9,8 +9,8 @@ import (
 
 const (
 	maxWriteDuration = 10 * time.Second
-	maxPongWait      = time.Minute
-	pingInterval     = (maxPongWait * 9) / 10
+	maxPongWait      = 6 * maxWriteDuration           // Must be greater than write wait.
+	pingInterval     = maxPongWait - maxWriteDuration // Must be less than pong wait.
 	maxMessageSize   = 512
 )
 
