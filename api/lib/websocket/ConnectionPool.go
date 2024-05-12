@@ -52,16 +52,16 @@ func (pool *ConnectionPool) Run() {
 
 func (pool *ConnectionPool) RegisterConnection(client *Client) {
 	// Create a new lobby if we didn't have one yet.
-	if pool.Lobbies[client.Game.Id] == nil {
-		pool.Lobbies[client.Game.Id] = make(map[*Client]bool)
+	if pool.Lobbies[client.GameId] == nil {
+		pool.Lobbies[client.GameId] = make(map[*Client]bool)
 	}
 
 	// This is only symbolic, to signal that a client is connected.
-	pool.Lobbies[client.Game.Id][client] = true
+	pool.Lobbies[client.GameId][client] = true
 }
 
 func (pool *ConnectionPool) RemoveConnection(client *Client) {
-	gameLobby := pool.Lobbies[client.Game.Id]
+	gameLobby := pool.Lobbies[client.GameId]
 
 	if gameLobby != nil {
 		delete(gameLobby, client)
@@ -70,7 +70,7 @@ func (pool *ConnectionPool) RemoveConnection(client *Client) {
 }
 
 func (pool *ConnectionPool) BroadcastMessage(message ServerMessage) {
-	gameLobby := pool.Lobbies[message.Game.Id]
+	gameLobby := pool.Lobbies[message.GameId]
 
 	for client := range gameLobby {
 		select {

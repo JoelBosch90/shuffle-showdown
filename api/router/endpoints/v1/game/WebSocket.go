@@ -48,8 +48,8 @@ func WebSocket(context *gin.Context) {
 	client := &websocket.Client{
 		Connection:       connection,
 		OutgoingMessages: make(chan websocket.ServerMessage, 256),
-		Game:             &game,
-		Player:           player,
+		GameId:           game.Id,
+		PlayerId:         player.Id,
 	}
 
 	// Add this client to the connection pool.

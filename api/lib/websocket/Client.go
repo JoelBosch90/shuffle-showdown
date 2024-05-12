@@ -1,10 +1,10 @@
 package websocket
 
 import (
-	"api/database/models"
 	"time"
 
 	gorilla "github.com/gorilla/websocket"
+	uuid "github.com/satori/go.uuid"
 )
 
 const (
@@ -16,8 +16,8 @@ const (
 
 type Client struct {
 	Connection       *gorilla.Conn
-	Game             *models.Game
-	Player           *models.Player
+	GameId           uuid.UUID
+	PlayerId         uuid.UUID
 	OutgoingMessages chan ServerMessage
 }
 

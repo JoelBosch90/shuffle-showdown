@@ -1,6 +1,6 @@
 package websocket
 
-import "api/database/models"
+import uuid "github.com/satori/go.uuid"
 
 type ServerMessageType string
 
@@ -12,5 +12,5 @@ const (
 type ServerMessage struct {
 	Type    ServerMessageType `json:"type"`
 	Content string            `json:"content"`
-	Game    *models.Game      `json:"-"`
+	GameId  uuid.UUID         `json:"-"`
 }

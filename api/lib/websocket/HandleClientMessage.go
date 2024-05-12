@@ -17,7 +17,7 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 
 		// Check if the player has already identified himself.
 		playerId, uuidError := uuid.FromString(message.PlayerId.String())
-		if uuidError != nil || client.Player.Id != playerId {
+		if uuidError != nil || client.PlayerId != playerId {
 			client.Notify(ServerMessage{
 				Type:    ServerMessageTypeError,
 				Content: "Player identification failed",
@@ -25,7 +25,7 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 			return
 		}
 
-		names, namesError := game.GetPlayerNames(client.Game)
+		names, namesError := game.GetPlayerNames(client.GameId)
 		if namesError != nil {
 			client.Notify(ServerMessage{
 				Type:    ServerMessageTypeError,
@@ -48,14 +48,14 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		pool.Broadcast <- ServerMessage{
 			Type:    ServerMessageTypeJoined,
 			Content: string(namesJson),
-			Game:    client.Game,
+			GameId:  client.GameId,
 		}
 
 	default:
 		pool.Broadcast <- ServerMessage{
 			Type:    ServerMessageTypeJoined,
 			Content: "Hello client!",
-			Game:    client.Game,
+			GameId:  client.GameId,
 		}
 	}
 }

@@ -4,14 +4,16 @@ import (
 	"api/database"
 	"api/database/models"
 	"errors"
+
+	uuid "github.com/satori/go.uuid"
 )
 
-func GetPlayerNames(game *models.Game) ([]string, error) {
+func GetPlayerNames(gameId uuid.UUID) ([]string, error) {
 	var names []string
 	var freshGame models.Game
 
 	database := database.Get()
-	databaseError := database.Preload("Players").Where("id = ?", game.Id).First(&freshGame).Error
+	databaseError := database.Preload("Players").Where("id = ?", gameId).First(&freshGame).Error
 	if databaseError != nil {
 		return []string{}, errors.New("could not fetch players")
 	}
