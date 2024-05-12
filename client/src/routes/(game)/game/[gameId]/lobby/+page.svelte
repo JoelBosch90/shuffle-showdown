@@ -5,26 +5,35 @@
 	import { API } from '$lib/services/API';
 	import { type Game } from '$lib/types/Game';
 	import { type Player } from '$lib/types/Player';
-	import { isPlayersUpdateMessage, type PlayersUpdateMessage, type ServerMessage } from '$lib/types/ServerMessage';
+	import { isPlayerKickedMessage, isPlayersUpdateMessage, type PlayersUpdateMessage, type ServerMessage } from '$lib/types/ServerMessage';
+	import { ClientMessageType } from '$lib/enums/ClientMessageType';
 
 	const gameId = $page.params.gameId;
 	let shareUrl: string | null = null;
 	let game: Game | void | null = null;
-	let player: Player | void | null = null;
+	let me: Player | void | null = null;
 
 	let players : Player[];
 	$: players = [];
 
 	const handlePlayerUpdate = (message: PlayersUpdateMessage) => {
-			players = message.content.map((playerState) => ({
-				id: playerState.id,
-				name: playerState.name,
-				isOwner: playerState.id === game?.owner.id,
-				isConnected: playerState.isConnected,
-			}));
+		players = message.payload.map((playerState) => ({
+			id: playerState.id,
+			name: playerState.name,
+			isOwner: playerState.id === game?.owner.id,
+			isConnected: playerState.isConnected,
+		}));
 	};
 	const handleMessage = (message: ServerMessage) => {
-		if (isPlayersUpdateMessage(message)) return handlePlayerUpdate(message)
+		if (isPlayersUpdateMessage(message)) return handlePlayerUpdate(message);
+		if (isPlayerKickedMessage(message)) return goto('/game');
+
+	};
+	const kickPlayer = (playerToKick: Player) => {
+		API.sendSocketMessage({
+			type: ClientMessageType.KickPlayer,
+			payload: playerToKick.id,
+		});
 	};
 
 	onMount(async () => {
@@ -35,16 +44,16 @@
 
 		if (!game) goto(`/game/${gameId}/configure`);
 
-		player = await API.getPlayer().catch(() => {
+		me = await API.getPlayer().catch(() => {
 			return goto(`/game/${gameId}/join`);
 		});
 
-		if (!player) {
+		if (!me) {
 			return goto(`/game/${gameId}/join`);
 		}
 
-		API.SocketConnection.onMessage(handleMessage);
-		API.SocketConnection.start(gameId);
+		API.onSocketMessage(handleMessage);
+		API.startSocketConnection(gameId);
 	});
 </script>
 
@@ -62,11 +71,20 @@
 	<ul class="players">
 		{#each players as player}
 			<li>
-				<i class="fa-solid fa-check {player.isConnected ? 'connected' : 'disconnected'}"></i>
-				{#if player.isOwner}
-					<i class="fa-solid fa-crown"></i>
+				{#if player.id === me?.id}
+					<i class="fa-solid fa-user me icon"></i>
+				{:else}
+				<button on:click={() => kickPlayer(player)}>
+					<i class="fa-solid fa-user-slash button kick icon"></i>
+				</button>
 				{/if}
-				{player.name}
+				<i class="fa-solid fa-check {player.isConnected ? 'connected' : 'disconnected'} icon"></i>
+				<span>
+					{player.name}
+					{#if player.isOwner}
+						<i class="fa-solid fa-crown crown"></i>
+					{/if}
+				</span>
 			</li>
 		{/each}
 	</ul>
@@ -80,17 +98,25 @@
 
 <style lang="scss">
 	.players {
+		display: grid;
+		grid-template-columns: min-content min-content max-content;
+		row-gap: 0.5rem;
+		column-gap: 1rem;
 		list-style-type: none;
 		padding: 0;
+
+		li {
+			display: contents;
+		}
 	}
 
-	i.fa-crown {
+	.crown {
 		color: var(--yellow);
+		margin-left: 1ch;
 	}
-	i.fa-check.connected {
-		color: var(--green);
-	}
-	i.fa-check.disconnected {
-		color: var(--red);
-	}
+
+	.icon { justify-self: center; }
+	.connected { color: var(--green); }
+	.disconnected { color: var(--red); }
+	.kick, .me { color: var(--purple); }
 </style>

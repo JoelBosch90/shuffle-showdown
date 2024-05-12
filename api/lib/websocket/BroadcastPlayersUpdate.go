@@ -62,7 +62,7 @@ func BroadcastPlayersUpdate(client *Client, pool *ConnectionPool) error {
 	// Broadcast the joined message to all plaers in the game.
 	pool.Broadcast <- ServerMessage{
 		Type:    ServerMessageTypePlayersUpdate,
-		Content: string(updateJson),
+		Payload: string(updateJson),
 		GameId:  client.GameId,
 	}
 

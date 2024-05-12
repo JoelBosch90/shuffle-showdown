@@ -1,7 +1,7 @@
 /**
  *  Basic styling for the button elements.
  */
-button
+button, .button
 {
   // Use a dark background color.
   background-color: transparent;
@@ -17,7 +17,6 @@ button
 
   // Make sure we inherit the local text styling.
   color: inherit;
-  font-family: inherit;
   font-size: inherit;
 
   // Make sure that it is clear that this is clickable.

@@ -62,7 +62,7 @@ func (client *Client) Read(pool *ConnectionPool) {
 		if messageError != nil {
 			connection.WriteJSON(ServerMessage{
 				Type:    "error",
-				Content: "Error reading message",
+				Payload: "Error reading message",
 			})
 			return
 		}

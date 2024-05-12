@@ -6,11 +6,12 @@ type ServerMessageType string
 
 const (
 	ServerMessageTypePlayersUpdate ServerMessageType = "players-update"
+	ServerMessageTypeKickedPlayer  ServerMessageType = "kicked-player"
 	ServerMessageTypeError         ServerMessageType = "error"
 )
 
 type ServerMessage struct {
 	Type    ServerMessageType `json:"type"`
-	Content string            `json:"content"`
+	Payload string            `json:"payload"`
 	GameId  uuid.UUID         `json:"-"`
 }

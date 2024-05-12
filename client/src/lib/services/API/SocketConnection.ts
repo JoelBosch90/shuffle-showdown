@@ -1,6 +1,7 @@
 import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
 import { type GenericEventCallback, type CloseEventCallback, type MessageEventCallback } from '$lib/types/EventCallbacks';
-import type { ServerMessage } from '$lib/types/ServerMessage';
+import type { ClientMessage } from '$lib/types/ClientMessage';
+import { ClientMessageType } from '$lib/enums/ClientMessageType';
 import { eventToServerMessage } from '$lib/mappers/EventToServerMessage';
 import { API } from '../API';
 
@@ -13,12 +14,6 @@ const RECOVERABLE_CLOSE_CODES = [
   WebSocketCloseCode.SERVICE_RESTART,
   WebSocketCloseCode.TRY_AGAIN_LATER,
 ];
-
-type Message = {
-  type: string,
-  payload: Record<string, unknown>,
-  playerId: string | null,
-};
 
 export class SocketConnection {
   private static connected = false;
@@ -35,7 +30,7 @@ export class SocketConnection {
   private static onErrorCallbacks: Array<GenericEventCallback> = [];
   private static onMessageCallbacks: Array<MessageEventCallback> = [];
 
-  private static queuedMessages: Array<Message> = [];
+  private static queuedMessages: Array<ClientMessage> = [];
 
   public static start(gameId?: string) {
     if (SocketConnection.connected || SocketConnection.connecting) return;
@@ -53,8 +48,8 @@ export class SocketConnection {
     API.getPlayer().then((player) => {
       // Identify the player to the server.
       SocketConnection.send({
-        type: 'join',
-        payload: {},
+        type: ClientMessageType.Join,
+        payload: null,
         playerId: player?.id || null,
       })
     });
@@ -72,7 +67,7 @@ export class SocketConnection {
     SocketConnection.connecting = false;
   }
 
-  public static send(message: Message) {
+  public static send(message: ClientMessage) {
     if (!SocketConnection.connected && !SocketConnection.connecting) SocketConnection.start();
     if (SocketConnection.connected && SocketConnection.connection) SocketConnection.connection.send(JSON.stringify(message));
     else SocketConnection.queuedMessages.push(message);

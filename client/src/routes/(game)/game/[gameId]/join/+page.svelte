@@ -23,7 +23,7 @@
 		if (!game) goto(`/game`);
 
 		// Close any existing socket connection.
-		API.SocketConnection.close();
+		API.closeSocketConnection();
 
 		// Prefill the player's name if possible.
 		const player = await API.getPlayer();

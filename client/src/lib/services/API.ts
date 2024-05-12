@@ -1,6 +1,7 @@
 import { type GameConfig } from '$lib/types/GameConfig';
 import { type Game } from '$lib/types/Game';
 import { type Player } from '$lib/types/Player';
+import { type ClientMessage } from '$lib/types/ClientMessage';
 import getGame from './API/game/get';
 import patchGame from './API/game/patch';
 import postGame from './API/game/post';
@@ -90,6 +91,18 @@ export class API {
     return patchGame(settings, playerId);
   }
 
+  public static sendSocketMessage(message: Omit<ClientMessage, 'playerId'>) {
+    SocketConnection.send({
+      ...message,
+      playerId: this.player?.id || null,
+    });
+  }
+
+  public static startSocketConnection = SocketConnection.start;
+  public static closeSocketConnection = SocketConnection.close;
+  public static onSocketMessage = SocketConnection.onMessage;
+  public static onSocketOpen = SocketConnection.onOpen;
+  public static onSocketClose = SocketConnection.onClose;
+  public static onSocketError = SocketConnection.onError;
   public static getGame = getGame;
-  public static SocketConnection = SocketConnection;
 }

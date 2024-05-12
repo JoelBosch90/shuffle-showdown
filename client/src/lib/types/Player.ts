@@ -1,6 +1,6 @@
 export interface Player {
     id: string;
     name?: string;
-    isConnected: boolean;
-    isOwner: boolean;
+    isConnected?: boolean;
+    isOwner?: boolean;
   }
