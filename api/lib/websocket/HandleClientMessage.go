@@ -18,10 +18,7 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		}
 
 	default:
-		pool.Broadcast <- ServerMessage{
-			Type:    ServerMessageTypeJoined,
-			Content: "Hello client!",
-			GameId:  client.GameId,
-		}
+		// TODO: think of a better default option.
+		BroadcastPlayersUpdate(client, pool)
 	}
 }

@@ -5,17 +5,26 @@
 	import { API } from '$lib/services/API';
 	import { type Game } from '$lib/types/Game';
 	import { type Player } from '$lib/types/Player';
+	import { isPlayersUpdateMessage, type PlayersUpdateMessage, type ServerMessage } from '$lib/types/ServerMessage';
 
 	const gameId = $page.params.gameId;
 	let shareUrl: string | null = null;
 	let game: Game | void | null = null;
 	let player: Player | void | null = null;
 
-	const players = [];
+	let players : Player[];
+	$: players = [];
 
-	let messages: string[] = [];
-	const showMessage = (message: string) => {
-		messages = [...messages, message];
+	const handlePlayerUpdate = (message: PlayersUpdateMessage) => {
+			players = message.content.map((playerState) => ({
+				id: playerState.id,
+				name: playerState.name,
+				isOwner: playerState.id === game?.owner.id,
+				isConnected: playerState.isConnected,
+			}));
+	};
+	const handleMessage = (message: ServerMessage) => {
+		if (isPlayersUpdateMessage(message)) return handlePlayerUpdate(message)
 	};
 
 	onMount(async () => {
@@ -34,7 +43,7 @@
 			return goto(`/game/${gameId}/join`);
 		}
 
-		API.SocketConnection.onMessage(({ data }) => showMessage(data));
+		API.SocketConnection.onMessage(handleMessage);
 		API.SocketConnection.start(gameId);
 	});
 </script>
@@ -49,15 +58,39 @@
 
 <section>
 	<h1>Game Lobby</h1>
-	<h3>Rules:</h3>
-	Share this link to let your friends join the game: <a href="{shareUrl}">{shareUrl}</a>
-	
-	<ul>
-		{#each messages as message}
-			<li>{message}</li>
+	<h3>Players:</h3>
+	<ul class="players">
+		{#each players as player}
+			<li>
+				<i class="fa-solid fa-check {player.isConnected ? 'connected' : 'disconnected'}"></i>
+				{#if player.isOwner}
+					<i class="fa-solid fa-crown"></i>
+				{/if}
+				{player.name}
+			</li>
 		{/each}
 	</ul>
+
+	Share this link to let your friends join the game: <a href="{shareUrl}">{shareUrl}</a>
+
+	<div class="button-row">
+		<button class="filled">Start game</button>
+	</div>
 </section>
 
 <style lang="scss">
+	.players {
+		list-style-type: none;
+		padding: 0;
+	}
+
+	i.fa-crown {
+		color: var(--yellow);
+	}
+	i.fa-check.connected {
+		color: var(--green);
+	}
+	i.fa-check.disconnected {
+		color: var(--red);
+	}
 </style>

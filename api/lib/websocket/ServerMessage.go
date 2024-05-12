@@ -5,8 +5,8 @@ import uuid "github.com/satori/go.uuid"
 type ServerMessageType string
 
 const (
-	ServerMessageTypeJoined ServerMessageType = "joined"
-	ServerMessageTypeError  ServerMessageType = "error"
+	ServerMessageTypePlayersUpdate ServerMessageType = "players-update"
+	ServerMessageTypeError         ServerMessageType = "error"
 )
 
 type ServerMessage struct {

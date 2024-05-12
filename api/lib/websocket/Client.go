@@ -41,10 +41,16 @@ func setConnectionSettings(connection *gorilla.Conn) {
 func (client *Client) Read(pool *ConnectionPool) {
 	connection := client.Connection
 
-	// Remove this client and unregister once we cannot continue reading messages.
+	// Close the client connection when we cannot continue reading messages.
 	defer func() {
+		// Remove the client from the connection pool.
 		pool.Remove <- client
+
+		// Close the client connection.
 		connection.Close()
+
+		// Broadcast the updated player list.
+		BroadcastPlayersUpdate(client, pool)
 	}()
 
 	setConnectionSettings(connection)
@@ -69,7 +75,7 @@ func (client *Client) Write(pool *ConnectionPool) {
 	connection := client.Connection
 	pingTimer := time.NewTicker(pingInterval)
 
-	// Remove this client and unregister once we cannot continue writing messages.
+	// Stop the timer and close the client connection when we cannot continue writing messages.
 	defer func() {
 		pingTimer.Stop()
 		connection.Close()
