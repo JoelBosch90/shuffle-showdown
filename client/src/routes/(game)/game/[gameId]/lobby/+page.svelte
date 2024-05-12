@@ -24,8 +24,6 @@
 			return goto('/game');
 		});
 
-		// TODO: Create player if we don't have one yet.
-
 		if (!game) goto(`/game/${gameId}/configure`);
 
 		player = await API.getPlayer().catch(() => {
