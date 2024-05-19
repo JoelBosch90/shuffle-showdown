@@ -20,7 +20,7 @@
 
 	onMount(async () => {
 		session = new GameSession(gameId);
-		session.onGameUpdate(({ game: newGame, me: newMe }) => {
+		session.onUpdate(({ game: newGame, me: newMe }) => {
 			game = newGame;
 			me = newMe;
 			players = newGame?.players ?? [];

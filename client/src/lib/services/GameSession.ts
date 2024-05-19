@@ -10,7 +10,7 @@ type GameUpdateCallback = (update: { game: GameUpdate | null, me: Player | null 
 export class GameSession {
 	private lastUpdate: GameUpdate | null = null;
 	private me: Player | null = null;
-	private gameUpdateCallbacks: GameUpdateCallback[] = [];
+	private updateCallbacks: GameUpdateCallback[] = [];
 
     constructor(private gameId: string) {}
 
@@ -29,18 +29,18 @@ export class GameSession {
         API.startSocketConnection(this.gameId);
 	}
 
-	public onGameUpdate = (callback: GameUpdateCallback) => this.gameUpdateCallbacks.push(callback);
+	public onUpdate = (callback: GameUpdateCallback) => this.updateCallbacks.push(callback);
     
     private handleMessage = (message: ServerMessage) => {
 		if (isPlayerKickedMessage(message)) return goto('/game');
-		if (isGameUpdateMessage(message)) return this.handleGameUpdate(message);
+		if (isGameUpdateMessage(message)) return this.handleUpdate(message);
 	};
 
-	private handleGameUpdate = (message: GameUpdateMessage) => {
+	private handleUpdate = (message: GameUpdateMessage) => {
 		this.lastUpdate = message.payload;
 		this.me = message.payload?.players.find(({ id }) => this.me?.id === id) ?? this.me;
 
-		this.gameUpdateCallbacks.forEach((callback) => callback({
+		this.updateCallbacks.forEach((callback) => callback({
 			game: message.payload,
 			me: this.me,
 		}));
