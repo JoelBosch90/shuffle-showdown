@@ -17,12 +17,20 @@
 	$: players = [];
 
 	const handlePlayerUpdate = (message: PlayersUpdateMessage) => {
-		players = message.payload.map((playerState) => ({
-			id: playerState.id,
-			name: playerState.name,
-			isOwner: playerState.id === game?.owner.id,
-			isConnected: playerState.isConnected,
-		}));
+		players = message.payload.map((playerState) => {
+			const newState = {
+				id: playerState.id,
+				name: playerState.name,
+				isOwner: playerState.id === game?.owner.id,
+				isConnected: playerState.isConnected,
+			};
+
+			if (playerState.id === me?.id) {
+				me = newState;
+			}
+
+			return newState;
+		});
 	};
 	const handleMessage = (message: ServerMessage) => {
 		if (isPlayersUpdateMessage(message)) return handlePlayerUpdate(message);
@@ -71,12 +79,12 @@
 	<ul class="players">
 		{#each players as player}
 			<li>
-				{#if player.id === me?.id}
-					<i class="fa-solid fa-user me icon"></i>
-				{:else}
+				{#if me?.isOwner && player.id !== me?.id}
 				<button on:click={() => kickPlayer(player)}>
 					<i class="fa-solid fa-user-slash button kick icon"></i>
 				</button>
+				{:else}
+				<i class="fa-solid fa-user me icon"></i>
 				{/if}
 				<i class="fa-solid fa-check {player.isConnected ? 'connected' : 'disconnected'} icon"></i>
 				<span>

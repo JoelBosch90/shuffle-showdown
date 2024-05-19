@@ -10,22 +10,32 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func includesPlayer(players []models.Player, playerId uuid.UUID) bool {
-	for _, player := range players {
-		if player.Id == playerId {
-			return true
-		}
-	}
-
-	return false
-}
-
 func findPlayerClient(playerId uuid.UUID, lobby map[*Client]bool) *Client {
 	for client := range lobby {
 		if client.PlayerId == playerId {
 			return client
 		}
 	}
+
+	return nil
+}
+
+func kickPlayerFromConnectionPool(playerIdToKick uuid.UUID, client *Client, pool *ConnectionPool) error {
+	clientToKick := findPlayerClient(playerIdToKick, pool.Lobbies[client.GameId])
+	if clientToKick != nil {
+		delete(pool.Lobbies[client.GameId], clientToKick)
+	}
+
+	kickPayload := KickPlayerPayload{PlayerId: playerIdToKick}
+	kickPayloadJson, jsonError := json.Marshal(&kickPayload)
+	if jsonError != nil {
+		return errors.New("could not read player names")
+	}
+
+	clientToKick.Notify(ServerMessage{
+		Type:    ServerMessageTypeKickedPlayer,
+		Payload: string(kickPayloadJson),
+	})
 
 	return nil
 }
@@ -57,26 +67,15 @@ func KickPlayerHandler(message ClientMessage, client *Client, pool *ConnectionPo
 		return errors.New("could not ban player")
 	}
 
-	clientToKick := findPlayerClient(playerIdToKick, pool.Lobbies[client.GameId])
-	if clientToKick != nil {
-		delete(pool.Lobbies[client.GameId], clientToKick)
+	kickFromClientError := kickPlayerFromConnectionPool(playerIdToKick, client, pool)
+	if kickFromClientError != nil {
+		return errors.New("could not kick player")
 	}
 
 	broadcastError := BroadcastPlayersUpdate(client, pool)
 	if broadcastError != nil {
 		return errors.New("could not broadcast player list")
 	}
-
-	kickPayload := KickPlayerPayload{PlayerId: playerIdToKick}
-	kickPayloadJson, jsonError := json.Marshal(&kickPayload)
-	if jsonError != nil {
-		return errors.New("could not read player names")
-	}
-
-	clientToKick.Notify(ServerMessage{
-		Type:    ServerMessageTypeKickedPlayer,
-		Payload: string(kickPayloadJson),
-	})
 
 	return nil
 }
