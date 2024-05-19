@@ -3,7 +3,6 @@ package websocket
 import (
 	"api/database"
 	"api/database/models"
-	"encoding/json"
 	"errors"
 
 	uuid "github.com/satori/go.uuid"
@@ -119,14 +118,9 @@ func BroadcastGameUpdate(client *Client, pool *ConnectionPool) error {
 		return errors.New("invalid game state")
 	}
 
-	updateJson, jsonError := json.Marshal(&gameUpdate)
-	if jsonError != nil {
-		return errors.New("invalid game state")
-	}
-
 	pool.Broadcast <- ServerMessage{
 		Type:    ServerMessageTypeGameUpdate,
-		Payload: string(updateJson),
+		Payload: gameUpdate,
 		GameId:  client.GameId,
 	}
 

@@ -4,7 +4,6 @@ import (
 	"api/database"
 	"api/database/models"
 	gameHelpers "api/lib/game"
-	"encoding/json"
 	"errors"
 
 	uuid "github.com/satori/go.uuid"
@@ -26,15 +25,9 @@ func kickPlayerFromConnectionPool(playerIdToKick uuid.UUID, client *Client, pool
 		return nil
 	}
 
-	kickPayload := KickPlayerPayload{PlayerId: playerIdToKick}
-	kickPayloadJson, jsonError := json.Marshal(&kickPayload)
-	if jsonError != nil {
-		return errors.New("could not read player names")
-	}
-
 	clientToKick.Notify(ServerMessage{
 		Type:    ServerMessageTypeKickedPlayer,
-		Payload: string(kickPayloadJson),
+		Payload: KickPlayerPayload{PlayerId: playerIdToKick},
 	})
 
 	delete(pool.Lobbies[client.GameId], clientToKick)

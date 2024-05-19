@@ -12,6 +12,6 @@ const (
 
 type ServerMessage struct {
 	Type    ServerMessageType `json:"type"`
-	Payload string            `json:"payload"`
+	Payload interface{}       `json:"payload"`
 	GameId  uuid.UUID         `json:"-"`
 }

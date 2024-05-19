@@ -2,7 +2,6 @@ import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
 import { type GenericEventCallback, type CloseEventCallback, type MessageEventCallback } from '$lib/types/EventCallbacks';
 import type { ClientMessage } from '$lib/types/ClientMessage';
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
-import { eventToServerMessage } from '$lib/mappers/EventToServerMessage';
 import { API } from '../API';
 
 const RECOVERABLE_CLOSE_CODES = [
@@ -121,6 +120,6 @@ export class SocketConnection {
   }
 
   private static baseOnMessage(event: MessageEvent) {
-    SocketConnection.onMessageCallbacks.forEach(callback => callback(eventToServerMessage(event)));
+    SocketConnection.onMessageCallbacks.forEach(callback => callback(JSON.parse(event.data)));
   }
 }

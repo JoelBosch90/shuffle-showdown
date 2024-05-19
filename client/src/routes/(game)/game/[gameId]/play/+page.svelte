@@ -25,6 +25,8 @@
 			me = newMe;
 			players = newGame?.players ?? [];
 
+			console.log(game)
+
 			if (!newGame?.isRunning) return goto(`/game/${gameId}/lobby`);
 		})
 		await session.initialize();
@@ -41,6 +43,7 @@
 
 <section>
 	<h1>Game</h1>
+	<audio src="{""}"></audio>
 </section>
 
 <style lang="scss">

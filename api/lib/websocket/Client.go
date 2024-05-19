@@ -1,8 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
-	"errors"
 	"time"
 
 	gorilla "github.com/gorilla/websocket"
@@ -122,15 +120,9 @@ func (client *Client) Notify(message ServerMessage) {
 }
 
 func (client *Client) SendError(message string) error {
-	errorPayload := ErrorMessagePayload{Message: message}
-	errorPayloadJson, jsonError := json.Marshal(&errorPayload)
-	if jsonError != nil {
-		return errors.New("could not read player names")
-	}
-
 	client.Notify(ServerMessage{
 		Type:    ServerMessageTypeError,
-		Payload: string(errorPayloadJson),
+		Payload: ErrorMessagePayload{Message: message},
 	})
 
 	return nil
