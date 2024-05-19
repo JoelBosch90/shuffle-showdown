@@ -6,7 +6,6 @@ import (
 	gameHelpers "api/lib/game"
 	"encoding/json"
 	"errors"
-	"log"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -36,16 +35,9 @@ type KickPlayerPayload struct {
 }
 
 func KickPlayerHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
-	log.Println("KickPlayerHandler")
-
-	// Check if the player has already identified himself.
-	playerId, playerUuidError := uuid.FromString(message.PlayerId.String())
-	if playerUuidError != nil || client.PlayerId != playerId {
-		return errors.New("player identification failed")
-	}
+	var game models.Game
 
 	database := database.Get()
-	var game models.Game
 	gameError := database.Preload("Owner").Preload("Players").Where("id = ?", client.GameId).First(&game).Error
 	if gameError != nil {
 		return errors.New("could not find game")

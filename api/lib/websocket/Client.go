@@ -1,6 +1,8 @@
 package websocket
 
 import (
+	"encoding/json"
+	"errors"
 	"time"
 
 	gorilla "github.com/gorilla/websocket"
@@ -19,6 +21,10 @@ type Client struct {
 	GameId           uuid.UUID
 	PlayerId         uuid.UUID
 	OutgoingMessages chan ServerMessage
+}
+
+type ErrorMessagePayload struct {
+	Message string `json:"message"`
 }
 
 func getReadDeadline() time.Time {
@@ -108,4 +114,19 @@ func (client *Client) Write(pool *ConnectionPool) {
 
 func (client *Client) Notify(message ServerMessage) {
 	client.OutgoingMessages <- message
+}
+
+func (client *Client) SendError(message string) error {
+	errorPayload := ErrorMessagePayload{Message: message}
+	errorPayloadJson, jsonError := json.Marshal(&errorPayload)
+	if jsonError != nil {
+		return errors.New("could not read player names")
+	}
+
+	client.Notify(ServerMessage{
+		Type:    ServerMessageTypeError,
+		Payload: string(errorPayloadJson),
+	})
+
+	return nil
 }

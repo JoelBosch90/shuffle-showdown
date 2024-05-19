@@ -1,24 +1,27 @@
 package websocket
 
-import "log"
+import (
+	uuid "github.com/satori/go.uuid"
+)
 
 type PlayerNames struct {
 	Players []string `json:"players"`
 }
 
 func HandleClientMessage(message ClientMessage, client *Client, pool *ConnectionPool) {
-	log.Println("Handling message", message)
+	// Players should identify themselves with every message.
+	playerId, uuidError := uuid.FromString(message.PlayerId.String())
+	if uuidError != nil || client.PlayerId != playerId {
+		client.SendError("player identification failed")
+		return
+	}
 
 	switch message.Type {
-
 	case ClientMessageTypeJoin:
 
 		joinError := JoinHandler(message, client, pool)
 		if joinError != nil {
-			client.Notify(ServerMessage{
-				Type:    ServerMessageTypeError,
-				Payload: joinError.Error(),
-			})
+			client.SendError(joinError.Error())
 			return
 		}
 
@@ -26,10 +29,7 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 
 		kickError := KickPlayerHandler(message, client, pool)
 		if kickError != nil {
-			client.Notify(ServerMessage{
-				Type:    ServerMessageTypeError,
-				Payload: kickError.Error(),
-			})
+			client.SendError(kickError.Error())
 			return
 		}
 
