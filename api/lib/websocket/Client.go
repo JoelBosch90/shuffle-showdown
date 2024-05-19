@@ -80,11 +80,11 @@ func (client *Client) Read() {
 
 func (client *Client) Write() {
 	connection := client.Connection
-	pingTimer := time.NewTicker(pingInterval)
+	// pingTimer := time.NewTicker(pingInterval)
 
 	// Stop the timer and close the client connection when we cannot continue writing messages.
 	defer func() {
-		pingTimer.Stop()
+		// pingTimer.Stop()
 		connection.Close()
 	}()
 
@@ -102,13 +102,13 @@ func (client *Client) Write() {
 					break
 				}
 			}
-		// Send pings to check the connection at each interval.
-		case <-pingTimer.C:
-			connection.SetWriteDeadline(getWriteDeadline())
-			pingError := connection.WriteMessage(gorilla.PingMessage, nil)
-			if pingError != nil {
-				return
-			}
+			// // Send pings to check the connection at each interval.
+			// case <-pingTimer.C:
+			// 	connection.SetWriteDeadline(getWriteDeadline())
+			// 	pingError := connection.WriteMessage(gorilla.PingMessage, nil)
+			// 	if pingError != nil {
+			// 		return
+			// 	}
 		}
 	}
 }

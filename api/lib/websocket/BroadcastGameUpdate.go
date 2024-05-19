@@ -5,7 +5,6 @@ import (
 	"api/database/models"
 	"encoding/json"
 	"errors"
-	"log"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -18,13 +17,14 @@ type PlayerState struct {
 }
 
 type GameState struct {
-	Id             uuid.UUID     `json:"id"`
-	IsRunning      bool          `json:"isRunning"`
-	SongsToWin     uint          `json:"songsToWin"`
-	TitleRequired  bool          `json:"titleRequired"`
-	ArtistRequired bool          `json:"artistRequired"`
-	Configured     bool          `json:"configured"`
-	Players        []PlayerState `json:"players"`
+	Id             uuid.UUID      `json:"id"`
+	IsRunning      bool           `json:"isRunning"`
+	SongsToWin     uint           `json:"songsToWin"`
+	TitleRequired  bool           `json:"titleRequired"`
+	ArtistRequired bool           `json:"artistRequired"`
+	Configured     bool           `json:"configured"`
+	Players        []PlayerState  `json:"players"`
+	Rounds         []models.Round `json:"rounds"`
 }
 
 func isConnected(playerId uuid.UUID, lobby map[*Client]bool) bool {
@@ -59,16 +59,42 @@ func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState,
 
 	return update, nil
 }
+
+func lastRound(rounds []models.Round) (int, models.Round) {
+	latestRound := models.Round{}
+	latestIndex := 0
+
+	for index, round := range rounds {
+		if round.Number > latestRound.Number {
+			latestRound = round
+			latestIndex = index
+		}
+	}
+
+	return latestIndex, latestRound
+}
+
+func hideTrackDetailsFromCurrentRound(rounds []models.Round) []models.Round {
+	if len(rounds) == 0 {
+		return rounds
+	}
+
+	currentRoundIndex, currentRound := lastRound(rounds)
+	rounds[currentRoundIndex].Track = models.Track{
+		PreviewUrl: currentRound.Track.PreviewUrl,
+	}
+
+	return rounds
+}
+
 func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error) {
 	var game models.Game
 
 	database := database.Get()
-	gameError := database.Where("id = ?", gameId).First(&game).Error
+	gameError := database.Preload("Rounds.Track").Where("id = ?", gameId).First(&game).Error
 	if gameError != nil {
 		return GameState{}, errors.New("could not load game")
 	}
-
-	log.Println("GAME:", game.IsRunning)
 
 	players, playersError := createPlayersUpdate(gameId, pool)
 	if playersError != nil {
@@ -83,6 +109,7 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 		TitleRequired:  game.TitleRequired,
 		ArtistRequired: game.ArtistRequired,
 		Players:        players,
+		Rounds:         hideTrackDetailsFromCurrentRound(game.Rounds),
 	}, nil
 }
 

@@ -3,14 +3,25 @@ package websocket
 import (
 	"api/database"
 	"api/database/models"
+	gameHelpers "api/lib/game"
 	"errors"
 )
 
 func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
 	database := database.Get()
 
-	updateError := database.Save(&models.Game{Id: client.GameId, IsRunning: true}).Error
-	if updateError != nil {
+	randomizePlayerError := gameHelpers.ShufflePlayers(client.GameId)
+	if randomizePlayerError != nil {
+		return errors.New("could not randomize player order")
+	}
+
+	createRoundError := gameHelpers.CreateNextRound(client.GameId)
+	if createRoundError != nil {
+		return errors.New("could not start first round")
+	}
+
+	setRunningError := database.Save(&models.Game{Id: client.GameId, IsRunning: true}).Error
+	if setRunningError != nil {
 		return errors.New("could not start game")
 	}
 
