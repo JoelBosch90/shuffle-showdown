@@ -1,5 +1,5 @@
 import type { Player } from '$lib/types/Player';
-import type { Playlist } from '$lib/types/Playlist';
+import type { Round } from '$lib/types/Round';
 
 export interface GameUpdate {
     id: string;
@@ -9,4 +9,5 @@ export interface GameUpdate {
     titleRequired: boolean;
     artistRequired: boolean;
     players: Player[];
+    rounds: Round[];
 }
