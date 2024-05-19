@@ -35,17 +35,16 @@
         } else {
             muted = audio.muted = false;
         }
+
         audio.volume = currentVolume / 100;
     }
 
     const muteUnmute = () => {
-        muted = !muted;
-        audio.muted = muted;
+        muted = audio.muted = !muted;
         currentVolume = muted ? 0 : audio.volume * 100;
     }
 
 	onMount(async () => {
-        console.log(audio)
         audio.addEventListener('loadedmetadata', () => {
             maxProgress = audio.duration;
             volumeUpdate();

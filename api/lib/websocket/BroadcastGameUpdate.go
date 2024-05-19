@@ -9,10 +9,11 @@ import (
 )
 
 type PlayerState struct {
-	Id          uuid.UUID `json:"id"`
-	Name        string    `json:"name"`
-	IsConnected bool      `json:"isConnected"`
-	IsOwner     bool      `json:"isOwner"`
+	Id          uuid.UUID         `json:"id"`
+	Name        string            `json:"name"`
+	IsConnected bool              `json:"isConnected"`
+	IsOwner     bool              `json:"isOwner"`
+	WonTracks   []models.WonTrack `json:"wonTracks"`
 }
 
 type GameState struct {
@@ -41,7 +42,7 @@ func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState,
 	var game models.Game
 
 	database := database.Get()
-	playersError := database.Preload("Players").Where("id = ?", gameId).First(&game).Error
+	playersError := database.Preload("Players.WonTracks.Track").Where("id = ?", gameId).First(&game).Error
 	if playersError != nil {
 		return update, errors.New("could not find players")
 	}
@@ -53,6 +54,7 @@ func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState,
 			Name:        player.Name,
 			IsConnected: isConnected(player.Id, lobby),
 			IsOwner:     player.Id == game.OwnerId,
+			WonTracks:   player.WonTracks,
 		})
 	}
 

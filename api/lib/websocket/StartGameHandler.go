@@ -15,9 +15,9 @@ func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPoo
 		return errors.New("could not randomize player order")
 	}
 
-	createRoundError := gameHelpers.CreateNextRound(client.GameId)
-	if createRoundError != nil {
-		return errors.New("could not start first round")
+	awardInitialTracksError := gameHelpers.AwardInitialTracks(client.GameId)
+	if awardInitialTracksError != nil {
+		return errors.New("could not award initial tracks")
 	}
 
 	setRunningError := database.Save(&models.Game{Id: client.GameId, IsRunning: true}).Error

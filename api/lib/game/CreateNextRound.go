@@ -8,14 +8,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func findNextRoundNumber(rounds []models.Round) uint {
-	if len(rounds) == 0 {
-		return 1
-	}
-
-	return rounds[len(rounds)-1].Number + 1
-}
-
 func CreateNextRound(gameId uuid.UUID) error {
 	database := database.Get()
 	var game models.Game
@@ -37,7 +29,7 @@ func CreateNextRound(gameId uuid.UUID) error {
 
 	return database.Create(&models.Round{
 		Id:       uuid.NewV4(),
-		Number:   findNextRoundNumber(game.Rounds),
+		Number:   FindNextRoundNumber(game.Rounds),
 		GameId:   gameId,
 		PlayerId: nextPlayerId,
 		TrackId:  nextTrack.Id,

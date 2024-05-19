@@ -15,5 +15,6 @@ type Player struct {
 	// It should not be exposed to the client, hence it's excluded from the JSON.
 	Secret uuid.UUID `json:"-" gorm:"type:uuid;"`
 	// No need to expose information about linked games either.
-	ParticipatedGames []Game `json:"-" gorm:"many2many:game_players;"`
+	ParticipatedGames []Game     `json:"-" gorm:"many2many:game_players;"`
+	WonTracks         []WonTrack `json:"awardedTracks" gorm:"foreignKey:PlayerId;references:Id;"`
 }

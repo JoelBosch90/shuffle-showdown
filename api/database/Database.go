@@ -20,7 +20,7 @@ func connect(name string) *gorm.DB {
 }
 
 func addModels(database *gorm.DB) *gorm.DB {
-	database.AutoMigrate(&models.Game{}, &models.Playlist{}, &models.AccessToken{}, &models.Artist{}, &models.Track{}, &models.Player{}, &models.GamePlayer{}, &models.Round{})
+	database.AutoMigrate(&models.Game{}, &models.Playlist{}, &models.AccessToken{}, &models.Artist{}, &models.Track{}, &models.Player{}, &models.GamePlayer{}, &models.Round{}, &models.WonTrack{})
 
 	return database
 }

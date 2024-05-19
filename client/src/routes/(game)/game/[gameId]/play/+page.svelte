@@ -40,8 +40,6 @@
 			players = newGame?.players ?? [];
 			currentRound = getCurrentRound();
 
-			console.log(game)
-
 			if (!newGame?.isRunning) return goto(`/game/${gameId}/lobby`);
 		})
 		await session.initialize();
