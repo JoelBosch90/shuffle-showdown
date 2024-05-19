@@ -3,18 +3,10 @@ package game
 import (
 	database "api/database"
 	"api/database/models"
+	"errors"
 
 	uuid "github.com/satori/go.uuid"
 )
-
-func containsPlayer(haystack []models.Player, needle models.Player) bool {
-	for _, player := range haystack {
-		if player.Id == needle.Id {
-			return true
-		}
-	}
-	return false
-}
 
 func AddPlayerToGame(gameId uuid.UUID, playerId uuid.UUID) error {
 	database := database.Get()
@@ -23,22 +15,29 @@ func AddPlayerToGame(gameId uuid.UUID, playerId uuid.UUID) error {
 
 	playerError := database.Where("id = ?", playerId).First(&player).Error
 	if playerError != nil {
-		return playerError
+		return errors.New("could not join game")
 	}
 
-	gameError := database.Preload("Players").Where("id = ?", gameId).First(&game).Error
+	gameError := database.Preload("Players").Preload("BannedPlayers").Where("id = ?", gameId).First(&game).Error
 	if gameError != nil {
-		return gameError
+		return errors.New("could not join game")
+	}
+
+	if IncludesPlayer(game.BannedPlayers, player) {
+		return errors.New("player is banned")
 	}
 
 	// No need to add the player to the game if he's already added.
-	if containsPlayer(game.Players, player) {
+	if IncludesPlayer(game.Players, player) {
 		return nil
 	}
 
 	// Add the player to the game.
 	game.Players = append(game.Players, player)
 	updateError := database.Save(&game).Error
+	if updateError != nil {
+		return errors.New("could not join game")
+	}
 
-	return updateError
+	return nil
 }

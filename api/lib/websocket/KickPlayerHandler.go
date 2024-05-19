@@ -43,7 +43,6 @@ func KickPlayerHandler(message ClientMessage, client *Client, pool *ConnectionPo
 		return errors.New("could not find game")
 	}
 
-	// Check if the player is the owner of the game.
 	if game.Owner.Id != client.PlayerId {
 		return errors.New("only the owner can kick players")
 	}
@@ -53,36 +52,27 @@ func KickPlayerHandler(message ClientMessage, client *Client, pool *ConnectionPo
 		return errors.New("player to kick could not be identified")
 	}
 
-	// Check if the player is in the game.
-	playerInGame := includesPlayer(game.Players, playerIdToKick)
-	if playerInGame {
-		// Remove the player from the game.
-		removeError := gameHelpers.RemovePlayerFromGame(client.GameId, playerIdToKick)
-		if removeError != nil {
-			return errors.New("could not kick player")
-		}
+	banError := gameHelpers.BanPlayerFromGame(client.GameId, playerIdToKick)
+	if banError != nil {
+		return errors.New("could not ban player")
 	}
 
-	// Remove the player from the lobby.
 	clientToKick := findPlayerClient(playerIdToKick, pool.Lobbies[client.GameId])
 	if clientToKick != nil {
 		delete(pool.Lobbies[client.GameId], clientToKick)
 	}
 
-	// Broadcast the updated player list.
 	broadcastError := BroadcastPlayersUpdate(client, pool)
 	if broadcastError != nil {
 		return errors.New("could not broadcast player list")
 	}
 
-	// Convert to JSON.
 	kickPayload := KickPlayerPayload{PlayerId: playerIdToKick}
 	kickPayloadJson, jsonError := json.Marshal(&kickPayload)
 	if jsonError != nil {
 		return errors.New("could not read player names")
 	}
 
-	// Let the kicked player know he was kicked.
 	clientToKick.Notify(ServerMessage{
 		Type:    ServerMessageTypeKickedPlayer,
 		Payload: string(kickPayloadJson),

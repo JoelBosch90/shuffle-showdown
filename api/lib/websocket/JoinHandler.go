@@ -9,7 +9,7 @@ func JoinHandler(message ClientMessage, client *Client, pool *ConnectionPool) er
 	// Add the player to the game.
 	addError := gameHelpers.AddPlayerToGame(client.GameId, client.PlayerId)
 	if addError != nil {
-		return errors.New("could not join game")
+		return addError
 	}
 
 	// Broadcast the updated player list.

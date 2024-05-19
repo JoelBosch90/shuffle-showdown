@@ -19,4 +19,5 @@ type Game struct {
 	OwnerId        uuid.UUID `gorm:"type:uuid;"`
 	Owner          Player    `json:"owner" gorm:"foreignKey:OwnerId;references:Id;"`
 	Players        []Player  `json:"players" gorm:"many2many:game_players;"`
+	BannedPlayers  []Player  `json:"bannedPlayers" gorm:"many2many:black_listed_players;"`
 }
