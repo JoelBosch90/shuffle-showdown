@@ -53,13 +53,11 @@ func BroadcastPlayersUpdate(client *Client, pool *ConnectionPool) error {
 		return errors.New("could not find players")
 	}
 
-	// Convert to JSON.
 	updateJson, jsonError := json.Marshal(&playersUpdate)
 	if jsonError != nil {
 		return errors.New("could not read player names")
 	}
 
-	// Broadcast the joined message to all plaers in the game.
 	pool.Broadcast <- ServerMessage{
 		Type:    ServerMessageTypePlayersUpdate,
 		Payload: string(updateJson),

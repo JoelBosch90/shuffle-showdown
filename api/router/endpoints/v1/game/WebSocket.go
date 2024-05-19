@@ -44,19 +44,16 @@ func WebSocket(context *gin.Context) {
 		return
 	}
 
-	// Create a new client for this connection.
+	connectionPool := websocket.GetConnectionPool()
 	client := &websocket.Client{
+		Pool:             connectionPool,
 		Connection:       connection,
 		OutgoingMessages: make(chan websocket.ServerMessage, 256),
 		GameId:           game.Id,
 		PlayerId:         player.Id,
 	}
-
-	// Add this client to the connection pool.
-	connectionPool := websocket.GetConnectionPool()
 	connectionPool.Register <- client
 
-	// Start routines to read from and write to this client.
-	go client.Read(connectionPool)
-	go client.Write(connectionPool)
+	go client.Read()
+	go client.Write()
 }

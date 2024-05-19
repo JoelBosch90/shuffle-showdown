@@ -7,6 +7,7 @@ type ClientMessageType string
 const (
 	ClientMessageTypeJoin       ClientMessageType = "join"
 	ClientMessageTypeKickPlayer ClientMessageType = "kick-player"
+	ClientMessageStartGame      ClientMessageType = "start-game"
 )
 
 type ClientMessage struct {

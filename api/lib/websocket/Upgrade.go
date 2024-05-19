@@ -18,8 +18,6 @@ var upgrader = websocket.Upgrader{
 }
 
 func Upgrade(context *gin.Context) (*websocket.Conn, error) {
-
-	// Upgrade the connection to a Websocket connection.
 	connection, error := upgrader.Upgrade(context.Writer, context.Request, nil)
 	if error != nil {
 		return nil, error

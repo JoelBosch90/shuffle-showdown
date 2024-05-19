@@ -22,8 +22,8 @@ func findPlayerClient(playerId uuid.UUID, lobby map[*Client]bool) *Client {
 
 func kickPlayerFromConnectionPool(playerIdToKick uuid.UUID, client *Client, pool *ConnectionPool) error {
 	clientToKick := findPlayerClient(playerIdToKick, pool.Lobbies[client.GameId])
-	if clientToKick != nil {
-		delete(pool.Lobbies[client.GameId], clientToKick)
+	if clientToKick == nil {
+		return nil
 	}
 
 	kickPayload := KickPlayerPayload{PlayerId: playerIdToKick}
@@ -37,6 +37,7 @@ func kickPlayerFromConnectionPool(playerIdToKick uuid.UUID, client *Client, pool
 		Payload: string(kickPayloadJson),
 	})
 
+	delete(pool.Lobbies[client.GameId], clientToKick)
 	return nil
 }
 

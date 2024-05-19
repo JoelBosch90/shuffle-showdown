@@ -4,10 +4,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type PlayerNames struct {
-	Players []string `json:"players"`
-}
-
 func HandleClientMessage(message ClientMessage, client *Client, pool *ConnectionPool) {
 	// Players should identify themselves with every message.
 	playerId, uuidError := uuid.FromString(message.PlayerId.String())
@@ -30,6 +26,14 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		kickError := KickPlayerHandler(message, client, pool)
 		if kickError != nil {
 			client.SendError(kickError.Error())
+			return
+		}
+
+	case ClientMessageStartGame:
+
+		startGameError := StartGameHandler(message, client, pool)
+		if startGameError != nil {
+			client.SendError(startGameError.Error())
 			return
 		}
 

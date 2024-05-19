@@ -17,6 +17,7 @@ const (
 )
 
 type Client struct {
+	Pool             *ConnectionPool
 	Connection       *gorilla.Conn
 	GameId           uuid.UUID
 	PlayerId         uuid.UUID
@@ -44,19 +45,19 @@ func setConnectionSettings(connection *gorilla.Conn) {
 	})
 }
 
-func (client *Client) Read(pool *ConnectionPool) {
+func (client *Client) Read() {
 	connection := client.Connection
 
 	// Close the client connection when we cannot continue reading messages.
 	defer func() {
 		// Remove the client from the connection pool.
-		pool.Remove <- client
+		client.Pool.Remove <- client
 
 		// Close the client connection.
 		connection.Close()
 
 		// Broadcast the updated player list.
-		BroadcastPlayersUpdate(client, pool)
+		BroadcastPlayersUpdate(client, client.Pool)
 	}()
 
 	setConnectionSettings(connection)
@@ -73,11 +74,11 @@ func (client *Client) Read(pool *ConnectionPool) {
 			return
 		}
 
-		HandleClientMessage(message, client, pool)
+		HandleClientMessage(message, client, client.Pool)
 	}
 }
 
-func (client *Client) Write(pool *ConnectionPool) {
+func (client *Client) Write() {
 	connection := client.Connection
 	pingTimer := time.NewTicker(pingInterval)
 
@@ -113,6 +114,10 @@ func (client *Client) Write(pool *ConnectionPool) {
 }
 
 func (client *Client) Notify(message ServerMessage) {
+	if client == nil {
+		return
+	}
+
 	client.OutgoingMessages <- message
 }
 
