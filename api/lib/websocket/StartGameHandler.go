@@ -9,7 +9,7 @@ import (
 func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
 	database := database.Get()
 
-	updateError := database.Model(&models.Game{}).Where("id = ?", client.GameId).Update("running", true).Error
+	updateError := database.Save(&models.Game{Id: client.GameId, IsRunning: true}).Error
 	if updateError != nil {
 		return errors.New("could not start game")
 	}

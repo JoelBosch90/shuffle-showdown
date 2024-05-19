@@ -38,7 +38,6 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		}
 
 	default:
-		// TODO: think of a better default option.
-		BroadcastPlayersUpdate(client, pool)
+		BroadcastGameUpdate(client, pool)
 	}
 }

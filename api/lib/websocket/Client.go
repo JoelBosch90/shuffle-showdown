@@ -56,8 +56,8 @@ func (client *Client) Read() {
 		// Close the client connection.
 		connection.Close()
 
-		// Broadcast the updated player list.
-		BroadcastPlayersUpdate(client, client.Pool)
+		// Broadcast the updated game state.
+		BroadcastGameUpdate(client, client.Pool)
 	}()
 
 	setConnectionSettings(connection)

@@ -73,9 +73,9 @@ func KickPlayerHandler(message ClientMessage, client *Client, pool *ConnectionPo
 		return errors.New("could not kick player")
 	}
 
-	broadcastError := BroadcastPlayersUpdate(client, pool)
+	broadcastError := BroadcastGameUpdate(client, pool)
 	if broadcastError != nil {
-		return errors.New("could not broadcast player list")
+		return errors.New("could not broadcast game update")
 	}
 
 	return nil

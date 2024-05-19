@@ -1,67 +1,30 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import { API } from '$lib/services/API';
-	import { type Game } from '$lib/types/Game';
-	import { type Player } from '$lib/types/Player';
-	import { isPlayerKickedMessage, isPlayersUpdateMessage, type PlayersUpdateMessage, type ServerMessage } from '$lib/types/ServerMessage';
-	import { ClientMessageType } from '$lib/enums/ClientMessageType';
+	import { goto } from '$app/navigation';
+	import { GameSession } from '$lib/services/GameSession';
+	import type { Player } from '$lib/types/Player';
 
 	const gameId = $page.params.gameId;
 	let shareUrl: string | null = null;
-	let game: Game | void | null = null;
-	let me: Player | void | null = null;
+	let session: GameSession | void | null = null;
 
-	let players : Player[];
+	let me: Player | null;
+	$: me = null;
+
+	let players: Player[];
 	$: players = [];
-
-	const handlePlayerUpdate = (message: PlayersUpdateMessage) => {
-		players = message.payload.map((playerState) => {
-			const newState = {
-				id: playerState.id,
-				name: playerState.name,
-				isOwner: playerState.id === game?.owner.id,
-				isConnected: playerState.isConnected,
-			};
-
-			if (playerState.id === me?.id) {
-				me = newState;
-			}
-
-			return newState;
-		});
-	};
-	const handleMessage = (message: ServerMessage) => {
-		if (isPlayersUpdateMessage(message)) return handlePlayerUpdate(message);
-		if (isPlayerKickedMessage(message)) return goto('/game');
-
-	};
-	const kickPlayer = (playerToKick: Player) => {
-		API.sendSocketMessage({
-			type: ClientMessageType.KickPlayer,
-			payload: playerToKick.id,
-		});
-	};
 
 	onMount(async () => {
 		shareUrl = `${window.location.origin}/game/${gameId}/join`;
-		game = await API.getGame(gameId).catch(() => {
-			return goto('/game');
-		});
+		session = new GameSession(gameId);
+		session.onGameUpdate(({ game: newGame, me: newMe }) => {
+			me = newMe;
+			players = newGame?.players ?? [];
 
-		if (!game) goto(`/game/${gameId}/configure`);
-
-		me = await API.getPlayer().catch(() => {
-			return goto(`/game/${gameId}/join`);
-		});
-
-		if (!me) {
-			return goto(`/game/${gameId}/join`);
-		}
-
-		API.onSocketMessage(handleMessage);
-		API.startSocketConnection(gameId);
+			if (newGame?.isRunning) return goto(`/game/${gameId}/play`);
+		})
+		await session.initialize();
 	});
 </script>
 
@@ -80,7 +43,7 @@
 		{#each players as player}
 			<li>
 				{#if me?.isOwner && player.id !== me?.id}
-				<button on:click={() => kickPlayer(player)}>
+				<button on:click={() => session?.kickPlayer(player)}>
 					<i class="fa-solid fa-user-slash button kick icon"></i>
 				</button>
 				{:else}
@@ -99,9 +62,14 @@
 
 	Share this link to let your friends join the game: <a href="{shareUrl}">{shareUrl}</a>
 
-	<div class="button-row">
-		<button class="filled">Start game</button>
-	</div>
+	{#if me?.isOwner}
+		<p>Once everyone is connected, click the button below to start the game.</p>
+		<div class="button-row">
+			<button class="filled" on:click={session?.startGame}>Start game</button>
+		</div>
+	{:else}
+		<p>Wait for the game owner to start the game.</p>
+	{/if}
 </section>
 
 <style lang="scss">

@@ -33,10 +33,12 @@ export class SocketConnection {
   private static queuedMessages: Array<ClientMessage> = [];
 
   public static start(gameId?: string) {
+    if (gameId && gameId !== SocketConnection.gameId) {
+      SocketConnection.close();
+      SocketConnection.gameId = gameId;
+    }
     if (SocketConnection.connected || SocketConnection.connecting) return;
     if (!SocketConnection.initialized) SocketConnection.initialize();
-    if (gameId && gameId !== SocketConnection.gameId) SocketConnection.gameId = gameId;
-    if (!gameId) gameId = SocketConnection.gameId;
     SocketConnection.connecting = true;
     SocketConnection.connection = new WebSocket(`${SocketConnection.connectionProtocol}//${SocketConnection.host}/api/v1/ws/${gameId}`);
 
@@ -64,7 +66,7 @@ export class SocketConnection {
   public static close() {
     if (!SocketConnection.connected || !SocketConnection.connection) return;
     SocketConnection.connection.close();
-    SocketConnection.connecting = false;
+    SocketConnection.connected = SocketConnection.connecting = false;
   }
 
   public static send(message: ClientMessage) {
