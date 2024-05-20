@@ -78,35 +78,18 @@ func (client *Client) Read() {
 
 func (client *Client) Write() {
 	connection := client.Connection
-	// pingTimer := time.NewTicker(pingInterval)
 
-	// Stop the timer and close the client connection when we cannot continue writing messages.
 	defer func() {
-		// pingTimer.Stop()
+		connection.WriteMessage(gorilla.CloseMessage, []byte{})
 		connection.Close()
 	}()
 
-	for {
-		select {
-		// Send pending messages to the client.
-		case message, ok := <-client.OutgoingMessages:
-			connection.SetWriteDeadline(getWriteDeadline())
-			if !ok {
-				connection.WriteMessage(gorilla.CloseMessage, []byte{})
-				return
-			} else {
-				writeError := connection.WriteJSON(message)
-				if writeError != nil {
-					break
-				}
-			}
-			// // Send pings to check the connection at each interval.
-			// case <-pingTimer.C:
-			// 	connection.SetWriteDeadline(getWriteDeadline())
-			// 	pingError := connection.WriteMessage(gorilla.PingMessage, nil)
-			// 	if pingError != nil {
-			// 		return
-			// 	}
+	for message := range client.OutgoingMessages {
+		connection.SetWriteDeadline(getWriteDeadline())
+
+		writeError := connection.WriteJSON(message)
+		if writeError != nil {
+			break
 		}
 	}
 }
