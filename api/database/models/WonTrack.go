@@ -10,7 +10,7 @@ type WonTrack struct {
 	Id        uuid.UUID `json:"id" gorm:"type:uuid; primaryKey;"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
-	GameId    uuid.UUID `json:"-" gorm:"type:uuid;"`
+	GameId    uuid.UUID `json:"gameId" gorm:"type:uuid;"`
 	Game      Game      `json:"-" gorm:"foreignKey:GameId;references:Id;"`
 	TrackId   string    `json:"-" gorm:"type:string;"`
 	Track     Track     `json:"track" gorm:"foreignKey:TrackId;references:Id;"`

@@ -3,10 +3,12 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import AudioPlayer from '$lib/components/AudioPlayer.svelte';
+	import Chronology from '$lib/components/Chronology.svelte';
 	import { GameSession } from '$lib/services/GameSession';
 	import type { Player } from '$lib/types/Player';
 	import type { Round } from '$lib/types/Round';
 	import type { GameUpdate } from '$lib/types/GameUpdate';
+	import type { Answer } from '$lib/types/Answer';
 
 	const gameId = $page.params.gameId;
 	let session: GameSession | void | null = null;
@@ -23,13 +25,24 @@
 	let currentRound: Round | null;
 	$: currentRound = null;
 
-	const getCurrentRound = () : Round | null => {
-		if (!game) return null;
+	let selectedAnswer: Answer | null = null;
 
-		const maxRoundNumber = Math.max(...game.rounds.map((round) => round.number));
-		const currentRound = game.rounds.find((round) => round.number === maxRoundNumber);
+	const getCurrentRound = (newGame: GameUpdate | null) : Round | null => {
+		if (!newGame) return null;
+
+		const maxRoundNumber = Math.max(...newGame.rounds.map((round) => round.number));
+		const currentRound = newGame.rounds.find((round) => round.number === maxRoundNumber);
 
 		return currentRound ?? null;
+	}
+
+	const onAnswerSelect = (answer: Answer) => {
+		selectedAnswer = answer;
+	}
+
+	const onAnswerSubmit = () => {
+		if (!selectedAnswer) return;
+		console.log('selectedAnswer', selectedAnswer);
 	}
 
 	onMount(async () => {
@@ -38,7 +51,8 @@
 			game = newGame;
 			me = newMe;
 			players = newGame?.players ?? [];
-			currentRound = getCurrentRound();
+			currentRound = getCurrentRound(newGame);
+			console.log('me', me);
 
 			if (!newGame?.isRunning) return goto(`/game/${gameId}/lobby`);
 		})
@@ -56,8 +70,23 @@
 
 <section>
 	<h1>Round {currentRound?.number}</h1>
+	<Chronology wonTracks={me?.wonTracks} onSelect={onAnswerSelect}/>
 	<AudioPlayer source="{currentRound?.track.previewUrl}" />
+	<button class="filled" on:click={onAnswerSubmit}>
+		Select answer
+	</button>
 </section>
 
 <style lang="scss">
+	section {
+		display: grid;
+		grid-template-rows: min-content 1fr min-content;
+		gap: 1rem;
+		justify-content: center;
+		align-items: center;
+
+		h1 {
+			text-align: center;
+		}
+	}
 </style>

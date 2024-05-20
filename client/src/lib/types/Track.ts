@@ -1,7 +1,8 @@
+import type { Artist } from './Artist';
 export interface Track {
     id?: string;
     name?: string;
-    artists?: string;
-    releaseDate?: Number;
+    artists?: Artist[];
+    releaseYear?: Number;
     previewUrl: string;
 }

@@ -37,12 +37,23 @@ func isConnected(playerId uuid.UUID, lobby map[*Client]bool) bool {
 	return false
 }
 
+func filterWonTracksByGameId(gameId uuid.UUID, wonTracks []models.WonTrack) []models.WonTrack {
+	filtered := []models.WonTrack{}
+	for _, wonTrack := range wonTracks {
+		if wonTrack.GameId == gameId {
+			filtered = append(filtered, wonTrack)
+		}
+	}
+
+	return filtered
+}
+
 func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState, error) {
 	update := []PlayerState{}
 	var game models.Game
 
 	database := database.Get()
-	playersError := database.Preload("Players.WonTracks.Track").Where("id = ?", gameId).First(&game).Error
+	playersError := database.Preload("Players.WonTracks.Track.Artists").Where("id = ?", gameId).First(&game).Error
 	if playersError != nil {
 		return update, errors.New("could not find players")
 	}
@@ -54,7 +65,7 @@ func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState,
 			Name:        player.Name,
 			IsConnected: isConnected(player.Id, lobby),
 			IsOwner:     player.Id == game.OwnerId,
-			WonTracks:   player.WonTracks,
+			WonTracks:   filterWonTracksByGameId(gameId, player.WonTracks),
 		})
 	}
 

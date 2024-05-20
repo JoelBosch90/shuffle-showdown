@@ -22,7 +22,7 @@ func SelectNextTrack(gameId uuid.UUID) (models.Track, error) {
 	database := database.Get()
 	var game models.Game
 
-	loadGameError := database.Preload("Playlist.Tracks").Preload("Rounds").Where("id = ?", gameId).First(&game).Error
+	loadGameError := database.Preload("Playlist.Tracks").Preload("Rounds").Preload("WonTracks").Where("id = ?", gameId).First(&game).Error
 	if loadGameError != nil {
 		return models.Track{}, errors.New("could not load game")
 	}
@@ -30,16 +30,23 @@ func SelectNextTrack(gameId uuid.UUID) (models.Track, error) {
 		return models.Track{}, errors.New("too few tracks")
 	}
 
-	playedTrackIds := []string{}
+	usedTrackIds := []string{}
 	for _, round := range game.Rounds {
-		playedTrackIds = append(playedTrackIds, round.TrackId)
+		usedTrackIds = append(usedTrackIds, round.TrackId)
+	}
+	for _, wonTrack := range game.WonTracks {
+		usedTrackIds = append(usedTrackIds, wonTrack.TrackId)
 	}
 
 	availableTracks := []models.Track{}
 	for _, track := range game.Playlist.Tracks {
-		if !includesString(playedTrackIds, track.Id) {
+		if !includesString(usedTrackIds, track.Id) {
 			availableTracks = append(availableTracks, track)
 		}
+	}
+
+	if len(availableTracks) <= 0 {
+		return models.Track{}, errors.New("no tracks left")
 	}
 
 	return availableTracks[rand.Intn(len(availableTracks))], nil
