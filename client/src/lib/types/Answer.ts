@@ -1,5 +1,5 @@
 
 export interface Answer {
-    releaseYearBefore?: number;
-    releaseYearAfter?: number;
+    beforeReleaseYear?: number;
+    afterReleaseYear?: number;
 }

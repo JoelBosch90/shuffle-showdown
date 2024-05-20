@@ -42,7 +42,7 @@
 
 	const onAnswerSubmit = () => {
 		if (!selectedAnswer) return;
-		console.log('selectedAnswer', selectedAnswer);
+		session?.submitAnswer(selectedAnswer);
 	}
 
 	onMount(async () => {

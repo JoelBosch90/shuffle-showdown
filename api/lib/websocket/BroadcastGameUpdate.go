@@ -3,6 +3,7 @@ package websocket
 import (
 	"api/database"
 	"api/database/models"
+	gameHelpers "api/lib/game"
 	"errors"
 
 	uuid "github.com/satori/go.uuid"
@@ -72,26 +73,12 @@ func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState,
 	return update, nil
 }
 
-func lastRound(rounds []models.Round) (int, models.Round) {
-	latestRound := models.Round{}
-	latestIndex := 0
-
-	for index, round := range rounds {
-		if round.Number > latestRound.Number {
-			latestRound = round
-			latestIndex = index
-		}
-	}
-
-	return latestIndex, latestRound
-}
-
 func hideTrackDetailsFromCurrentRound(rounds []models.Round) []models.Round {
 	if len(rounds) == 0 {
 		return rounds
 	}
 
-	currentRoundIndex, currentRound := lastRound(rounds)
+	currentRoundIndex, currentRound := gameHelpers.LastRound(rounds)
 	rounds[currentRoundIndex].Track = models.Track{
 		PreviewUrl: currentRound.Track.PreviewUrl,
 	}

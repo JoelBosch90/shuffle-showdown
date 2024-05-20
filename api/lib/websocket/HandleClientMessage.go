@@ -37,6 +37,14 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 			return
 		}
 
+	case ClientMessageSubmitAnswer:
+
+		submitAnswerError := SubmitAnswerHandler(message, client, pool)
+		if submitAnswerError != nil {
+			client.SendError(submitAnswerError.Error())
+			return
+		}
+
 	default:
 		BroadcastGameUpdate(client, pool)
 	}

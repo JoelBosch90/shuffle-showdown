@@ -30,7 +30,7 @@ func FindNextPlayerId(gameId uuid.UUID) (uuid.UUID, error) {
 	database := database.Get()
 	var game models.Game
 
-	loadGameError := database.Preload("GamePlayers").Preload("Players").Preload("Rounds").Where("id = ?", gameId).First(&game).Error
+	loadGameError := database.Preload("GamePlayers").Preload("Players").Preload("Rounds.Player").Where("id = ?", gameId).First(&game).Error
 	if loadGameError != nil {
 		return uuid.UUID{}, errors.New("could not load game")
 	}
@@ -50,7 +50,8 @@ func FindNextPlayerId(gameId uuid.UUID) (uuid.UUID, error) {
 		}
 
 		var findPlayerError error
-		nextPlayerId, findPlayerError = findPlayerIdByOrder(game.GamePlayers, lastPlayerOrder%uint(len(game.GamePlayers))+1)
+		nextPlayerOrder := (lastPlayerOrder + 1) % uint(len(game.GamePlayers))
+		nextPlayerId, findPlayerError = findPlayerIdByOrder(game.GamePlayers, nextPlayerOrder)
 		if findPlayerError != nil {
 			return uuid.UUID{}, findPlayerError
 		}

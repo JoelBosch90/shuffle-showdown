@@ -27,9 +27,10 @@ func CreateNextRound(gameId uuid.UUID) error {
 		return findNextTrackError
 	}
 
+	_, lastRound := LastRound(game.Rounds)
 	return database.Create(&models.Round{
 		Id:       uuid.NewV4(),
-		Number:   FindNextRoundNumber(game.Rounds),
+		Number:   lastRound.Number + 1,
 		GameId:   gameId,
 		PlayerId: nextPlayerId,
 		TrackId:  nextTrack.Id,

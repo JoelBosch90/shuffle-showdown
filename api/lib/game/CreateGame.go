@@ -16,10 +16,11 @@ func CreateGame(info spotifyModels.Playlist, player models.Player, database *gor
 	}
 
 	game := models.Game{
-		Id:       uuid.NewV4(),
-		Playlist: playlist,
-		Owner:    player,
-		Players:  []models.Player{player},
+		Id:         uuid.NewV4(),
+		PlaylistId: playlist.Id,
+		Playlist:   playlist,
+		Owner:      player,
+		Players:    []models.Player{player},
 	}
 
 	createGameError := database.Create(&game).Error

@@ -5,11 +5,29 @@ import (
 	"api/database/models"
 	gameHelpers "api/lib/game"
 	"errors"
+
+	uuid "github.com/satori/go.uuid"
 )
 
-func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
+func runGame(gameId uuid.UUID) error {
 	database := database.Get()
 
+	var game models.Game
+	loadGameError := database.Where("id = ?", gameId).First(&game).Error
+	if loadGameError != nil {
+		return errors.New("could not load game")
+	}
+
+	game.IsRunning = true
+	saveGameError := database.Save(&game).Error
+	if saveGameError != nil {
+		return errors.New("could not save game")
+	}
+
+	return nil
+}
+
+func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
 	randomizePlayerError := gameHelpers.ShufflePlayers(client.GameId)
 	if randomizePlayerError != nil {
 		return errors.New("could not randomize player order")
@@ -20,7 +38,7 @@ func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPoo
 		return errors.New("could not create round")
 	}
 
-	setRunningError := database.Save(&models.Game{Id: client.GameId, IsRunning: true}).Error
+	setRunningError := runGame(client.GameId)
 	if setRunningError != nil {
 		return errors.New("could not start game")
 	}

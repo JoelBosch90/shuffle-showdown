@@ -4,7 +4,6 @@ import (
 	databaseHelpers "api/database/helpers"
 	"api/database/models"
 	spotifyModels "api/lib/spotify/models"
-	"errors"
 
 	"github.com/jinzhu/gorm"
 )
@@ -26,7 +25,6 @@ func CreatePlaylist(info spotifyModels.Playlist, database *gorm.DB) (models.Play
 		return models.Playlist{}, upsertPlaylistError
 	}
 
-	// Create links between the playlist and the tracks on the playlist.
 	playlistTrackLinks := []interface{}{}
 	for _, track := range tracks {
 		playlistTrackLinks = append(playlistTrackLinks, &models.PlaylistTrack{
@@ -35,16 +33,15 @@ func CreatePlaylist(info spotifyModels.Playlist, database *gorm.DB) (models.Play
 		})
 	}
 
-	// Upsert the playlist track links.
 	_, upsertPlayListTrackLinksError := databaseHelpers.Upsert(database, playlistTrackLinks)
 	if upsertPlayListTrackLinksError != nil {
 		return models.Playlist{}, upsertPlayListTrackLinksError
 	}
 
-	// Use type assertion to convert upsertedPlaylist[0] to models.Playlist
-	playlist, ok := upsertedPlaylist[0].(models.Playlist)
-	if !ok {
-		return models.Playlist{}, errors.New("could not convert upsertedPlaylist[0] to models.Playlist")
+	var playlist models.Playlist
+	getPlaylistError := database.Where("id = ?", info.Id).First(&playlist).Error
+	if getPlaylistError != nil {
+		return models.Playlist{}, getPlaylistError
 	}
 
 	return playlist, nil

@@ -2,6 +2,7 @@ import { goto } from '$app/navigation';
 import { API } from '$lib/services/API';
 import { type Player } from '$lib/types/Player';
 import { type GameUpdate } from '$lib/types/GameUpdate';
+import { type Answer } from '$lib/types/Answer';
 import { isPlayerKickedMessage, isGameUpdateMessage, type ServerMessage, type GameUpdateMessage } from '$lib/types/ServerMessage';
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
 
@@ -59,4 +60,11 @@ export class GameSession {
 			payload: null,
 		});
 	};
+
+	public submitAnswer = (answer: Answer) => {
+		API.sendSocketMessage({
+			type: ClientMessageType.SubmitAnswer,
+			payload: JSON.stringify(answer),
+		});
+	}
 }

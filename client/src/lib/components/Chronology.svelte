@@ -68,8 +68,8 @@
         const cardAfter = slotIndex < slots.length - 2 ? slots[slotIndex + 1].card : undefined;
 
         onSelect({
-            releaseYearBefore: cardBefore ? parseInt(cardBefore?.releaseYear ?? "") : undefined,
-            releaseYearAfter: cardAfter ? parseInt(cardAfter?.releaseYear ?? "") : undefined,
+            afterReleaseYear: cardBefore ? parseInt(cardBefore?.releaseYear ?? "") : undefined,
+            beforeReleaseYear: cardAfter ? parseInt(cardAfter?.releaseYear ?? "") : undefined,
         });
     }
 
@@ -95,11 +95,11 @@
     {#each slots as slot, slotIndex}
         {#if slot.card}
             <div
+                role="button"
+                tabindex="0"
                 class="chronology-card"
                 draggable={slot.card.isGuess}
                 on:dragstart={drag}
-                role="button"
-                tabindex="0"
             >
                 <h2>{slot.card.releaseYear}</h2>
 
@@ -113,16 +113,15 @@
             </div>
         {:else if isDragging}
             <div
+                role="button"
+                tabindex="0"
                 class="droppable"
                 class:hovering={slotIndex === hoveringOption}
                 on:dragenter={() => hoveringOption = slotIndex}
                 on:dragleave={() => hoveringOption = null}
                 on:drop={(event) => drop(event, slotIndex)}
                 on:dragover={(event) => event.preventDefault()}
-                role="button"
-                tabindex="0"
-            >
-            </div>
+            />
         {/if}
     {/each}
 </div>
