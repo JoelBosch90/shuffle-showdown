@@ -8,16 +8,26 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func AwardInitialTracks(gameId uuid.UUID) error {
+func AwardInitialTrack(gameId uuid.UUID, playerId uuid.UUID) error {
 	database := database.Get()
 	var game models.Game
 
-	gameLoadError := database.Preload("Players").Where("id = ?", gameId).First(&game).Error
+	gameLoadError := database.Preload("Players").Preload("WonTracks").Where("id = ?", gameId).First(&game).Error
 	if gameLoadError != nil {
 		return errors.New("could not load game")
 	}
 
+	for _, wonTrack := range game.WonTracks {
+		if wonTrack.PlayerId == playerId {
+			return nil
+		}
+	}
+
 	for _, player := range game.Players {
+		if player.Id != playerId {
+			continue
+		}
+
 		track, selectTrackError := SelectNextTrack(gameId)
 		if selectTrackError != nil {
 			return selectTrackError

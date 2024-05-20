@@ -23,4 +23,5 @@ type Game struct {
 	BannedPlayers  []Player     `json:"-" gorm:"many2many:black_listed_players;"`
 	Rounds         []Round      `json:"rounds" gorm:"foreignKey:GameId;references:Id;"`
 	GamePlayers    []GamePlayer `json:"-" gorm:"foreignKey:GameId;references:Id;"`
+	WonTracks      []WonTrack   `json:"wonTracks" gorm:"foreignKey:GameId;references:Id;"`
 }
