@@ -10,7 +10,7 @@
         releaseYear: string;
         name?: string;
         artists?: string;
-        isGuess: boolean;
+        isCurrentGuess: boolean;
     }
 
     interface CardSlot {
@@ -19,7 +19,7 @@
 
     const guessCard: Card = {
         releaseYear: "???",
-        isGuess: true,
+        isCurrentGuess: true,
     }
 
     let slots: CardSlot[];
@@ -44,25 +44,35 @@
         return artists.map((artist) => artist.name).join(', ');
     };
 
-    const convertToSlots = (tracks: WonTrack[]) => {
-        const nonPlaceholderTracks: CardSlot[] = tracks.map(({ track }) => ({
-            card: {
-                releaseYear: track.releaseYear?.toString() ?? "???",
-                name: track.name,
-                artists: joinArtists(track.artists),
-                isGuess: false,
-            }
-        }));
-        const guessPlaceholders: CardSlot[] = Array(nonPlaceholderTracks.length + 1).fill({});
-        guessPlaceholders[Math.ceil(guessPlaceholders.length / 2)] = { card: guessCard };
+    const sortTracks = (tracks: WonTrack[]) => {
+        return tracks.toSorted((a, b) => {
+            const aNumber = a?.track?.releaseYear ?? 0;
+            const bNumber = b?.track?.releaseYear ?? 0;
+            return aNumber - bNumber;
+        });
+    };
 
-        const slots = weaveArrays(guessPlaceholders, nonPlaceholderTracks);
+    const convertToSlots = (tracks: WonTrack[]) => {
+        const ownedTracks: CardSlot[] = sortTracks(tracks)
+            .map(({ track }) => ({
+                card: {
+                    releaseYear: track.releaseYear?.toString() ?? "???",
+                    name: track.name,
+                    artists: joinArtists(track.artists),
+                    isCurrentGuess: false,
+                }
+            }));
+        // This looks funky, but the map makes sure that each placeholder has a unique object.
+        const guessPlaceholders: CardSlot[] = Array(ownedTracks.length + 1).fill({}).map(() => ({}));
+        guessPlaceholders[Math.ceil(guessPlaceholders.length / 2) - 1] = { card: guessCard };
+
+        const slots = weaveArrays(guessPlaceholders, ownedTracks);
         select(slots);
         return slots;
     };
 
     const select = (slots: CardSlot[]) => {
-        const slotIndex = slots.findIndex((slot) => slot.card?.isGuess);
+        const slotIndex = slots.findIndex((slot) => slot.card?.isCurrentGuess);
 
         const cardBefore = slotIndex > 1 ? slots[slotIndex - 1].card : undefined;
         const cardAfter = slotIndex < slots.length - 2 ? slots[slotIndex + 1].card : undefined;
@@ -81,10 +91,11 @@
         event.preventDefault();
         isDragging = false;
 
-        const sourceSlot = slots.find((slot) => slot.card?.isGuess);
+        const sourceSlot = slots.find((slot) => slot.card?.isCurrentGuess);
         if (sourceSlot) {
-            sourceSlot.card = undefined;
+            delete sourceSlot.card;   
         }
+
         slots[slotIndex].card = guessCard;
 
         select(slots);
@@ -98,7 +109,7 @@
                 role="button"
                 tabindex="0"
                 class="chronology-card"
-                draggable={slot.card.isGuess}
+                draggable={slot.card.isCurrentGuess}
                 on:dragstart={drag}
             >
                 <h2>{slot.card.releaseYear}</h2>
@@ -134,7 +145,12 @@
         justify-content: center;
         align-items: center;
         gap: 1rem;
+        padding: 1rem;
         height: 100%;
+        
+        // Make sure the cards can be scrolled through only vertically.
+        overflow-y: auto;
+        overflow-x: hidden;
     }
 
     .chronology-card {

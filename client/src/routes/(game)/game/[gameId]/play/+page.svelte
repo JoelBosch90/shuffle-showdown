@@ -52,7 +52,6 @@
 			me = newMe;
 			players = newGame?.players ?? [];
 			currentRound = getCurrentRound(newGame);
-			console.log('me', me);
 
 			if (!newGame?.isRunning) return goto(`/game/${gameId}/lobby`);
 		})

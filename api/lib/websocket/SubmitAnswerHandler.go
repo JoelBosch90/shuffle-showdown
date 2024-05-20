@@ -50,5 +50,10 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 		return errors.New("could not create next round")
 	}
 
+	broadcastError := BroadcastGameUpdate(client, pool)
+	if broadcastError != nil {
+		return errors.New("could not broadcast game update")
+	}
+
 	return nil
 }
