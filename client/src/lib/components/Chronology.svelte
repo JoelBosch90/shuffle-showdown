@@ -142,11 +142,9 @@
         display: flex;
         flex-direction: column;
         box-sizing: border-box;
-        justify-content: center;
         align-items: center;
         gap: 1rem;
         padding: 1rem;
-        height: 100%;
         
         // Make sure the cards can be scrolled through only vertically.
         overflow-y: auto;
@@ -176,6 +174,8 @@
     }
 
     .droppable {
+        display: flex;
+        flex-shrink: 0;
         width: 100%;
         height: 6rem;
         background-color: rgba(0, 0, 0, 0.15);

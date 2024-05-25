@@ -9,9 +9,11 @@
 
 <style>
 	.app {
+		box-sizing: border-box;
 		display: flex;
 		flex-direction: row;
-		min-height: 100vh;
 		justify-content: center;
+		height: 100dvh;
+		width: 100dvw;
 	}
 </style>

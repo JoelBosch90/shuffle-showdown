@@ -87,10 +87,10 @@
 
 <style lang="scss">
 	section {
-		display: grid;
-		grid-template-rows: min-content min-content 1fr min-content;
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
 		gap: 1rem;
-		justify-content: center;
 		align-items: center;
 
 		h1, p {
