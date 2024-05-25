@@ -23,9 +23,9 @@
         if (!audio) return;
 
         if (audio.paused || audio.ended) {
-            audio.play();
+            play();
         } else {
-            audio.pause();
+            pause();
         }
 
         playing = !(audio.paused || audio.ended);
@@ -45,12 +45,34 @@
 
     const muteUnmute = () => {
         if (!audio) return;
-        
+
         muted = audio.muted = !muted;
         currentVolume = muted ? 0 : audio.volume * 100;
     }
 
+    const updatePlayState = () => {
+        playing = !(audio.paused || audio.ended);
+    }
+
+    export const play = () => {
+        if (!audio) return;
+
+        audio.play();
+
+        updatePlayState();
+    }
+
+    export const pause = () => {
+        if (!audio) return;
+
+        audio.pause();
+
+        updatePlayState();
+    }
+
 	onMount(async () => {
+        playing = false;
+
         audio.addEventListener('loadedmetadata', () => {
             maxProgress = audio?.duration;
             volumeUpdate();

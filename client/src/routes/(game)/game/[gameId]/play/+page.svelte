@@ -35,6 +35,7 @@
 
 	let isCelebrating: boolean = false;
 	let celebration: Celebration | null = null;
+	let audioPlayer: AudioPlayer | null = null;
 
 	const getCurrentRound = (update: GameUpdate | null) : Round | null => {
 		if (!update) return null;
@@ -54,6 +55,7 @@
 	const onAnswerSubmit = () => {
 		if (!selectedAnswer) return;
 		session?.submitAnswer(selectedAnswer);
+		audioPlayer?.pause();
 	}
 
 	const findWinner = (update: GameUpdate, trackPreviewUrl?: string) => {
@@ -116,7 +118,6 @@
 		const winner = findWinner(update, lastRound.track.previewUrl);
 		if (!winner) return;
 
-		console.log(lastRound.track, winner, winner.id !== newMe?.id)
 		await celebrateTrack(lastRound.track, winner, winner.id !== newMe?.id, true, true);
 	}
 
@@ -157,7 +158,6 @@
 		const latestUpdate = session.getLatestUpdate();
 		if (latestUpdate) updateState(latestUpdate);
 		if (latestUpdate && latestUpdate.game?.rounds.length <= 1) await celebrateStart(latestUpdate.me);
-		console.log(latestUpdate)
 		if (latestUpdate && latestUpdate.game?.hasFinished) await celebrateEnd(latestUpdate.game, latestUpdate.me);
 
 		await session.initialize();
@@ -179,10 +179,11 @@
 	<div class="game-interface" class:hidden={isCelebrating}>
 		<h1>Round {currentRound?.number}</h1>
 		{#if currentPlayer}
-			<p>Currently playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name}</p>
+			<span>Currently playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name}</span>
+			<span>{currentPlayer.id === me?.id ? "You have" : currentPlayer.name + " has"} won {currentPlayer.wonTracks?.length} out of {game?.songsToWin} tracks.</span>
 		{/if}
 		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
-		<AudioPlayer source="{currentRound?.track.previewUrl}" />
+		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
 		<button class="filled" on:click={onAnswerSubmit}>
 			Select answer
 		</button>
