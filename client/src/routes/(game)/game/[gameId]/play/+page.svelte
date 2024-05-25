@@ -22,6 +22,9 @@
 	let players: Player[];
 	$: players = [];
 
+	let currentPlayer: Player | null;
+	$: currentPlayer = null;
+
 	let currentRound: Round | null;
 	$: currentRound = null;
 
@@ -35,6 +38,8 @@
 
 		return currentRound ?? null;
 	}
+
+	const findPlayer = (playerId: string | undefined) => players.find((player) => player.id === playerId) ?? null;
 
 	const onAnswerSelect = (answer: Answer) => {
 		selectedAnswer = answer;
@@ -52,6 +57,7 @@
 			me = newMe;
 			players = newGame?.players ?? [];
 			currentRound = getCurrentRound(newGame);
+			currentPlayer = findPlayer(currentRound?.playerId);
 
 			if (!newGame?.isRunning) return goto(`/game/${gameId}/lobby`);
 		})
@@ -69,6 +75,9 @@
 
 <section>
 	<h1>Round {currentRound?.number}</h1>
+	{#if currentPlayer}
+		<p>Currently playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name}</p>
+	{/if}
 	<Chronology wonTracks={me?.wonTracks} onSelect={onAnswerSelect}/>
 	<AudioPlayer source="{currentRound?.track.previewUrl}" />
 	<button class="filled" on:click={onAnswerSubmit}>
@@ -79,12 +88,12 @@
 <style lang="scss">
 	section {
 		display: grid;
-		grid-template-rows: min-content 1fr min-content;
+		grid-template-rows: min-content min-content 1fr min-content;
 		gap: 1rem;
 		justify-content: center;
 		align-items: center;
 
-		h1 {
+		h1, p {
 			text-align: center;
 		}
 	}

@@ -6,6 +6,7 @@ import (
 	gameHelpers "api/lib/game"
 	"encoding/json"
 	"errors"
+	"log"
 )
 
 type Answer struct {
@@ -27,6 +28,8 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 		return errors.New("not your turn")
 	}
 
+	log.Println("CURRENT ROUND: ", currentRound.Track)
+
 	var answer Answer
 	answerParseError := json.Unmarshal([]byte(message.Payload), &answer)
 	if answerParseError != nil {
@@ -36,14 +39,23 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 		return errors.New("answer must contain at least one field")
 	}
 
-	correctBefore := answer.BeforeReleaseYear == nil || uint(*answer.BeforeReleaseYear) <= currentRound.Track.ReleaseYear
-	correctAfter := answer.AfterReleaseYear == nil || uint(*answer.AfterReleaseYear) >= currentRound.Track.ReleaseYear
+	if answer.BeforeReleaseYear != nil {
+		log.Println("BEFORE RELEASE YEAR: ", *answer.BeforeReleaseYear)
+	}
+	if answer.AfterReleaseYear != nil {
+		log.Println("AFTER RELEASE YEAR: ", *answer.AfterReleaseYear)
+	}
+
+	correctBefore := answer.BeforeReleaseYear == nil || currentRound.Track.ReleaseYear <= uint(*answer.BeforeReleaseYear)
+	correctAfter := answer.AfterReleaseYear == nil || currentRound.Track.ReleaseYear >= uint(*answer.AfterReleaseYear)
 	if correctBefore && correctAfter {
 		awardError := gameHelpers.AwardTrack(game.Id, currentRound.Track, models.Player{Id: client.PlayerId})
 		if awardError != nil {
 			return errors.New("could not award track")
 		}
 	}
+	log.Println("CORRECT BEFORE: ", correctBefore)
+	log.Println("CORRECT AFTER: ", correctAfter)
 
 	createNextRoundError := gameHelpers.CreateNextRound(game.Id)
 	if createNextRoundError != nil {
