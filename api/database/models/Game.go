@@ -12,7 +12,8 @@ type Game struct {
 	UpdatedAt      time.Time    `json:"updatedAt"`
 	PlaylistId     string       `json:"-" gorm:"type:string;"`
 	Playlist       Playlist     `json:"playlist" gorm:"foreignKey:PlaylistId;references:Id;"`
-	IsRunning      bool         `json:"isRunning" gorm:"type:bool;"`
+	HasStarted     bool         `json:"hasStarted" gorm:"type:bool;"`
+	HasFinished    bool         `json:"hasFinished" gorm:"type:bool;"`
 	SongsToWin     uint         `json:"songsToWin" gorm:"type:uint;"`
 	TitleRequired  bool         `json:"titleRequired" gorm:"type:bool;"`
 	ArtistRequired bool         `json:"artistRequired" gorm:"type:bool;"`

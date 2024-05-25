@@ -14,7 +14,7 @@
 
 	const predefinedSettings: Record<PredefinedGameMode, GameSettings> = {
 		normal: {
-			songsToWin: 10,
+			songsToWin: 3,
 			titleRequired: false,
 			artistRequired: false,
 			releaseYearRequired: true

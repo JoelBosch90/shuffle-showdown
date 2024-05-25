@@ -4,7 +4,8 @@ import type { Round } from '$lib/types/Round';
 export interface GameUpdate {
     id: string;
     configured: boolean;
-    isRunning: boolean;
+    hasStarted: boolean;
+    hasFinished: boolean;
     songsToWin: number;
     titleRequired: boolean;
     artistRequired: boolean;

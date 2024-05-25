@@ -19,7 +19,8 @@ type PlayerState struct {
 
 type GameState struct {
 	Id             uuid.UUID      `json:"id"`
-	IsRunning      bool           `json:"isRunning"`
+	HasStarted     bool           `json:"hasStarted"`
+	HasFinished    bool           `json:"hasFinished"`
 	SongsToWin     uint           `json:"songsToWin"`
 	TitleRequired  bool           `json:"titleRequired"`
 	ArtistRequired bool           `json:"artistRequired"`
@@ -36,17 +37,6 @@ func isConnected(playerId uuid.UUID, lobby map[*Client]bool) bool {
 	}
 
 	return false
-}
-
-func filterWonTracksByGameId(gameId uuid.UUID, wonTracks []models.WonTrack) []models.WonTrack {
-	filtered := []models.WonTrack{}
-	for _, wonTrack := range wonTracks {
-		if wonTrack.GameId == gameId {
-			filtered = append(filtered, wonTrack)
-		}
-	}
-
-	return filtered
 }
 
 func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState, error) {
@@ -66,7 +56,7 @@ func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState,
 			Name:        player.Name,
 			IsConnected: isConnected(player.Id, lobby),
 			IsOwner:     player.Id == game.OwnerId,
-			WonTracks:   filterWonTracksByGameId(gameId, player.WonTracks),
+			WonTracks:   gameHelpers.FilterWonTracksByGameId(gameId, player.WonTracks),
 		})
 	}
 
@@ -90,7 +80,7 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 	var game models.Game
 
 	database := database.Get()
-	gameError := database.Preload("Rounds.Track").Where("id = ?", gameId).First(&game).Error
+	gameError := database.Preload("Rounds.Track.Artists").Where("id = ?", gameId).First(&game).Error
 	if gameError != nil {
 		return GameState{}, errors.New("could not load game")
 	}
@@ -100,15 +90,21 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 		return GameState{}, playersError
 	}
 
+	rounds := game.Rounds
+	if !game.HasFinished {
+		rounds = hideTrackDetailsFromCurrentRound(game.Rounds)
+	}
+
 	return GameState{
 		Id:             game.Id,
 		Configured:     game.Configured,
-		IsRunning:      game.IsRunning,
+		HasStarted:     game.HasStarted,
+		HasFinished:    game.HasFinished,
 		SongsToWin:     game.SongsToWin,
 		TitleRequired:  game.TitleRequired,
 		ArtistRequired: game.ArtistRequired,
 		Players:        players,
-		Rounds:         hideTrackDetailsFromCurrentRound(game.Rounds),
+		Rounds:         rounds,
 	}, nil
 }
 

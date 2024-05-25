@@ -3,6 +3,7 @@
     import type { Artist } from '$lib/types/Artist';
     import type { Answer } from '$lib/types/Answer';
 
+    export let disabled: boolean = false;
     export let wonTracks: WonTrack[] = [];
     export let onSelect: (answer: Answer) => void;
 
@@ -102,14 +103,14 @@
     };
 </script>
 
-<div class="chronology">
+<div class="chronology" class:disabled={disabled}>
     {#each slots as slot, slotIndex}
         {#if slot.card}
             <div
                 role="button"
                 tabindex="0"
-                class="chronology-card"
-                draggable={slot.card.isCurrentGuess}
+                class="card"
+                draggable={slot.card.isCurrentGuess && !disabled}
                 on:dragstart={drag}
             >
                 <h2>{slot.card.releaseYear}</h2>
@@ -149,39 +150,47 @@
         // Make sure the cards can be scrolled through only vertically.
         overflow-y: auto;
         overflow-x: hidden;
-    }
 
-    .chronology-card {
-        display: flex;
-        box-sizing: border-box;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        width: 100%;
-        gap: 0.5rem;
-        padding: 1rem;
-        border-radius: 1rem;
-        box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+        .card {
+            display: flex;
+            box-sizing: border-box;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            gap: 0.5rem;
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
 
-        h2 {
-            font-size: 4rem;
-            margin: 0;
+            h2 {
+                font-size: 4rem;
+                margin: 0;
+            }
+
+            p {
+                margin: 0;
+            }
         }
 
-        p {
-            margin: 0;
+        .droppable {
+            display: flex;
+            flex-shrink: 0;
+            width: 100%;
+            height: 6rem;
+            background-color: rgba(0, 0, 0, 0.15);
+            border-radius: 1rem;
         }
-    }
 
-    .droppable {
-        display: flex;
-        flex-shrink: 0;
-        width: 100%;
-        height: 6rem;
-        background-color: rgba(0, 0, 0, 0.15);
-        border-radius: 1rem;
-    }
-    .hovering {
-        background-color: rgba(0, 0, 0, 0.3);
+        .hovering {
+            background-color: rgba(0, 0, 0, 0.3);
+        }
+
+        &.disabled {
+            .card {
+                cursor: not-allowed;
+                filter: invert(50%);
+            }
+        }
     }
 </style>

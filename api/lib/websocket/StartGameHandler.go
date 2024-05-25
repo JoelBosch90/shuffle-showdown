@@ -18,7 +18,7 @@ func runGame(gameId uuid.UUID) error {
 		return errors.New("could not load game")
 	}
 
-	game.IsRunning = true
+	game.HasStarted = true
 	saveGameError := database.Save(&game).Error
 	if saveGameError != nil {
 		return errors.New("could not save game")

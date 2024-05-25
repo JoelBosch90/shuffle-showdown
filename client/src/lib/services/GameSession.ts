@@ -15,7 +15,7 @@ export class GameSession {
 
     constructor(private gameId: string) {}
 
-	public initialize = async () => {		
+	public initialize = async () => {
 		this.lastUpdate = await API.getGame(this.gameId).catch(() => goto('/game')) ?? null;
 
 		if (!this.lastUpdate) goto(`/game/${this.gameId}/configure`);
@@ -41,11 +41,19 @@ export class GameSession {
 		this.lastUpdate = message.payload;
 		this.me = message.payload?.players.find(({ id }) => this.me?.id === id) ?? this.me;
 
+		localStorage.setItem('me', JSON.stringify(this.me));
+		localStorage.setItem('lastUpdate', JSON.stringify(this.lastUpdate));
+
 		this.updateCallbacks.forEach((callback) => callback({
 			game: message.payload,
 			me: this.me,
 		}));
 	}
+
+	public getLatestUpdate = () => ({
+		game: JSON.parse(localStorage.getItem('lastUpdate') ?? 'null'),
+		me: JSON.parse(localStorage.getItem('me') ?? 'null'),
+	});
 
 	public kickPlayer = (playerToKick: Player) => {
 		API.sendSocketMessage({

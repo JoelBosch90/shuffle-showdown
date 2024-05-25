@@ -20,6 +20,8 @@
     $: maxProgress = 0;
 
     const playPause = () => {
+        if (!audio) return;
+
         if (audio.paused || audio.ended) {
             audio.play();
         } else {
@@ -30,6 +32,8 @@
     }
 
     const volumeUpdate = () => {
+        if (!audio) return;
+
         if (currentVolume === 0) {
             muted = audio.muted = true;
         } else {
@@ -40,17 +44,19 @@
     }
 
     const muteUnmute = () => {
+        if (!audio) return;
+        
         muted = audio.muted = !muted;
         currentVolume = muted ? 0 : audio.volume * 100;
     }
 
 	onMount(async () => {
         audio.addEventListener('loadedmetadata', () => {
-            maxProgress = audio.duration;
+            maxProgress = audio?.duration;
             volumeUpdate();
         });
         audio.addEventListener('timeupdate', () => {
-            progress = audio.currentTime;
+            progress = audio?.currentTime;
         });
 	});
 </script>

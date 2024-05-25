@@ -22,7 +22,7 @@
 			me = newMe;
 			players = newGame?.players ?? [];
 
-			if (newGame?.isRunning) return goto(`/game/${gameId}/play`);
+			if (newGame?.hasStarted) return goto(`/game/${gameId}/play`);
 		})
 		await session.initialize();
 	});

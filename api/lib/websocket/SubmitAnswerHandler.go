@@ -6,6 +6,7 @@ import (
 	gameHelpers "api/lib/game"
 	"encoding/json"
 	"errors"
+	"log"
 )
 
 type Answer struct {
@@ -20,6 +21,9 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 	gameError := database.Preload("Rounds.Track").Where("id = ?", client.GameId).First(&game).Error
 	if gameError != nil {
 		return errors.New("could not find game")
+	}
+	if game.HasFinished {
+		return errors.New("game has already finished")
 	}
 
 	_, currentRound := gameHelpers.LastRound(game.Rounds)
@@ -45,9 +49,13 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 		}
 	}
 
-	createNextRoundError := gameHelpers.CreateNextRound(game.Id)
-	if createNextRoundError != nil {
-		return errors.New("could not create next round")
+	hasFinished := gameHelpers.CheckGameEnd(game.Id)
+	log.Println("HAS FINISHED", hasFinished)
+	if !hasFinished {
+		createNextRoundError := gameHelpers.CreateNextRound(game.Id)
+		if createNextRoundError != nil {
+			return errors.New("could not create next round")
+		}
 	}
 
 	broadcastError := BroadcastGameUpdate(client, pool)
