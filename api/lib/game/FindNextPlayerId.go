@@ -38,23 +38,22 @@ func FindNextPlayerId(gameId uuid.UUID) (uuid.UUID, error) {
 		return uuid.UUID{}, errors.New("too few players")
 	}
 
-	nextPlayerId := game.GamePlayers[0].PlayerId
+	nextPlayerOrder := uint(0)
 
 	if len(game.Rounds) > 0 {
-		lastRound := game.Rounds[len(game.Rounds)-1]
-		lastPlayerId := lastRound.Player.Id
+		_, lastRound := LastRound(game.Rounds)
 
-		lastPlayerOrder, findOrderError := findPlayerOrder(game.GamePlayers, lastPlayerId)
+		lastPlayerOrder, findOrderError := findPlayerOrder(game.GamePlayers, lastRound.Player.Id)
 		if findOrderError != nil {
 			return uuid.UUID{}, findOrderError
 		}
 
-		var findPlayerError error
-		nextPlayerOrder := (lastPlayerOrder + 1) % uint(len(game.GamePlayers))
-		nextPlayerId, findPlayerError = findPlayerIdByOrder(game.GamePlayers, nextPlayerOrder)
-		if findPlayerError != nil {
-			return uuid.UUID{}, findPlayerError
-		}
+		nextPlayerOrder = (lastPlayerOrder + 1) % uint(len(game.GamePlayers))
+	}
+
+	nextPlayerId, findPlayerError := findPlayerIdByOrder(game.GamePlayers, nextPlayerOrder)
+	if findPlayerError != nil {
+		return uuid.UUID{}, findPlayerError
 	}
 
 	return nextPlayerId, nil
