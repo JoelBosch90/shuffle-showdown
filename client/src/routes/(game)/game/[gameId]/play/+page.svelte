@@ -215,7 +215,7 @@
 		gap: 1rem;
 		align-items: center;
 
-		h1, p {
+		h1 {
 			text-align: center;
 		}
 	}
