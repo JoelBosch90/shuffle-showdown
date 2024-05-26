@@ -3,11 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { API } from '$lib/services/API';
-	import { type Game } from '$lib/types/Game';
+	import { type GameUpdate } from '$lib/types/GameUpdate';
 
 	const gameId = $page.params.gameId;
-	let game: Game | void | null = null;
+	let game: GameUpdate | void | null = null;
 	let playerName = '';
+	let isOwner = false;
 
 	const createPlayer = async () => {
 		await API.postPlayer(playerName);
@@ -19,7 +20,6 @@
 
 	onMount(async () => {
 		game = await API.getGame(gameId);
-		
 		if (!game) goto(`/game`);
 
 		// Close any existing socket connection.
@@ -28,6 +28,7 @@
 		// Prefill the player's name if possible.
 		const player = await API.getPlayer();
 		if (player?.name) playerName = player?.name;
+		isOwner = player?.id === game?.owner.id;
 	});
 </script>
 
@@ -48,18 +49,36 @@
 
 	<ul>
 		<li>Playlist name: {game?.playlist.name}</li>
-		<li>Playlist owner: {game?.owner.name}</li>
+		{#if isOwner}
+			<li>This is your game!</li>
+		{:else}
+			<li>Playlist owner: {game?.owner.name}</li>
+		{/if}
 	</ul>
 
-	<label>
-		<span>Your name</span><br/>
-		<input type="text" placeholder="David Bowie" bind:value={playerName} />
-	</label>
+	<form on:submit|preventDefault={createPlayer}>
+		<label>
+			<span>Your name</span><br/>
+			<input type="text" placeholder="David Bowie" bind:value={playerName} />
+		</label>
 
-	<div class="button-row">
-		<button class="filled" on:click={createPlayer}>Join lobby</button>
-	</div>
+		<div class="button-row">
+			<button type="submit" class="filled">Join lobby</button>
+		</div>
+	</form>
 </section>
 
 <style lang="scss">
+	form {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: 100%;
+		gap: 1rem;
+
+		input {
+			box-sizing: border-box;
+			width: 100%;
+		}
+	}
 </style>

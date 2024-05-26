@@ -1,7 +1,7 @@
 import { type GameConfig } from '$lib/types/GameConfig';
-import { type Game } from "$lib/types/Game";
+import { type GameUpdate } from "$lib/types/GameUpdate";
 
-export default async (settings: GameConfig, playerId: string) : Promise<Game> => {
+export default async (settings: GameConfig, playerId: string) : Promise<GameUpdate> => {
   const requestBody = {
     settings,
     playerId

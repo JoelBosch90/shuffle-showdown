@@ -7,7 +7,7 @@
 	const createGame = async () => {
 		const game = await API.postGame(playList);
 
-		await goto(`/game/${game.id}/configure`);
+		await goto(`/game/${game.id}/join`);
 	};
 </script>
 
@@ -20,16 +20,26 @@
 </svelte:head>
 
 <section>
-	<h1>Select your playlist</h1>
+	<form on:submit|preventDefault={createGame}>
+		<h1>Select your playlist</h1>
 
-	<input placeholder="Paste your Spotify Playlist link here..." bind:value={playList} />
+		<input placeholder="Paste your Spotify Playlist link here..." bind:value={playList} />
 
-	<button class="filled" on:click={createGame}>Select playlist</button>
+		<button type="submit" class="filled">Select playlist</button>
+	</form>
 </section>
 
 <style lang="scss">
-	input {
-		box-sizing: border-box;
+	form {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
 		width: 100%;
+		gap: 1rem;
+
+		input {
+			box-sizing: border-box;
+			width: 100%;
+		}
 	}
 </style>

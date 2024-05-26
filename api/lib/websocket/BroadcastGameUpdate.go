@@ -18,15 +18,13 @@ type PlayerState struct {
 }
 
 type GameState struct {
-	Id             uuid.UUID      `json:"id"`
-	HasStarted     bool           `json:"hasStarted"`
-	HasFinished    bool           `json:"hasFinished"`
-	SongsToWin     uint           `json:"songsToWin"`
-	TitleRequired  bool           `json:"titleRequired"`
-	ArtistRequired bool           `json:"artistRequired"`
-	Configured     bool           `json:"configured"`
-	Players        []PlayerState  `json:"players"`
-	Rounds         []models.Round `json:"rounds"`
+	Id          uuid.UUID      `json:"id"`
+	HasStarted  bool           `json:"hasStarted"`
+	HasFinished bool           `json:"hasFinished"`
+	SongsToWin  uint           `json:"songsToWin"`
+	Owner       models.Player  `json:"owner"`
+	Players     []PlayerState  `json:"players"`
+	Rounds      []models.Round `json:"rounds"`
 }
 
 func isConnected(playerId uuid.UUID, lobby map[*Client]bool) bool {
@@ -80,7 +78,7 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 	var game models.Game
 
 	database := database.Get()
-	gameError := database.Preload("Rounds.Track.Artists").Where("id = ?", gameId).First(&game).Error
+	gameError := database.Preload("Rounds.Track.Artists").Preload("Owner").Where("id = ?", gameId).First(&game).Error
 	if gameError != nil {
 		return GameState{}, errors.New("could not load game")
 	}
@@ -96,15 +94,13 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 	}
 
 	return GameState{
-		Id:             game.Id,
-		Configured:     game.Configured,
-		HasStarted:     game.HasStarted,
-		HasFinished:    game.HasFinished,
-		SongsToWin:     game.SongsToWin,
-		TitleRequired:  game.TitleRequired,
-		ArtistRequired: game.ArtistRequired,
-		Players:        players,
-		Rounds:         rounds,
+		Id:          game.Id,
+		HasStarted:  game.HasStarted,
+		HasFinished: game.HasFinished,
+		SongsToWin:  game.SongsToWin,
+		Owner:       game.Owner,
+		Players:     players,
+		Rounds:      rounds,
 	}, nil
 }
 
@@ -115,7 +111,7 @@ func BroadcastGameUpdate(client *Client, pool *ConnectionPool) error {
 	}
 
 	pool.Broadcast <- ServerMessage{
-		Type:    ServerMessageTypeGameUpdate,
+		Type:    ServerMessageTypeGameSessionUpdate,
 		Payload: gameUpdate,
 		GameId:  client.GameId,
 	}

@@ -47,7 +47,6 @@ export class SocketConnection {
     SocketConnection.connection.addEventListener('message', SocketConnection.baseOnMessage);
 
     API.getPlayer().then((player) => {
-      // Identify the player to the server.
       SocketConnection.send({
         type: ClientMessageType.Join,
         payload: null,

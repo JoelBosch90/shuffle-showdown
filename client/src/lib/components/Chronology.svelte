@@ -45,7 +45,7 @@
         return artists.map((artist) => artist.name).join(', ');
     };
 
-    const sortTracks = (tracks: WonTrack[]) => {
+    const sortTracks = (tracks: WonTrack[] = []) => {
         return tracks.toSorted((a, b) => {
             const aNumber = a?.track?.releaseYear ?? 0;
             const bNumber = b?.track?.releaseYear ?? 0;
@@ -53,7 +53,7 @@
         });
     };
 
-    const convertToSlots = (tracks: WonTrack[]) => {
+    const convertToSlots = (tracks: WonTrack[] = []) => {
         const ownedTracks: CardSlot[] = sortTracks(tracks)
             .map(({ track }) => ({
                 card: {
@@ -72,7 +72,7 @@
         return slots;
     };
 
-    const select = (slots: CardSlot[]) => {
+    const select = (slots: CardSlot[] = []) => {
         const slotIndex = slots.findIndex((slot) => slot.card?.isCurrentGuess);
 
         const cardBefore = slotIndex > 1 ? slots[slotIndex - 1].card : undefined;

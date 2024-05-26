@@ -1,14 +1,13 @@
-import type { Player } from '$lib/types/Player';
-import type { Round } from '$lib/types/Round';
+import { type Player } from './Player';
+import { type Playlist } from './Playlist';
 
 export interface GameUpdate {
-    id: string;
-    configured: boolean;
-    hasStarted: boolean;
-    hasFinished: boolean;
-    songsToWin: number;
-    titleRequired: boolean;
-    artistRequired: boolean;
-    players: Player[];
-    rounds: Round[];
+  id: string;
+  createdAt: Date;
+  updatedAt: Date;
+  playlist: Playlist;
+  songsToWin: number;
+  owner: Player;
+  hasStarted: boolean;
+  hasFinished: boolean;
 }

@@ -1,5 +1,5 @@
 import { type GameConfig } from '$lib/types/GameConfig';
-import { type Game } from '$lib/types/Game';
+import { type GameUpdate } from '$lib/types/GameUpdate';
 import { type Player } from '$lib/types/Player';
 import { type ClientMessage } from '$lib/types/ClientMessage';
 import getGame from './API/game/get';
@@ -81,7 +81,7 @@ export class API {
     return game;
   };
 
-  public static async patchGame(settings: GameConfig) : Promise<Game> {
+  public static async patchGame(settings: GameConfig) : Promise<GameUpdate> {
     const playerId = await this.getPlayerId();
 
     if (!playerId) {

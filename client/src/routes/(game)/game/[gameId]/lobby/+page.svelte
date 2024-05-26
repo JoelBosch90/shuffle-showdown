@@ -38,27 +38,29 @@
 
 <section>
 	<h1>Game Lobby</h1>
-	<h3>Players:</h3>
-	<ul class="players">
-		{#each players as player}
-			<li>
-				{#if me?.isOwner && player.id !== me?.id}
-				<button on:click={() => session?.kickPlayer(player)}>
-					<i class="fa-solid fa-user-slash button kick icon"></i>
-				</button>
-				{:else}
-				<i class="fa-solid fa-user me icon"></i>
-				{/if}
-				<i class="fa-solid fa-check {player.isConnected ? 'connected' : 'disconnected'} icon"></i>
-				<span>
-					{player.name}
-					{#if player.isOwner}
-						<i class="fa-solid fa-crown crown"></i>
+	{#if players.length > 0}
+		<h3>Players:</h3>
+		<ul class="players">
+			{#each players as player}
+				<li>
+					{#if me?.isOwner && player.id !== me?.id}
+					<button on:click={() => session?.kickPlayer(player)}>
+						<i class="fa-solid fa-user-slash button kick icon"></i>
+					</button>
+					{:else}
+					<i class="fa-solid fa-user me icon"></i>
 					{/if}
-				</span>
-			</li>
-		{/each}
-	</ul>
+					<i class="fa-solid fa-check {player.isConnected ? 'connected' : 'disconnected'} icon"></i>
+					<span>
+						<span class:anonymous={!player.name}>{player.name || "Anonymous"}</span>
+						{#if player.isOwner}
+							<i class="fa-solid fa-crown crown"></i>
+						{/if}
+					</span>
+				</li>
+			{/each}
+		</ul>
+	{/if}
 
 	Share this link to let your friends join the game: <a href="{shareUrl}">{shareUrl}</a>
 
@@ -95,4 +97,8 @@
 	.connected { color: var(--green); }
 	.disconnected { color: var(--red); }
 	.kick, .me { color: var(--purple); }
+	.anonymous {
+		font-style: italic;
+		filter: invert(50%);
+	}
 </style>

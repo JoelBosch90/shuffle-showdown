@@ -8,7 +8,7 @@
 	import { GameSession } from '$lib/services/GameSession';
 	import type { Player } from '$lib/types/Player';
 	import type { Round } from '$lib/types/Round';
-	import type { GameUpdate } from '$lib/types/GameUpdate';
+	import type { GameSessionUpdate } from '$lib/types/GameSessionUpdate';
 	import type { Answer } from '$lib/types/Answer';
 	import type { Track } from '$lib/types/Track';
 
@@ -16,8 +16,8 @@
 	const gameId = $page.params.gameId;
 	let session: GameSession | void | null = null;
 
-	let game: GameUpdate | null;
-	$: game = null;
+	let gameUpdate: GameSessionUpdate | null;
+	$: gameUpdate = null;
 
 	let currentRound: Round | null;
 	$: currentRound = null;
@@ -33,11 +33,13 @@
 
 	let selectedAnswer: Answer | null = null;
 
-	let isCelebrating: boolean = false;
-	let celebration: Celebration | null = null;
 	let audioPlayer: AudioPlayer | null = null;
 
-	const getCurrentRound = (update: GameUpdate | null) : Round | null => {
+	let celebration: Celebration | null = null;
+	let isCelebrating: boolean = false;
+	let celebrationPromise: Promise<void> = Promise.resolve();
+
+	const getCurrentRound = (update: GameSessionUpdate | null) : Round | null => {
 		if (!update) return null;
 
 		const maxRoundNumber = Math.max(...update.rounds.map((round) => round.number));
@@ -46,7 +48,7 @@
 		return currentRound ?? null;
 	}
 
-	const findPlayer = (update: GameUpdate | null, playerId: string | undefined) => update?.players.find((player) => player.id === playerId) ?? null;
+	const findPlayer = (update: GameSessionUpdate | null, playerId: string | undefined) => update?.players.find((player) => player.id === playerId) ?? null;
 
 	const onAnswerSelect = (answer: Answer) => {
 		selectedAnswer = answer;
@@ -58,7 +60,7 @@
 		audioPlayer?.pause();
 	}
 
-	const findWinner = (update: GameUpdate, trackPreviewUrl?: string) => {
+	const findWinner = (update: GameSessionUpdate, trackPreviewUrl?: string) => {
 		if (!trackPreviewUrl) return undefined;
 
 		for (let player of update?.players ?? []) {
@@ -70,7 +72,7 @@
 		return undefined;
 	}
 
-	const sleep = async (ms: number) => {
+	const sleep = async (ms: number) : Promise<void> => {
 		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
@@ -79,12 +81,13 @@
 		celebration?.celebrate(track, player, isOtherPlayer, hasWon, isFinalWin);
 
 		if (millisecondsToSleep) {
-			await sleep(millisecondsToSleep);
+			celebrationPromise = celebrationPromise?.then(() => sleep(millisecondsToSleep));
+			await celebrationPromise;
 			isCelebrating = false;
 		}
 	}
 
-	const celebrateRound = async (update: GameUpdate, roundIndex: number) => {
+	const celebrateRound = async (update: GameSessionUpdate, roundIndex: number) => {
 		const track = update.rounds.find((round) => round.number === roundIndex)?.track;
 		if (!track?.name) return;
 
@@ -109,7 +112,7 @@
 		}
 	}
 
-	const celebrateEnd = async (update: GameUpdate, newMe: Player | null) => {
+	const celebrateEnd = async (update: GameSessionUpdate, newMe: Player | null) => {
 		if (!update || !update.hasFinished) return;
 
 		const lastRound = getCurrentRound(update);
@@ -121,7 +124,7 @@
 		await celebrateTrack(lastRound.track, winner, winner.id !== newMe?.id, true, true);
 	}
 
-	const processCelebrations = async (currentGame: GameUpdate | null, update: GameUpdate | null, newMe: Player | null) => {
+	const processCelebrations = async (currentGame: GameSessionUpdate | null, update: GameSessionUpdate | null, newMe: Player | null) => {
 		if (!update) return;
 
 		if (update.hasFinished) await celebrateEnd(update, newMe);
@@ -135,16 +138,16 @@
 		}
 	}
 
-	const updateState = ({ game: update, me: newMe }: { game: GameUpdate | null, me: Player | null }) => {
-		game = update;
+	const updateState = ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
+		gameUpdate = update;
 		me = newMe;
 		currentRound = getCurrentRound(update);
 		currentPlayer = findPlayer(update, currentRound?.playerId);
 		isPlaying = !!currentPlayer && currentPlayer.id === me?.id;
 	}
 
-	const onUpdate = async ({ game: update, me: newMe }: { game: GameUpdate | null, me: Player | null }) => {
-		processCelebrations(game, update, newMe);
+	const onUpdate = async ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
+		processCelebrations(gameUpdate, update, newMe);
 
 		updateState({ game: update, me: newMe });
 
@@ -155,7 +158,7 @@
 		session = new GameSession(gameId);
 		session.onUpdate(onUpdate);
 
-		const latestUpdate = session.getLatestUpdate();
+		const latestUpdate = session.getCachedUpdate();
 		if (latestUpdate) updateState(latestUpdate);
 		if (latestUpdate && latestUpdate.game?.rounds.length <= 1) await celebrateStart(latestUpdate.me);
 		if (latestUpdate && latestUpdate.game?.hasFinished) await celebrateEnd(latestUpdate.game, latestUpdate.me);
@@ -168,7 +171,7 @@
 	<title>Game</title>
 	<meta
 		name="description"
-		content="Shuffle Showdown game. First to collect {game?.songsToWin} songs by placing them in order of release wins!"
+		content="Shuffle Showdown game. First to collect {gameUpdate?.songsToWin} songs by placing them in order of release wins!"
 	/>
 </svelte:head>
 
@@ -180,7 +183,7 @@
 		<h1>Round {currentRound?.number}</h1>
 		{#if currentPlayer}
 			<span>Currently playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name}</span>
-			<span>{currentPlayer.id === me?.id ? "You have" : currentPlayer.name + " has"} won {currentPlayer.wonTracks?.length} out of {game?.songsToWin} tracks.</span>
+			<span>{currentPlayer.id === me?.id ? "You have" : currentPlayer.name + " has"} won {currentPlayer.wonTracks?.length} out of {gameUpdate?.songsToWin} tracks.</span>
 		{/if}
 		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
 		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />

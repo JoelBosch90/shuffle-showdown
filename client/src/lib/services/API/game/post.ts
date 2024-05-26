@@ -1,6 +1,6 @@
-import { type Game } from "$lib/types/Game";
+import { type GameUpdate } from "$lib/types/GameUpdate";
 
-export default async (playListString: string) : Promise<Game> => {
+export default async (playListString: string) : Promise<GameUpdate> => {
   const playList = encodeURIComponent(playListString);
 
   // By lack of better methods without doing any external requests, we try to 

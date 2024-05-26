@@ -1,5 +1,5 @@
 import { type Player } from './Player';
-import { type GameUpdate } from './GameUpdate';
+import { type GameSessionUpdate } from './GameSessionUpdate';
 import { ServerMessageType } from '$lib/enums/ServerMessageType';
 
 export interface ServerMessage {
@@ -34,11 +34,11 @@ export const isPlayerKickedMessage = (message: ServerMessage) : message is Playe
     return message.type === ServerMessageType.PlayerKicked;
 }
 
-export interface GameUpdateMessage extends ServerMessage {
-    type: ServerMessageType.GameUpdate;
-    payload: GameUpdate;
+export interface GameSessionUpdateMessage extends ServerMessage {
+    type: ServerMessageType.GameSessionUpdate;
+    payload: GameSessionUpdate;
 }
 
-export const isGameUpdateMessage = (message: ServerMessage) : message is GameUpdateMessage => {
-    return message.type === ServerMessageType.GameUpdate;
+export const isGameSessionUpdateMessage = (message: ServerMessage) : message is GameSessionUpdateMessage => {
+    return message.type === ServerMessageType.GameSessionUpdate;
 }

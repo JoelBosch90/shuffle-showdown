@@ -2,42 +2,37 @@ import { goto } from '$app/navigation';
 import { API } from '$lib/services/API';
 import { type Player } from '$lib/types/Player';
 import { type GameUpdate } from '$lib/types/GameUpdate';
+import { type GameSessionUpdate } from '$lib/types/GameSessionUpdate';
 import { type Answer } from '$lib/types/Answer';
-import { isPlayerKickedMessage, isGameUpdateMessage, type ServerMessage, type GameUpdateMessage } from '$lib/types/ServerMessage';
+import { isPlayerKickedMessage, isGameSessionUpdateMessage, type ServerMessage, type GameSessionUpdateMessage } from '$lib/types/ServerMessage';
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
 
-type GameUpdateCallback = (update: { game: GameUpdate | null, me: Player | null }) => void;
+type GameUpdateCallback = (update: { game: GameSessionUpdate | null, me: Player | null }) => void;
 
 export class GameSession {
-	private lastUpdate: GameUpdate | null = null;
+	private lastUpdate: GameUpdate | GameSessionUpdate | null = null;
 	private me: Player | null = null;
 	private updateCallbacks: GameUpdateCallback[] = [];
 
     constructor(private gameId: string) {}
 
 	public initialize = async () => {
-		this.lastUpdate = await API.getGame(this.gameId).catch(() => goto('/game')) ?? null;
-
-		if (!this.lastUpdate) goto(`/game/${this.gameId}/configure`);
-
 		this.me = await API.getPlayer().catch(() => goto(`/game/${this.gameId}/join`)) ?? null;
-
-		if (!this.me) {
-			return goto(`/game/${this.gameId}/join`);
-		}
+		if (!this.me) return goto(`/game/${this.gameId}/join`);
 
         API.onSocketMessage(this.handleMessage);
         API.startSocketConnection(this.gameId);
-	}
+		this.requestUpdate();
+	};
 
 	public onUpdate = (callback: GameUpdateCallback) => this.updateCallbacks.push(callback);
     
     private handleMessage = (message: ServerMessage) => {
 		if (isPlayerKickedMessage(message)) return goto('/game');
-		if (isGameUpdateMessage(message)) return this.handleUpdate(message);
+		if (isGameSessionUpdateMessage(message)) return this.handleUpdate(message);
 	};
 
-	private handleUpdate = (message: GameUpdateMessage) => {
+	private handleUpdate = (message: GameSessionUpdateMessage) => {
 		this.lastUpdate = message.payload;
 		this.me = message.payload?.players.find(({ id }) => this.me?.id === id) ?? this.me;
 
@@ -50,10 +45,17 @@ export class GameSession {
 		}));
 	}
 
-	public getLatestUpdate = () => ({
-		game: JSON.parse(localStorage.getItem('lastUpdate') ?? 'null'),
-		me: JSON.parse(localStorage.getItem('me') ?? 'null'),
-	});
+	public getCachedUpdate = () => {
+		if (this.lastUpdate && this.me) return {
+			game: this.lastUpdate,
+			me: this.me
+		};
+
+		return {
+			game: JSON.parse(localStorage.getItem('lastUpdate') ?? 'null'),
+			me: JSON.parse(localStorage.getItem('me') ?? 'null')
+		};
+	};
 
 	public kickPlayer = (playerToKick: Player) => {
 		API.sendSocketMessage({
@@ -73,6 +75,13 @@ export class GameSession {
 		API.sendSocketMessage({
 			type: ClientMessageType.SubmitAnswer,
 			payload: JSON.stringify(answer),
+		});
+	}
+
+	private requestUpdate = () => {
+		API.sendSocketMessage({
+			type: ClientMessageType.UpdateRequest,
+			payload: null,
 		});
 	}
 }

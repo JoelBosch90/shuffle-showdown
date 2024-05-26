@@ -45,6 +45,14 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 			return
 		}
 
+	case ClientMessageUpdateRequest:
+
+		broadcastError := BroadcastGameUpdate(client, pool)
+		if broadcastError != nil {
+			client.SendError(broadcastError.Error())
+			return
+		}
+
 	default:
 		BroadcastGameUpdate(client, pool)
 	}

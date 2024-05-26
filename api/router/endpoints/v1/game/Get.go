@@ -13,7 +13,7 @@ func Get(context *gin.Context) {
 	database := database.Get()
 	var game models.Game
 
-	databaseError := database.Preload("Owner").Preload("Playlist").Where("id = ?", id).First(&game).Error
+	databaseError := database.Preload("Owner").Preload("Playlist").Preload("Players").Preload("Rounds").Where("id = ?", id).First(&game).Error
 	if databaseError != nil {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
 		return
