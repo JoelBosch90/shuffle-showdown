@@ -19,8 +19,8 @@ export class GameSession {
     constructor(private gameId: string) {}
 
 	public initialize = async () => {
-		this.me = await API.getPlayer().catch(() => goto(`/game/${this.gameId}/join`)) ?? null;
-		if (!this.me) return goto(`/game/${this.gameId}/join`);
+		this.me = await API.getPlayer().catch(() => goto(`/${this.gameId}/join`)) ?? null;
+		if (!this.me) return goto(`/${this.gameId}/join`);
 
 		this.connection = await API.getSocketConnection(this.gameId);
         this.connection.onMessage(this.handleMessage);
@@ -31,7 +31,7 @@ export class GameSession {
 	public onUpdate = (callback: GameUpdateCallback) => this.updateCallbacks.push(callback);
     
     private handleMessage = (message: ServerMessage) => {
-		if (isPlayerKickedMessage(message)) return goto('/game');
+		if (isPlayerKickedMessage(message)) return goto("/");
 		if (isGameSessionUpdateMessage(message)) return this.handleUpdate(message);
 	};
 

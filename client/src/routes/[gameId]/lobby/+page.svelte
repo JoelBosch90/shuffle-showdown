@@ -16,13 +16,13 @@
 	$: players = [];
 
 	onMount(async () => {
-		shareUrl = `${window.location.origin}/game/${gameId}/join`;
+		shareUrl = `${window.location.origin}/${gameId}/join`;
 		if (!session) session = new GameSession(gameId);
 		session.onUpdate(({ game: newGame, me: newMe }) => {
 			me = newMe;
 			players = newGame?.players ?? [];
 
-			if (newGame?.hasStarted) return goto(`/game/${gameId}/play`);
+			if (newGame?.hasStarted) return goto(`/${gameId}/play`);
 		})
 		await session.initialize();
 	});

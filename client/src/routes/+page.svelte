@@ -7,7 +7,7 @@
 	const createGame = async () => {
 		const game = await API.postGame(playList);
 
-		await goto(`/game/${game.id}/join`);
+		await goto(`/${game.id}/join`);
 	};
 </script>
 

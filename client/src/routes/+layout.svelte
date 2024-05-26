@@ -4,10 +4,12 @@
 </script>
 
 <div class="app">
-	<slot />
+	<main>
+		<slot />
+	</main>
 </div>
 
-<style>
+<style lang="scss">
 	.app {
 		box-sizing: border-box;
 		display: flex;
@@ -18,5 +20,14 @@
 		width: 100dvw;
 
 		background-color: var(--white);
+
+		main {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			padding: 1rem;
+			max-width: 64rem;
+			box-sizing: border-box;
+		}
 	}
 </style>

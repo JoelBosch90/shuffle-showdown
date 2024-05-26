@@ -16,14 +16,14 @@
 		if (!player?.id) await API.postPlayer(playerName);
 		else await API.patchPlayer(playerName);
 
-		if (!game?.id) goto(`/game`);
+		if (!game?.id) goto("/");
 
-		await goto(`/game/${game?.id}/lobby`);
+		await goto(`/${game?.id}/lobby`);
 	};
 
 	onMount(async () => {
 		game = await API.getGame(gameId);
-		if (!game) goto(`/game`);
+		if (!game) goto("/");
 
 		// Prefill the player's name if possible.
 		player = await API.getPlayer();

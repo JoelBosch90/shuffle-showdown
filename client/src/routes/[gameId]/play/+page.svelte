@@ -69,7 +69,7 @@
 		currentPlayer = findPlayerInGameSessionUpdate(update, currentRound?.playerId);
 		isPlaying = !!currentPlayer && currentPlayer.id === me?.id;
 
-		if (!update?.hasStarted) return goto(`/game/${gameId}/lobby`);
+		if (!update?.hasStarted) return goto(`/${gameId}/lobby`);
 	}
 
 	onMount(async () => {
