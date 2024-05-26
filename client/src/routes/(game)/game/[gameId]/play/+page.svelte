@@ -5,14 +5,13 @@
 	import AudioPlayer from '$lib/components/AudioPlayer.svelte';
 	import Chronology from '$lib/components/Chronology.svelte';
 	import Celebration from '$lib/components/Celebration.svelte';
-	import { GameSession } from '$lib/services/GameSession';
 	import type { Player } from '$lib/types/Player';
 	import type { Round } from '$lib/types/Round';
 	import type { GameSessionUpdate } from '$lib/types/GameSessionUpdate';
 	import type { Answer } from '$lib/types/Answer';
-	import type { Track } from '$lib/types/Track';
+	import { GameSession } from '$lib/services/GameSession';
+	import { findPlayerInGameSessionUpdate } from '$lib/helpers/findPlayerInGameSessionUpdate';
 
-	const CELEBRATION_DURATION = 3500;
 	const gameId = $page.params.gameId;
 	let session: GameSession | void | null = null;
 
@@ -36,8 +35,6 @@
 	let audioPlayer: AudioPlayer | null = null;
 
 	let celebration: Celebration | null = null;
-	let isCelebrating: boolean = false;
-	let celebrationPromise: Promise<void> = Promise.resolve();
 
 	const getCurrentRound = (update: GameSessionUpdate | null) : Round | null => {
 		if (!update) return null;
@@ -47,8 +44,6 @@
 
 		return currentRound ?? null;
 	}
-
-	const findPlayer = (update: GameSessionUpdate | null, playerId: string | undefined) => update?.players.find((player) => player.id === playerId) ?? null;
 
 	const onAnswerSelect = (answer: Answer) => {
 		selectedAnswer = answer;
@@ -60,97 +55,19 @@
 		audioPlayer?.pause();
 	}
 
-	const findWinner = (update: GameSessionUpdate, trackPreviewUrl?: string) => {
-		if (!trackPreviewUrl) return undefined;
+	const onUpdate = async ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
+		celebration?.update({
+			oldUpdate: gameUpdate,
+			newUpdate: update,
+			oldMe: me,
+			newMe
+		});
 
-		for (let player of update?.players ?? []) {
-			for (let wonTrack of player?.wonTracks ?? []) {
-				if (wonTrack.track.previewUrl === trackPreviewUrl) return player;
-			}
-		}
-
-		return undefined;
-	}
-
-	const sleep = async (ms: number) : Promise<void> => {
-		return new Promise((resolve) => setTimeout(resolve, ms));
-	}
-
-	const celebrateTrack = async (track: Track, player: Player, isOtherPlayer: boolean, hasWon: boolean, isFinalWin: boolean, millisecondsToSleep?: number) => {
-		isCelebrating = true;
-		celebration?.celebrate(track, player, isOtherPlayer, hasWon, isFinalWin);
-
-		if (millisecondsToSleep) {
-			celebrationPromise = celebrationPromise?.then(() => sleep(millisecondsToSleep));
-			await celebrationPromise;
-			isCelebrating = false;
-		}
-	}
-
-	const celebrateRound = async (update: GameSessionUpdate, roundIndex: number) => {
-		const track = update.rounds.find((round) => round.number === roundIndex)?.track;
-		if (!track?.name) return;
-
-		const winner = findWinner(update, track.previewUrl);
-		const player = winner ?? findPlayer(update, update.rounds[roundIndex].playerId);
-
-		const isOtherPlayer = player?.id !== me?.id;
-		const hasWon = !!winner;
-
-		const wonTracksCount = player?.wonTracks?.length ?? 0;
-		const isFinalWin = hasWon && wonTracksCount >= update.songsToWin;
-
-		if (!track || !player) return;
-		await celebrateTrack(track, player, isOtherPlayer, hasWon, isFinalWin, CELEBRATION_DURATION);
-	}
-
-	const celebrateStart = async (newMe: Player) => {
-		if (!newMe) return;
-
-		for (const track of newMe?.wonTracks ?? []) {
-			await celebrateTrack(track.track, newMe, false, true, false, CELEBRATION_DURATION);
-		}
-	}
-
-	const celebrateEnd = async (update: GameSessionUpdate, newMe: Player | null) => {
-		if (!update || !update.hasFinished) return;
-
-		const lastRound = getCurrentRound(update);
-		if (!lastRound) return;
-
-		const winner = findWinner(update, lastRound.track.previewUrl);
-		if (!winner) return;
-
-		await celebrateTrack(lastRound.track, winner, winner.id !== newMe?.id, true, true);
-	}
-
-	const processCelebrations = async (currentGame: GameSessionUpdate | null, update: GameSessionUpdate | null, newMe: Player | null) => {
-		if (!update) return;
-
-		if (update.hasFinished) await celebrateEnd(update, newMe);
-
-		const lastSeenRound = getCurrentRound(currentGame)?.number ?? 0;
-		const currentRound = getCurrentRound(update)?.number ?? 0;
-		if (lastSeenRound >= currentRound) return;
-
-		for (let celebratedRound = lastSeenRound; celebratedRound < currentRound; celebratedRound++) {
-			celebrateRound(update, celebratedRound);
-		}
-	}
-
-	const updateState = ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
 		gameUpdate = update;
 		me = newMe;
 		currentRound = getCurrentRound(update);
-		currentPlayer = findPlayer(update, currentRound?.playerId);
+		currentPlayer = findPlayerInGameSessionUpdate(update, currentRound?.playerId);
 		isPlaying = !!currentPlayer && currentPlayer.id === me?.id;
-	}
-
-	const onUpdate = async ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
-		if (update?.hasFinished) celebrateEnd(update, newMe);
-		else processCelebrations(gameUpdate, update, newMe);
-
-		updateState({ game: update, me: newMe });
 
 		if (!update?.hasStarted) return goto(`/game/${gameId}/lobby`);
 	}
@@ -160,9 +77,7 @@
 		session.onUpdate(onUpdate);
 
 		const latestUpdate = session.getCachedUpdate();
-		if (latestUpdate) updateState(latestUpdate);
-		if (latestUpdate && latestUpdate.game?.rounds.length <= 1) await celebrateStart(latestUpdate.me);
-		if (latestUpdate && latestUpdate.game?.hasFinished) await celebrateEnd(latestUpdate.game, latestUpdate.me);
+		if (latestUpdate) onUpdate(latestUpdate);
 
 		await session.initialize();
 	});
@@ -177,10 +92,7 @@
 </svelte:head>
 
 <div class="container">
-	<div class="overlay" class:hidden={!isCelebrating}>
-		<svelte:component this={Celebration} bind:this={celebration} />
-	</div>
-	<div class="game-interface" class:hidden={isCelebrating}>
+	<div class="game-interface">
 		<h1>Round {currentRound?.number}</h1>
 		{#if currentPlayer}
 			<span>Currently playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name}</span>
@@ -192,6 +104,7 @@
 			Select answer
 		</button>
 	</div>
+	<svelte:component this={Celebration} bind:this={celebration} />
 </div>
 
 <style lang="scss">
@@ -202,13 +115,7 @@
 		justify-content: center;
 		height: 100%;
 		width: 100%;
-	}
-
-	.overlay {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		align-items: center;
+		position: relative;
 	}
 
 	.game-interface {
@@ -222,9 +129,5 @@
 		h1 {
 			text-align: center;
 		}
-	}
-
-	.hidden {
-		display: none;
 	}
 </style>

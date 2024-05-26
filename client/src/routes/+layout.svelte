@@ -13,7 +13,10 @@
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
+
 		height: 100dvh;
 		width: 100dvw;
+
+		background-color: var(--white);
 	}
 </style>
