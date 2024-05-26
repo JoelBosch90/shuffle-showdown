@@ -34,25 +34,24 @@ func Post(context *gin.Context) {
 
 	database := database.Get()
 
-	player := &models.Player{}
+	player := models.Player{}
 	if input.PlayerId != uuid.Nil {
-		getPlayerError := database.Where("id = ?", input.PlayerId).First(player).Error
-		if getPlayerError != nil {
-			context.JSON(http.StatusNotFound, gin.H{"error": "Player not found"})
-		}
-	} else {
-		var createPlayerError error
-		player, createPlayerError = gameHelpers.CreatePlayer("", database)
+		database.Where("id = ?", input.PlayerId).First(&player)
+	}
+
+	if player.Id == uuid.Nil {
+		playerPointer, createPlayerError := gameHelpers.CreatePlayer("", database)
+		player = *playerPointer
 		if createPlayerError != nil {
 			context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		}
 	}
 
-	game, gameError := gameHelpers.CreateGame(playlist, *player, database)
+	game, gameError := gameHelpers.CreateGame(playlist, player, database)
 	if gameError != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 	}
 
-	gameHelpers.SetPlayerCookie(context, *player)
+	gameHelpers.SetPlayerCookie(context, player)
 	context.JSON(http.StatusOK, gin.H{"game": game})
 }
