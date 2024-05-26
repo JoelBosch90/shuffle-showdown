@@ -39,8 +39,8 @@ export class GameSession {
 		this.lastUpdate = message.payload;
 		this.me = message.payload?.players.find(({ id }) => this.me?.id === id) ?? this.me;
 
-		localStorage.setItem('me', JSON.stringify(this.me));
-		localStorage.setItem('lastUpdate', JSON.stringify(this.lastUpdate));
+		localStorage.setItem(`me-${this.gameId}`, JSON.stringify(this.me));
+		localStorage.setItem(`lastUpdate-${this.gameId}`, JSON.stringify(this.lastUpdate));
 
 		this.updateCallbacks.forEach((callback) => callback({
 			game: message.payload,
@@ -55,8 +55,8 @@ export class GameSession {
 		};
 
 		return {
-			game: JSON.parse(localStorage.getItem('lastUpdate') ?? 'null'),
-			me: JSON.parse(localStorage.getItem('me') ?? 'null')
+			game: JSON.parse(localStorage.getItem(`lastUpdate-${this.gameId}`) ?? 'null'),
+			me: JSON.parse(localStorage.getItem(`me-${this.gameId}`) ?? 'null')
 		};
 	};
 

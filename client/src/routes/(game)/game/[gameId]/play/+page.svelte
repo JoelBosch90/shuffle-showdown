@@ -147,7 +147,8 @@
 	}
 
 	const onUpdate = async ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
-		processCelebrations(gameUpdate, update, newMe);
+		if (update?.hasFinished) celebrateEnd(update, newMe);
+		else processCelebrations(gameUpdate, update, newMe);
 
 		updateState({ game: update, me: newMe });
 
