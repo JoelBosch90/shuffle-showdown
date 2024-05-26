@@ -2,7 +2,6 @@ import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
 import { type GenericEventCallback, type CloseEventCallback, type MessageEventCallback } from '$lib/types/EventCallbacks';
 import type { ClientMessage } from '$lib/types/ClientMessage';
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
-import { API } from '../API';
 
 const RECOVERABLE_CLOSE_CODES = [
   WebSocketCloseCode.GOING_AWAY,
@@ -15,110 +14,108 @@ const RECOVERABLE_CLOSE_CODES = [
 ];
 
 export class SocketConnection {
-  private static connected = false;
-  private static connecting = false;
-  private static initialized = false;
+  private connected = false;
+  private connecting = false;
 
-  private static gameId: string | undefined = undefined;
-  private static host: string | undefined = undefined;
-  private static connectionProtocol: string | undefined = undefined;
-  private static connection: WebSocket | undefined = undefined;
+  private host: string | undefined = undefined;
+  private connectionProtocol: string | undefined = undefined;
+  private connection: WebSocket | undefined = undefined;
 
-  private static onOpenCallbacks: Array<GenericEventCallback> = [];
-  private static onCloseCallbacks: Array<CloseEventCallback> = [];
-  private static onErrorCallbacks: Array<GenericEventCallback> = [];
-  private static onMessageCallbacks: Array<MessageEventCallback> = [];
+  private onOpenCallbacks: Array<GenericEventCallback> = [];
+  private onCloseCallbacks: Array<CloseEventCallback> = [];
+  private onErrorCallbacks: Array<GenericEventCallback> = [];
+  private onMessageCallbacks: Array<MessageEventCallback> = [];
 
-  private static queuedMessages: Array<ClientMessage> = [];
+  private queuedMessages: Array<ClientMessage> = [];
 
-  public static start(gameId?: string) {
-    if (gameId && gameId !== SocketConnection.gameId) {
-      SocketConnection.close();
-      SocketConnection.gameId = gameId;
-    }
-    if (SocketConnection.connected || SocketConnection.connecting) return;
-    if (!SocketConnection.initialized) SocketConnection.initialize();
-    SocketConnection.connecting = true;
-    SocketConnection.connection = new WebSocket(`${SocketConnection.connectionProtocol}//${SocketConnection.host}/api/v1/ws/${gameId}`);
-
-    SocketConnection.connection.addEventListener('open', SocketConnection.baseOnOpen);
-    SocketConnection.connection.addEventListener('close', SocketConnection.baseOnClose);
-    SocketConnection.connection.addEventListener('error', SocketConnection.baseOnError);
-    SocketConnection.connection.addEventListener('message', SocketConnection.baseOnMessage);
-
-    API.getPlayer().then((player) => {
-      SocketConnection.send({
-        type: ClientMessageType.Join,
-        payload: null,
-        playerId: player?.id || null,
-      })
-    });
+  constructor(public readonly gameId: string, private playerId: string) {
+    this.connectionProtocol = window.location.protocol.endsWith('s:') ? 'wss:' : 'ws:';
+    this.host = window.location.host;
+ 
+    this.baseOnOpen = this.baseOnOpen.bind(this);
+    this.baseOnClose = this.baseOnClose.bind(this);
+    this.baseOnError = this.baseOnError.bind(this);
+    this.baseOnMessage = this.baseOnMessage.bind(this);
   }
 
-  private static initialize() {
-    if (SocketConnection.initialized) return;
-    SocketConnection.connectionProtocol = window.location.protocol.endsWith('s:') ? 'wss:' : 'ws:';
-    SocketConnection.host = window.location.host;
+  public start() {
+    if (this.connected || this.connecting) return;
+    this.connecting = true;
+    this.connection = new WebSocket(`${this.connectionProtocol}//${this.host}/api/v1/ws/${this.gameId}`);
+
+    this.connection.addEventListener('open', this.baseOnOpen);
+    this.connection.addEventListener('close', this.baseOnClose);
+    this.connection.addEventListener('error', this.baseOnError);
+    this.connection.addEventListener('message', this.baseOnMessage);
+
+    this.send({ type: ClientMessageType.Join, payload: null });
   }
 
-  public static close() {
-    if (!SocketConnection.connected || !SocketConnection.connection) return;
-    SocketConnection.connection.close();
-    SocketConnection.connected = SocketConnection.connecting = false;
+  public close() {
+    if (!this.connected || !this.connection) return;
+    this.connection.close();
+    this.connected = this.connecting = false;
   }
 
-  public static send(message: ClientMessage) {
-    if (!SocketConnection.connected && !SocketConnection.connecting) SocketConnection.start();
-    if (SocketConnection.connected && SocketConnection.connection) SocketConnection.connection.send(JSON.stringify(message));
-    else SocketConnection.queuedMessages.push(message);
+  public send(message: Omit<ClientMessage, 'playerId'>) {
+    const messageWithPlayerId = {
+      ...message,
+      playerId: this.playerId,
+    };
+    if (!this.connected && !this.connecting) this.start();
+    if (this.connected && this.connection) this.connection.send(JSON.stringify(messageWithPlayerId));
+    else this.queuedMessages.push(messageWithPlayerId);
   }
 
-  private static sendQueuedMessages() {
-    const messages = structuredClone(SocketConnection.queuedMessages);
+  private sendQueuedMessages() {
+    const messages = structuredClone(this.queuedMessages);
 
     // Empty the array of queued messages.
-    SocketConnection.queuedMessages.splice(0, SocketConnection.queuedMessages.length);
+    this.queuedMessages.splice(0, this.queuedMessages.length);
 
-    messages.forEach((message) => SocketConnection.send(message));
+    messages.forEach((message) => this.send(message));
   }
 
-  public static onOpen(callback: GenericEventCallback) {
-    SocketConnection.onOpenCallbacks.push(callback);
+  public onOpen(callback: GenericEventCallback) {
+    this.onOpenCallbacks.push(callback);
   }
 
-  private static baseOnOpen(event: Event) {
-    SocketConnection.connecting = false;
-    SocketConnection.connected = true;
-    SocketConnection.onOpenCallbacks.forEach(callback => callback(event));
+  private baseOnOpen(event: Event) {
+    this.connecting = false;
+    this.connected = true;
+    this.onOpenCallbacks.forEach(callback => callback(event));
 
-    SocketConnection.sendQueuedMessages();
+    this.sendQueuedMessages();
   }
 
-  public static onClose(callback: CloseEventCallback) {
-    SocketConnection.onCloseCallbacks.push(callback);
+  public onClose(callback: CloseEventCallback) {
+    this.onCloseCallbacks.push(callback);
   }
 
-  private static baseOnClose(event: CloseEvent) {
-    SocketConnection.connected = false;
-    SocketConnection.onCloseCallbacks.forEach(callback => callback(event));
+  private baseOnClose(event: CloseEvent) {
+    this.connected = false;
+    this.onCloseCallbacks.forEach(callback => callback(event));
     
     // Try to reconnect if the connection seems recoverable.
-    if (event.code in RECOVERABLE_CLOSE_CODES) SocketConnection.start();
+    if (event.code in RECOVERABLE_CLOSE_CODES) this.start();
   }
 
-  public static onError(callback: GenericEventCallback) {
-    SocketConnection.onErrorCallbacks.push(callback);
+  public onError(callback: GenericEventCallback) {
+    this.onErrorCallbacks.push(callback);
   }
 
-  private static baseOnError(event: Event) {
-    SocketConnection.onErrorCallbacks.forEach(callback => callback(event));
+  private baseOnError(event: Event) {
+    this.onErrorCallbacks.forEach(callback => callback(event));
   }
 
-  public static onMessage(callback: MessageEventCallback) {
-    SocketConnection.onMessageCallbacks.push(callback);
+  public onMessage(callback: MessageEventCallback) {
+    this.onMessageCallbacks.push(callback);
   }
 
-  private static baseOnMessage(event: MessageEvent) {
-    SocketConnection.onMessageCallbacks.forEach(callback => callback(JSON.parse(event.data)));
+  private baseOnMessage(event: MessageEvent) {
+    this.onMessageCallbacks.forEach(callback => callback({
+      gameId: this.gameId,
+      ...JSON.parse(event.data)
+    }));
   }
 }

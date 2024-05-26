@@ -4,14 +4,17 @@
 	import { page } from '$app/stores';
 	import { API } from '$lib/services/API';
 	import { type GameUpdate } from '$lib/types/GameUpdate';
+	import { type Player } from '$lib/types/Player';
 
 	const gameId = $page.params.gameId;
 	let game: GameUpdate | void | null = null;
+	let player: Player | void | null = null;
 	let playerName = '';
 	let isOwner = false;
 
 	const createPlayer = async () => {
-		await API.postPlayer(playerName);
+		if (!player?.id) await API.postPlayer(playerName);
+		else await API.patchPlayer(playerName);
 
 		if (!game?.id) goto(`/game`);
 
@@ -22,12 +25,9 @@
 		game = await API.getGame(gameId);
 		if (!game) goto(`/game`);
 
-		// Close any existing socket connection.
-		API.closeSocketConnection();
-
 		// Prefill the player's name if possible.
-		const player = await API.getPlayer();
-		if (player?.name) playerName = player?.name;
+		player = await API.getPlayer();
+		playerName = player?.name ?? "";
 		isOwner = player?.id === game?.owner.id;
 	});
 </script>

@@ -7,7 +7,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func CreatePlayer(name string, database *gorm.DB) (models.Player, error) {
+func CreatePlayer(name string, database *gorm.DB) (*models.Player, error) {
 	player := models.Player{
 		Id:     uuid.NewV4(),
 		Secret: uuid.NewV4(),
@@ -16,8 +16,8 @@ func CreatePlayer(name string, database *gorm.DB) (models.Player, error) {
 
 	playerError := database.Create(&player).Error
 	if playerError != nil {
-		return models.Player{}, playerError
+		return nil, playerError
 	}
 
-	return player, nil
+	return &player, nil
 }

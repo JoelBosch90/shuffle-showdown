@@ -3,6 +3,7 @@ import { type GameSessionUpdate } from './GameSessionUpdate';
 import { ServerMessageType } from '$lib/enums/ServerMessageType';
 
 export interface ServerMessage {
+    gameId: string;
     type: ServerMessageType;
     payload: unknown;
 }

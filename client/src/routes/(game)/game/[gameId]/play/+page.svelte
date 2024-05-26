@@ -155,7 +155,7 @@
 	}
 
 	onMount(async () => {
-		session = new GameSession(gameId);
+		if (!session) session = new GameSession(gameId);
 		session.onUpdate(onUpdate);
 
 		const latestUpdate = session.getCachedUpdate();

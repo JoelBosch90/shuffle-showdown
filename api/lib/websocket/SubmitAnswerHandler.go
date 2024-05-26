@@ -6,7 +6,6 @@ import (
 	gameHelpers "api/lib/game"
 	"encoding/json"
 	"errors"
-	"log"
 )
 
 type Answer struct {
@@ -50,7 +49,6 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 	}
 
 	hasFinished := gameHelpers.CheckGameEnd(game.Id)
-	log.Println("HAS FINISHED", hasFinished)
 	if !hasFinished {
 		createNextRoundError := gameHelpers.CreateNextRound(game.Id)
 		if createNextRoundError != nil {

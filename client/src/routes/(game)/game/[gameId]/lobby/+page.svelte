@@ -17,7 +17,7 @@
 
 	onMount(async () => {
 		shareUrl = `${window.location.origin}/game/${gameId}/join`;
-		session = new GameSession(gameId);
+		if (!session) session = new GameSession(gameId);
 		session.onUpdate(({ game: newGame, me: newMe }) => {
 			me = newMe;
 			players = newGame?.players ?? [];

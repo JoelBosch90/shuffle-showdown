@@ -28,7 +28,7 @@ func Post(context *gin.Context) {
 	}
 
 	// Set the player cookie.
-	gameHelpers.SetPlayerCookie(context, player)
+	gameHelpers.SetPlayerCookie(context, *player)
 
-	context.JSON(http.StatusOK, gin.H{"player": player})
+	context.JSON(http.StatusOK, gin.H{"player": *player})
 }

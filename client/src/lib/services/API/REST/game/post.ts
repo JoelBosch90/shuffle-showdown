@@ -1,6 +1,6 @@
 import { type GameUpdate } from "$lib/types/GameUpdate";
 
-export default async (playListString: string) : Promise<GameUpdate> => {
+export default async (playListString: string, playerId?: string) : Promise<GameUpdate> => {
   const playList = encodeURIComponent(playListString);
 
   // By lack of better methods without doing any external requests, we try to 
@@ -14,7 +14,8 @@ export default async (playListString: string) : Promise<GameUpdate> => {
     },
     body: JSON.stringify({
       playList,
-      countryCode
+      countryCode,
+      playerId
     })
   });
   

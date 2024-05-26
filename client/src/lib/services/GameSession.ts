@@ -6,6 +6,7 @@ import { type GameSessionUpdate } from '$lib/types/GameSessionUpdate';
 import { type Answer } from '$lib/types/Answer';
 import { isPlayerKickedMessage, isGameSessionUpdateMessage, type ServerMessage, type GameSessionUpdateMessage } from '$lib/types/ServerMessage';
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
+import type { SocketConnection } from './API/SocketConnection';
 
 type GameUpdateCallback = (update: { game: GameSessionUpdate | null, me: Player | null }) => void;
 
@@ -13,6 +14,7 @@ export class GameSession {
 	private lastUpdate: GameUpdate | GameSessionUpdate | null = null;
 	private me: Player | null = null;
 	private updateCallbacks: GameUpdateCallback[] = [];
+	private connection: SocketConnection | null = null;
 
     constructor(private gameId: string) {}
 
@@ -20,8 +22,9 @@ export class GameSession {
 		this.me = await API.getPlayer().catch(() => goto(`/game/${this.gameId}/join`)) ?? null;
 		if (!this.me) return goto(`/game/${this.gameId}/join`);
 
-        API.onSocketMessage(this.handleMessage);
-        API.startSocketConnection(this.gameId);
+		this.connection = await API.getSocketConnection(this.gameId);
+        this.connection.onMessage(this.handleMessage);
+        this.connection.start();
 		this.requestUpdate();
 	};
 
@@ -58,28 +61,28 @@ export class GameSession {
 	};
 
 	public kickPlayer = (playerToKick: Player) => {
-		API.sendSocketMessage({
+		if (this.connection) this.connection.send({
 			type: ClientMessageType.KickPlayer,
 			payload: playerToKick.id,
 		});
 	};
 
 	public startGame = () => {
-		API.sendSocketMessage({
+		if (this.connection) this.connection.send({
 			type: ClientMessageType.StartGame,
 			payload: null,
 		});
 	};
 
 	public submitAnswer = (answer: Answer) => {
-		API.sendSocketMessage({
+		if (this.connection) this.connection.send({
 			type: ClientMessageType.SubmitAnswer,
 			payload: JSON.stringify(answer),
 		});
 	}
 
 	private requestUpdate = () => {
-		API.sendSocketMessage({
+		if (this.connection) this.connection.send({
 			type: ClientMessageType.UpdateRequest,
 			payload: null,
 		});
