@@ -59,4 +59,4 @@ jobs:
         KEY: ${{ secrets.KEY }}
         script: |
           cd /var/www/shuffle-showdown
-          docker-compose up -d --build
+          docker-compose -f docker-compose.yml up -d

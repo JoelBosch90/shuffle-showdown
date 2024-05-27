@@ -19,7 +19,7 @@ func CreateGame(info spotifyModels.Playlist, player models.Player, database *gor
 		Id:         uuid.NewV4(),
 		PlaylistId: playlist.Id,
 		Playlist:   playlist,
-		SongsToWin: 3,
+		SongsToWin: 10,
 		Owner:      player,
 		Players:    []models.Player{player},
 	}
