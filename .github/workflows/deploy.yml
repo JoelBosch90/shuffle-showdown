@@ -40,12 +40,11 @@ jobs:
     # the latest version of the repository.
     - name: Copy repository contents through SCP
       uses: appleboy/scp-action@master
-      env:
+      with:
         HOST: ${{ secrets.HOST }}
         USERNAME: ${{ secrets.USER }}
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.KEY }}
-      with:
         source: "."
         target: "/var/www/stocks-in-motion"
 
