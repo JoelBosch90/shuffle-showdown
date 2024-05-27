@@ -46,7 +46,7 @@ jobs:
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.KEY }}
         source: "."
-        target: "/var/www/stocks-in-motion"
+        target: "/var/www/shuffle-showdown"
 
     # Next, we need to execute some actions. We need to navigate to the right
     # directory for our repository and rebuild the Docker Compose network.
@@ -58,5 +58,5 @@ jobs:
         PORT: ${{ secrets.PORT }}
         KEY: ${{ secrets.KEY }}
         script: |
-          cd /var/www/stocks-in-motion
+          cd /var/www/shuffle-showdown
           docker-compose up -d --build
