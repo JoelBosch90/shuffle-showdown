@@ -1,196 +1,161 @@
 <script lang="ts">
-    import type { WonTrack } from '$lib/types/WonTrack';
-    import type { Artist } from '$lib/types/Artist';
-    import type { Answer } from '$lib/types/Answer';
+  import type { WonTrack } from '$lib/types/WonTrack';
+  import type { Artist } from '$lib/types/Artist';
+  import type { Answer } from '$lib/types/Answer';
 
-    export let disabled: boolean = false;
-    export let wonTracks: WonTrack[] = [];
-    export let onSelect: (answer: Answer) => void;
+  export let disabled: boolean = false;
+  export let wonTracks: WonTrack[] = [];
+  export let onSelect: (answer: Answer) => void;
 
-    interface Card {
-        releaseYear: string;
-        name?: string;
-        artists?: string;
-        isCurrentGuess: boolean;
-    }
+  interface Card {
+    releaseYear: string;
+    name?: string;
+    artists?: string;
+  }
 
-    interface CardSlot {
-        card?: Card;
-    }
+  const guessCard: Card = {
+    releaseYear: "???",
+  }
 
-    const guessCard: Card = {
-        releaseYear: "???",
-        isCurrentGuess: true,
-    }
+  const trackToCard = ({ track }: WonTrack) : Card => ({
+    releaseYear: track.releaseYear?.toString() ?? '???',
+    name: track.name,
+    artists: joinArtists(track.artists),
+  });
 
-    let slots: CardSlot[];
-    $: slots = convertToSlots(wonTracks);
+  const joinArtists = (artists: Artist[] = []) => {
+    return artists.map((artist) => artist.name).join(', ');
+  };
 
-    let isDragging: boolean = false;
-    let hoveringOption: number | null = null;
+  const moveUp = () => {
+    moveCardTo(guessIndex - 1);
+  };
 
-    const weaveArrays = <TypeA, TypeB>(arrayA: TypeA[], arrayB: TypeB[]): (TypeA | TypeB)[] => {
-        const newArray: (TypeA | TypeB)[] = [];
-        const maxLength = Math.max(arrayA.length, arrayB.length);
+  const moveDown = () => {
+    moveCardTo(guessIndex + 1);
+  };
 
-        for (let index = 0; index < maxLength; index++) {
-            if (arrayA[index]) newArray.push(arrayA[index]);
-            if (arrayB[index]) newArray.push(arrayB[index]);
-        }
+  const moveCardTo = (newIndex: number) => {
+    if (disabled) return;
 
-        return newArray;
-    };
+    guessIndex = Math.min(cards.length - 1, Math.max(newIndex, 0));
+    const newCards =  [...trackCards.slice(0, guessIndex), guessCard, ...trackCards.slice(guessIndex)];
+    const cardBefore = guessIndex > 0 ? newCards[guessIndex - 1] : undefined;
+    const cardAfter = guessIndex < newCards.length - 1 ? newCards[guessIndex + 1] : undefined;
 
-    const joinArtists = (artists: Artist[] = []) => {
-        return artists.map((artist) => artist.name).join(', ');
-    };
+    onSelect({
+      afterReleaseYear: cardBefore ? parseInt(cardBefore?.releaseYear ?? "") : undefined,
+      beforeReleaseYear: cardAfter ? parseInt(cardAfter?.releaseYear ?? "") : undefined,
+    });
+  };
 
-    const sortTracks = (tracks: WonTrack[] = []) => {
-        return tracks.toSorted((a, b) => {
-            const aNumber = a?.track?.releaseYear ?? 0;
-            const bNumber = b?.track?.releaseYear ?? 0;
-            return aNumber - bNumber;
-        });
-    };
+  const sortWonTracks = (a: WonTrack, b: WonTrack) => {
+    const aReleaseYear = a.track.releaseYear ?? 0;
+    const bReleaseYear = b.track.releaseYear ?? 0;
+    return aReleaseYear - bReleaseYear;
+  };
 
-    const convertToSlots = (tracks: WonTrack[] = []) => {
-        const ownedTracks: CardSlot[] = sortTracks(tracks)
-            .map(({ track }) => ({
-                card: {
-                    releaseYear: track.releaseYear?.toString() ?? "???",
-                    name: track.name,
-                    artists: joinArtists(track.artists),
-                    isCurrentGuess: false,
-                }
-            }));
-        // This looks funky, but the map makes sure that each placeholder has a unique object.
-        const guessPlaceholders: CardSlot[] = Array(ownedTracks.length + 1).fill({}).map(() => ({}));
-        guessPlaceholders[Math.ceil(guessPlaceholders.length / 2) - 1] = { card: guessCard };
+  let trackCards: Card[];
+  $: trackCards = wonTracks.toSorted(sortWonTracks).map(trackToCard);
 
-        const slots = weaveArrays(guessPlaceholders, ownedTracks);
-        select(slots);
-        return slots;
-    };
+  let guessIndex: number;
+  $: guessIndex = Math.ceil(wonTracks.length / 2) - 1;
 
-    const select = (slots: CardSlot[] = []) => {
-        const slotIndex = slots.findIndex((slot) => slot.card?.isCurrentGuess);
-
-        const cardBefore = slotIndex > 1 ? slots[slotIndex - 1].card : undefined;
-        const cardAfter = slotIndex < slots.length - 2 ? slots[slotIndex + 1].card : undefined;
-
-        onSelect({
-            afterReleaseYear: cardBefore ? parseInt(cardBefore?.releaseYear ?? "") : undefined,
-            beforeReleaseYear: cardAfter ? parseInt(cardAfter?.releaseYear ?? "") : undefined,
-        });
-    }
-
-    const drag = () => {
-        isDragging = true;
-    };
-
-    const drop = (event: DragEvent, slotIndex: number) => {
-        event.preventDefault();
-        isDragging = false;
-
-        const sourceSlot = slots.find((slot) => slot.card?.isCurrentGuess);
-        if (sourceSlot) {
-            delete sourceSlot.card;   
-        }
-
-        slots[slotIndex].card = guessCard;
-
-        select(slots);
-    };
+  let cards: Card[];
+  $: cards = [...trackCards.slice(0, guessIndex), guessCard, ...trackCards.slice(guessIndex)];
 </script>
 
 <div class="chronology" class:disabled={disabled}>
-    {#each slots as slot, slotIndex}
-        {#if slot.card}
-            <div
-                role="button"
-                tabindex="0"
-                class="card"
-                draggable={slot.card.isCurrentGuess && !disabled}
-                on:dragstart={drag}
-            >
-                <h2>{slot.card.releaseYear}</h2>
+  {#each cards as card, cardIndex}
+    <div
+      role="button"
+      tabindex="0"
+      class="card"
+    >
+      {#if cardIndex === guessIndex}
+        <button class="top-half" on:click={moveUp}></button>
+        <button class="bottom-half" on:click={moveDown}></button>
+        <i class="fa-solid fa-arrow-up"></i>
+      {/if}
 
-                {#if slot.card.name}
-                    <p>{slot.card.name}</p>
-                {/if}
+      <h2>{card.releaseYear}</h2>
 
-                {#if slot.card.artists}
-                    <p>{slot.card.artists}</p>
-                {/if}
-            </div>
-        {:else if isDragging}
-            <div
-                role="button"
-                tabindex="0"
-                class="droppable"
-                class:hovering={slotIndex === hoveringOption}
-                on:dragenter={() => hoveringOption = slotIndex}
-                on:dragleave={() => hoveringOption = null}
-                on:drop={(event) => drop(event, slotIndex)}
-                on:dragover={(event) => event.preventDefault()}
-            />
-        {/if}
-    {/each}
+      {#if card.name}
+        <p>{card.name}</p>
+      {/if}
+
+      {#if card.artists}
+        <p>{card.artists}</p>
+      {/if}
+
+      {#if cardIndex === guessIndex}
+        <i class="fa-solid fa-arrow-down"></i>
+      {/if}
+    </div>
+  {/each}
 </div>
 
 <style lang="scss">
-    .chronology {
-        display: flex;
-        flex-direction: column;
+  .chronology {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+
+    // Make sure the cards can be scrolled through only vertically.
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    .card {
+      --card-border-radius: 1rem;
+
+      position: relative;
+      display: flex;
+      box-sizing: border-box;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      gap: 0.5rem;
+      padding: var(--card-border-radius);
+      border-radius: var(--card-border-radius);
+      box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+
+      h2 {
+        font-size: 4rem;
+      }
+
+      p, h2 {
+        margin: 0;
+      }
+
+      .top-half, .bottom-half {
         box-sizing: border-box;
-        align-items: center;
-        gap: 1rem;
-        padding: 1rem;
-        
-        // Make sure the cards can be scrolled through only vertically.
-        overflow-y: auto;
-        overflow-x: hidden;
+        position: absolute;
+        width: 100%;
+        height: 50%;
+        left: 0;
+        cursor: pointer;
+      }
 
-        .card {
-            display: flex;
-            box-sizing: border-box;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            width: 100%;
-            gap: 0.5rem;
-            padding: 1rem;
-            border-radius: 1rem;
-            box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+      .top-half {
+        border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+        top: 0;
+      }
 
-            h2 {
-                font-size: 4rem;
-                margin: 0;
-            }
-
-            p {
-                margin: 0;
-            }
-        }
-
-        .droppable {
-            display: flex;
-            flex-shrink: 0;
-            width: 100%;
-            height: 6rem;
-            background-color: rgba(0, 0, 0, 0.15);
-            border-radius: 1rem;
-        }
-
-        .hovering {
-            background-color: rgba(0, 0, 0, 0.3);
-        }
-
-        &.disabled {
-            .card {
-                cursor: not-allowed;
-                filter: invert(50%);
-            }
-        }
+      .bottom-half {
+        border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
+        bottom: 0;
+      }
     }
+
+    &.disabled {
+      .card {
+        cursor: not-allowed;
+        filter: invert(50%);
+      }
+    }
+  }
 </style>

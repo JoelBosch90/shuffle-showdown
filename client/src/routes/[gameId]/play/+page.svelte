@@ -20,7 +20,7 @@
 
 	let currentRound: Round | null;
 	$: currentRound = null;
-	
+
 	let currentPlayer: Player | null;
 	$: currentPlayer = null;
 
@@ -93,11 +93,12 @@
 
 <div class="container">
 	<div class="game-interface">
-		<h1>Round {currentRound?.number}</h1>
-		{#if currentPlayer}
-			<span>Currently playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name}</span>
-			<span>{currentPlayer.id === me?.id ? "You have" : currentPlayer.name + " has"} won {currentPlayer.wonTracks?.length} out of {gameUpdate?.songsToWin} tracks.</span>
-		{/if}
+    <div class="game-info">
+      <h1>Round {currentRound?.number}</h1>
+      {#if currentPlayer}
+        <p>Now playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name} ({currentPlayer.wonTracks?.length}/{gameUpdate?.songsToWin})</p>
+      {/if}
+    </div>
 		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
 		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
 		<button class="filled" on:click={onAnswerSubmit}>
@@ -125,9 +126,12 @@
 		flex-direction: column;
 		gap: 1rem;
 		align-items: center;
-
-		h1 {
-			text-align: center;
-		}
 	}
+
+  .game-info {
+    h1, p {
+      text-align: center;
+      margin: 0;
+    }
+  }
 </style>
