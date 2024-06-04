@@ -27,7 +27,7 @@ type GameState struct {
 	Rounds      []models.Round `json:"rounds"`
 }
 
-func isConnected(playerId uuid.UUID, lobby map[*Client]bool) bool {
+func isConnected(playerId uuid.UUID, lobby map[*Client]struct{}) bool {
 	for client := range lobby {
 		if client.PlayerId == playerId {
 			return true

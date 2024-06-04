@@ -9,15 +9,15 @@ import (
 )
 
 type Answer struct {
-	BeforeReleaseYear *int `json:"beforeReleaseYear"`
 	AfterReleaseYear  *int `json:"afterReleaseYear"`
+	BeforeReleaseYear *int `json:"beforeReleaseYear"`
 }
 
 func SubmitAnswerHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
 	database := database.Get()
 	var game models.Game
 
-	gameError := database.Preload("Rounds.Track").Where("id = ?", client.GameId).First(&game).Error
+	gameError := database.Preload("Rounds.Track").Preload("WonTracks.Track").Where("id = ?", client.GameId).First(&game).Error
 	if gameError != nil {
 		return errors.New("could not find game")
 	}
@@ -35,13 +35,12 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 	if answerParseError != nil {
 		return errors.New("could not parse answer")
 	}
-	if answer.BeforeReleaseYear == nil && answer.AfterReleaseYear == nil {
-		return errors.New("answer must contain at least one field")
-	}
 
-	correctBefore := answer.BeforeReleaseYear == nil || currentRound.Track.ReleaseYear <= uint(*answer.BeforeReleaseYear)
-	correctAfter := answer.AfterReleaseYear == nil || currentRound.Track.ReleaseYear >= uint(*answer.AfterReleaseYear)
-	if correctBefore && correctAfter {
+	correctAnswer, verifyError := gameHelpers.VerifyAnswer(answer.AfterReleaseYear, answer.BeforeReleaseYear, client.PlayerId, &game.Rounds, &game.WonTracks)
+	if verifyError != nil {
+		return verifyError
+	}
+	if correctAnswer {
 		awardError := gameHelpers.AwardTrack(game.Id, currentRound.Track, models.Player{Id: client.PlayerId})
 		if awardError != nil {
 			return errors.New("could not award track")

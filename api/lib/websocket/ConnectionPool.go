@@ -9,7 +9,7 @@ type ConnectionPool struct {
 	// In this map of clients, each client's memory address points to a boolean.
 	// The boolean is irrelevant, but using the map allows us easy registration
 	// of client memory addresses.
-	Lobbies   map[uuid.UUID]map[*Client]bool
+	Lobbies   map[uuid.UUID]map[*Client]struct{}
 	Remove    chan *Client
 	Register  chan *Client
 	Broadcast chan ServerMessage
@@ -20,7 +20,7 @@ var connectionPool = createConnectionPool()
 
 func createConnectionPool() *ConnectionPool {
 	pool := &ConnectionPool{
-		Lobbies:   make(map[uuid.UUID]map[*Client]bool),
+		Lobbies:   make(map[uuid.UUID]map[*Client]struct{}),
 		Remove:    make(chan *Client),
 		Register:  make(chan *Client),
 		Broadcast: make(chan ServerMessage),
@@ -53,11 +53,11 @@ func (pool *ConnectionPool) Run() {
 func (pool *ConnectionPool) RegisterConnection(client *Client) {
 	// Create a new lobby if we didn't have one yet.
 	if pool.Lobbies[client.GameId] == nil {
-		pool.Lobbies[client.GameId] = make(map[*Client]bool)
+		pool.Lobbies[client.GameId] = make(map[*Client]struct{})
 	}
 
 	// This is only symbolic, to signal that a client is connected.
-	pool.Lobbies[client.GameId][client] = true
+	pool.Lobbies[client.GameId][client] = struct{}{}
 }
 
 func (pool *ConnectionPool) RemoveConnection(client *Client) {

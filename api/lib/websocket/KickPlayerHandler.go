@@ -9,7 +9,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func findPlayerClient(playerId uuid.UUID, lobby map[*Client]bool) *Client {
+func findPlayerClient(playerId uuid.UUID, lobby map[*Client]struct{}) *Client {
 	for client := range lobby {
 		if client.PlayerId == playerId {
 			return client
