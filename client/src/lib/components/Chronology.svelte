@@ -28,20 +28,24 @@
   };
 
   const moveUp = () => {
-    moveCardTo(guessIndex - 1);
+    updateGuess(guessIndex - 1);
   };
 
   const moveDown = () => {
-    moveCardTo(guessIndex + 1);
+    updateGuess(guessIndex + 1);
   };
 
-  const moveCardTo = (newIndex: number) => {
+  const updateGuess = (newIndex: number) => {
     if (disabled) return;
 
     guessIndex = Math.min(cards.length - 1, Math.max(newIndex, 0));
-    const newCards =  [...trackCards.slice(0, guessIndex), guessCard, ...trackCards.slice(guessIndex)];
-    const cardBefore = guessIndex > 0 ? newCards[guessIndex - 1] : undefined;
-    const cardAfter = guessIndex < newCards.length - 1 ? newCards[guessIndex + 1] : undefined;
+  };
+
+  const selectAnswer = () => {
+    if (disabled) return;
+
+    const cardBefore = guessIndex > 0 ? cards[guessIndex - 1] : undefined;
+    const cardAfter = guessIndex < cards.length - 1 ? cards[guessIndex + 1] : undefined;
 
     onSelect({
       afterReleaseYear: cardBefore ? parseInt(cardBefore?.releaseYear ?? "") : undefined,
@@ -59,10 +63,11 @@
   $: trackCards = wonTracks.toSorted(sortWonTracks).map(trackToCard);
 
   let guessIndex: number;
-  $: guessIndex = Math.ceil(wonTracks.length / 2) - 1;
+  $: guessIndex = Math.ceil(wonTracks.length / 2);
 
   let cards: Card[];
   $: cards = [...trackCards.slice(0, guessIndex), guessCard, ...trackCards.slice(guessIndex)];
+  $: cards, selectAnswer();
 </script>
 
 <div class="chronology" class:disabled={disabled}>
