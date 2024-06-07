@@ -1,6 +1,5 @@
 <script>
 	import { goto } from '$app/navigation';
-	import Toasts from '$lib/components/Toasts.svelte';
 	import { API } from '$lib/services/API';
   import { showToast } from '$lib/store/toasts';
   import { ToastType } from '$lib/types/Toast';
@@ -28,8 +27,6 @@
 		content="Select a Spotify Playlist to create a new Shuffle Showdown game."
 	/>
 </svelte:head>
-
-<Toasts />
 
 <section>
 	<form on:submit|preventDefault={createGame}>

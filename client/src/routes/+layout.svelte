@@ -1,9 +1,13 @@
 <script>
 	import '@fortawesome/fontawesome-free/css/all.min.css'
+	import Toasts from '$lib/components/Toasts.svelte';
 	import '../styles/global.scss';
 </script>
 
 <div class="app">
+
+  <Toasts />
+
 	<main>
 		<slot />
 	</main>
