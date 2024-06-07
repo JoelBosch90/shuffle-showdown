@@ -1,8 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
 	import { API } from '$lib/services/API';
-  import { showToast } from '$lib/store/toasts';
-  import { ToastType } from '$lib/types/Toast';
 
 	let playList = '';
 
@@ -11,13 +9,6 @@
 
 		await goto(`/${game.id}/join`);
 	};
-
-  const createToast = () => {
-    showToast({
-      type: ToastType.Success,
-      message: 'Happy stuff',
-    })
-  };
 </script>
 
 <svelte:head>
@@ -35,7 +26,6 @@
 		<input placeholder="Paste your Spotify Playlist link here..." bind:value={playList} />
 
 		<button type="submit" class="filled">Select playlist</button>
-    <button class="filled" on:click={createToast} type="button">Show toast</button>
 	</form>
 </section>
 

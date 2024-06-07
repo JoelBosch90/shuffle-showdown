@@ -55,14 +55,16 @@
 		audioPlayer?.pause();
 	}
 
-	const onUpdate = async ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
-		celebration?.update({
-			oldUpdate: gameUpdate,
-			newUpdate: update,
-			oldMe: me,
-			newMe
-		});
+  const celebrate = ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
+    celebration?.update({
+      oldUpdate: gameUpdate,
+      newUpdate: update,
+      oldMe: me,
+      newMe
+    });
+  };
 
+	const updatePage = async ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
 		gameUpdate = update;
 		me = newMe;
 		currentRound = getCurrentRound(update);
@@ -74,10 +76,13 @@
 
 	onMount(async () => {
 		if (!session) session = new GameSession(gameId);
-		session.onUpdate(onUpdate);
+		session.onUpdate((gameUpdate) => {
+      celebrate(gameUpdate);
+      updatePage(gameUpdate);
+    });
 
 		const latestUpdate = session.getCachedUpdate();
-		if (latestUpdate) onUpdate(latestUpdate);
+		if (latestUpdate) updatePage(latestUpdate);
 
 		await session.initialize();
 	});

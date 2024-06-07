@@ -5,7 +5,6 @@
 </script>
 
 <div class="app">
-
   <Toasts />
 
 	<main>
