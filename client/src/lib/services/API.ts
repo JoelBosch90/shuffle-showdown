@@ -16,10 +16,10 @@ export class API {
 
     API.socketConnection = new SocketConnection(gameId, player.id);
     API.socketConnection.start();
-    
+
     return API.socketConnection;
   };
-  
+
   public static getGame = REST.getGame;
   public static getPlayer = REST.getPlayer;
   public static patchGame = REST.patchGame;

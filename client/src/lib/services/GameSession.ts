@@ -4,9 +4,11 @@ import { type Player } from '$lib/types/Player';
 import { type GameUpdate } from '$lib/types/GameUpdate';
 import { type GameSessionUpdate } from '$lib/types/GameSessionUpdate';
 import { type Answer } from '$lib/types/Answer';
-import { isPlayerKickedMessage, isGameSessionUpdateMessage, type ServerMessage, type GameSessionUpdateMessage } from '$lib/types/ServerMessage';
+import { isPlayerKickedMessage, isGameSessionUpdateMessage, type ServerMessage, type GameSessionUpdateMessage, isErrorMessage } from '$lib/types/ServerMessage';
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
 import type { SocketConnection } from './API/SocketConnection';
+import { showToast } from '$lib/store/toasts';
+import { ToastType } from '$lib/types/Toast';
 
 type GameUpdateCallback = (update: { game: GameSessionUpdate | null, me: Player | null }) => void;
 
@@ -16,24 +18,45 @@ export class GameSession {
 	private updateCallbacks: GameUpdateCallback[] = [];
 	private connection: SocketConnection | null = null;
 
-    constructor(private gameId: string) {}
+  constructor(private gameId: string) {}
 
 	public initialize = async () => {
 		this.me = await API.getPlayer().catch(() => goto(`/${this.gameId}/join`)) ?? null;
 		if (!this.me) return goto(`/${this.gameId}/join`);
 
 		this.connection = await API.getSocketConnection(this.gameId);
-        this.connection.onMessage(this.handleMessage);
-        this.connection.start();
+    this.connection.onMessage(this.handleMessage);
+    this.connection.onError(() => this.handleError(new Error("An error occurred with the connection.")));
+    this.connection.onClose(this.handleClose);
+    this.connection.start();
 		this.requestUpdate();
 	};
 
 	public onUpdate = (callback: GameUpdateCallback) => this.updateCallbacks.push(callback);
-    
-    private handleMessage = (message: ServerMessage) => {
+
+  private handleMessage = (message: ServerMessage) => {
+    if (isErrorMessage(message)) return this.handleError(new Error(message.payload));
 		if (isPlayerKickedMessage(message)) return goto("/");
 		if (isGameSessionUpdateMessage(message)) return this.handleUpdate(message);
 	};
+
+  private handleClose = (event: CloseEvent) => {
+    if (event.code === 1000) return showToast({
+      type: ToastType.Info,
+      message: "The connection was closed.",
+    });
+    else showToast({
+      type: ToastType.Warning,
+      message: "The connection was closed unexpectedly.",
+    });
+  };
+
+  private handleError = (error: Error) => {
+    showToast({
+      type: ToastType.Error,
+      message: error.message,
+    });
+  };
 
 	private handleUpdate = (message: GameSessionUpdateMessage) => {
 		this.lastUpdate = message.payload;
@@ -46,7 +69,7 @@ export class GameSession {
 			game: message.payload,
 			me: this.me,
 		}));
-	}
+	};
 
 	public getCachedUpdate = () => {
 		if (this.lastUpdate && this.me) return {
