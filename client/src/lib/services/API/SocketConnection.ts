@@ -46,7 +46,7 @@ export class SocketConnection {
 
     const exponentialWaitInSeconds = RETRY_MAX_WAIT_SECONDS * (1 / retries ** 2);
 
-    return new Promise<void>((resolve) => setTimeout(resolve, exponentialWaitInSeconds));
+    return new Promise<void>((resolve) => setTimeout(resolve, exponentialWaitInSeconds * 1000));
   }
 
   public async start(retries?: number) {
