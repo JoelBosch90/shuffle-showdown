@@ -107,7 +107,6 @@
     flex-grow: 1;
     box-sizing: border-box;
     align-items: center;
-    justify-content: center;
     gap: 1rem;
     padding: 1rem;
 
