@@ -5,8 +5,7 @@
   import type { GameSessionUpdate } from '$lib/types/GameSessionUpdate';
   import { getCurrentRound} from '$lib/helpers/getCurrentRound';
   import { findPlayerInGameSessionUpdate } from '$lib/helpers/findPlayerInGameSessionUpdate';
-
-	const CELEBRATION_DURATION = 3500;
+  import { Timeout } from '$lib/enums/Timeout';
 
   type CelebrationUpdate = {
     oldUpdate: GameSessionUpdate | null,
@@ -76,14 +75,14 @@
     const isFinalWin = hasWon && wonTracksCount >= update.songsToWin;
 
     if (!track || !player) return;
-    await celebrateTrack(track, player, isOtherPlayer, hasWon, isFinalWin, CELEBRATION_DURATION);
+    await celebrateTrack(track, player, isOtherPlayer, hasWon, isFinalWin, Timeout.CELEBRATION);
   }
 
   const celebrateStart = async (me: Player) => {
     if (!me) return;
 
     for (const track of me?.wonTracks ?? []) {
-      await celebrateTrack(track.track, me, false, true, false, CELEBRATION_DURATION);
+      await celebrateTrack(track.track, me, false, true, false, Timeout.CELEBRATION);
     }
   }
 

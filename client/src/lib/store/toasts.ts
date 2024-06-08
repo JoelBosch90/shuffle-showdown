@@ -1,12 +1,12 @@
 import { writable } from 'svelte/store';
 import { type Toast, ToastType } from '$lib/types/Toast';
+import { Timeout } from '$lib/enums/Timeout';
 
-const DEFAULT_TOAST_TIMEOUT = 6000;
 const DEFAULT_TOAST: Toast = {
   id: 0,
   message: '',
   type: ToastType.Error,
-  timeout: DEFAULT_TOAST_TIMEOUT,
+  timeout: Timeout.TOAST,
 };
 
 
