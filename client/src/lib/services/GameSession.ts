@@ -9,6 +9,7 @@ import { ClientMessageType } from '$lib/enums/ClientMessageType';
 import type { SocketConnection } from './API/SocketConnection';
 import { showToast } from '$lib/store/toasts';
 import { ToastType } from '$lib/types/Toast';
+import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
 
 type GameUpdateCallback = (update: { game: GameSessionUpdate | null, me: Player | null }) => void;
 
@@ -41,7 +42,7 @@ export class GameSession {
 	};
 
   private handleClose = (event: CloseEvent) => {
-    if (event.code === 1000) return showToast({
+    if (event.code === WebSocketCloseCode.NORMAL) return showToast({
       type: ToastType.Info,
       message: "The connection was closed.",
     });

@@ -12,10 +12,13 @@ const RECOVERABLE_CLOSE_CODES = [
   WebSocketCloseCode.SERVICE_RESTART,
   WebSocketCloseCode.TRY_AGAIN_LATER,
 ];
+const DEFAULT_RETRIES = 5;
+const RETRY_MAX_WAIT_SECONDS = 180;
 
 export class SocketConnection {
   private connected = false;
   private connecting = false;
+  private retries = DEFAULT_RETRIES;
 
   private host: string | undefined = undefined;
   private connectionProtocol: string | undefined = undefined;
@@ -31,18 +34,30 @@ export class SocketConnection {
   constructor(public readonly gameId: string, private playerId: string) {
     this.connectionProtocol = window.location.protocol.endsWith('s:') ? 'wss:' : 'ws:';
     this.host = window.location.host;
- 
+
     this.baseOnOpen = this.baseOnOpen.bind(this);
     this.baseOnClose = this.baseOnClose.bind(this);
     this.baseOnError = this.baseOnError.bind(this);
     this.baseOnMessage = this.baseOnMessage.bind(this);
   }
 
-  public start() {
+  private async awaitRetries(retries: number) {
+    if (retries === DEFAULT_RETRIES) return;
+
+    const exponentialWaitInSeconds = RETRY_MAX_WAIT_SECONDS * (1 / retries ** 2);
+
+    return new Promise<void>((resolve) => setTimeout(resolve, exponentialWaitInSeconds));
+  }
+
+  public async start(retries?: number) {
     if (this.connected || this.connecting) return;
     this.connecting = true;
-    this.connection = new WebSocket(`${this.connectionProtocol}//${this.host}/api/v1/ws/${this.gameId}`);
 
+    if (retries === 0) return;
+    this.retries = retries ?? DEFAULT_RETRIES;
+    await this.awaitRetries(this.retries);
+
+    this.connection = new WebSocket(`${this.connectionProtocol}//${this.host}/api/v1/ws/${this.gameId}`);
     this.connection.addEventListener('open', this.baseOnOpen);
     this.connection.addEventListener('close', this.baseOnClose);
     this.connection.addEventListener('error', this.baseOnError);
@@ -95,9 +110,9 @@ export class SocketConnection {
   private baseOnClose(event: CloseEvent) {
     this.connected = false;
     this.onCloseCallbacks.forEach(callback => callback(event));
-    
+
     // Try to reconnect if the connection seems recoverable.
-    if (event.code in RECOVERABLE_CLOSE_CODES) this.start();
+    if (event.code in RECOVERABLE_CLOSE_CODES) this.start(this.retries--);
   }
 
   public onError(callback: GenericEventCallback) {

@@ -15,7 +15,7 @@ export class API {
     if (!player) throw new Error('No player found.');
 
     API.socketConnection = new SocketConnection(gameId, player.id);
-    API.socketConnection.start();
+    await API.socketConnection.start();
 
     return API.socketConnection;
   };
