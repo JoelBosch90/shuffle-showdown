@@ -41,7 +41,7 @@ export class SocketConnection {
     this.baseOnMessage = this.baseOnMessage.bind(this);
   }
 
-  private async awaitRetries(retries: number) {
+  private async waitBeforeRetry(retries: number) {
     if (retries === DEFAULT_RETRIES) return;
 
     const exponentialWaitInSeconds = RETRY_MAX_WAIT_SECONDS * (1 / retries ** 2);
@@ -55,7 +55,7 @@ export class SocketConnection {
 
     if (retries === 0) return;
     this.retries = retries ?? DEFAULT_RETRIES;
-    await this.awaitRetries(this.retries);
+    await this.waitBeforeRetry(this.retries);
 
     this.connection = new WebSocket(`${this.connectionProtocol}//${this.host}/api/v1/ws/${this.gameId}`);
     this.connection.addEventListener('open', this.baseOnOpen);
