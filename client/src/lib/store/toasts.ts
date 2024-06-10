@@ -15,6 +15,7 @@ export const toasts = writable<Toast[]>([]);
 let latestId = 0;
 
 export const showToast = (toast: Omit<Toast, 'id'>) => {
+  console.debug('showToast', toast)
   const newToast = { ...DEFAULT_TOAST, ...toast, id: latestId++ };
   toasts.update(all => [...all, newToast]);
 
