@@ -1,7 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { fade } from 'svelte/transition';
-  import { ToastType, type Toast } from '$lib/types/Toast';
+  import type { Toast } from '$lib/types/Toast';
+  import { ToastType } from '$lib/enums/ToastType';
 
   const dispatch = createEventDispatcher();
 

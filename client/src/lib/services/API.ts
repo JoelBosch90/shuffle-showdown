@@ -1,10 +1,11 @@
 import { SocketConnection } from './API/SocketConnection';
 import { REST } from './API/REST';
+import { handleError } from '$lib/helpers/handleError';
 
 export class API {
   private static socketConnection: SocketConnection | null = null;
 
-  public static getSocketConnection = async (gameId: string) : Promise<SocketConnection> => {
+  private static connectToSocket = async (gameId: string) : Promise<SocketConnection> => {
     if (API.socketConnection) {
       if (API.socketConnection.gameId === gameId) return API.socketConnection;
 
@@ -20,10 +21,11 @@ export class API {
     return API.socketConnection;
   };
 
-  public static getGame = REST.getGame;
-  public static getPlayer = REST.getPlayer;
-  public static patchGame = REST.patchGame;
-  public static postGame = REST.postGame;
-  public static patchPlayer = REST.patchPlayer;
-  public static postPlayer = REST.postPlayer;
+  public static getSocketConnection = handleError(API.connectToSocket);
+  public static getGame = handleError(REST.getGame);
+  public static getPlayer = handleError(REST.getPlayer);
+  public static patchGame = handleError(REST.patchGame);
+  public static postGame = handleError(REST.postGame);
+  public static patchPlayer = handleError(REST.patchPlayer);
+  public static postPlayer = handleError(REST.postPlayer);
 }

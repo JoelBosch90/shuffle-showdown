@@ -2,19 +2,12 @@ package game
 
 import (
 	"api/database/models"
-	spotify "api/lib/spotify"
-	spotifyModels "api/lib/spotify/models"
 
 	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
 
-func CreateGame(info spotifyModels.Playlist, player models.Player, database *gorm.DB) (models.Game, error) {
-	playlist, playlistError := spotify.CreatePlaylist(info, database)
-	if playlistError != nil {
-		return models.Game{}, playlistError
-	}
-
+func CreateGame(playlist models.Playlist, player models.Player, database *gorm.DB) (models.Game, error) {
 	game := models.Game{
 		Id:         uuid.NewV4(),
 		PlaylistId: playlist.Id,

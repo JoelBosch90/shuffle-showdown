@@ -1,9 +1,4 @@
-export enum ToastType {
-  Success = 'success',
-  Error = 'error',
-  Warning = 'warning',
-  Info = 'info',
-}
+import type { ToastType } from '$lib/enums/ToastType';
 
 export interface Toast {
   id: number;

@@ -33,7 +33,7 @@ export class REST {
 
   public static async getPlayer() : Promise<Player | null> {
     if (REST.player) return REST.player;
-  
+
     const id = localStorage.getItem('playerId');
 
     if (!id) return null;
@@ -65,10 +65,14 @@ export class REST {
     const playerId = await REST.getPlayerId();
 
     if (!playerId) {
-      throw new Error('No player ID found');
+      return REST.postPlayer(playerName);
     }
 
-    return patchPlayer(playerName, playerId);
+    try {
+      return await patchPlayer(playerName, playerId);
+    } catch (error) {
+      return await REST.postPlayer(playerName);
+    }
   }
 
   public static async postGame(playListString: string) : Promise<Player> {

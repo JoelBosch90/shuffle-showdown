@@ -1,5 +1,6 @@
 import { writable } from 'svelte/store';
-import { type Toast, ToastType } from '$lib/types/Toast';
+import type { Toast } from '$lib/types/Toast';
+import { ToastType } from '$lib/enums/ToastType';
 import { Timeout } from '$lib/enums/Timeout';
 
 const DEFAULT_TOAST: Toast = {

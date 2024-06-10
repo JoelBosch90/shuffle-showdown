@@ -25,14 +25,14 @@ func Post(context *gin.Context) {
 		return
 	}
 
+	database := database.Get()
 	playlistId := spotify.ExtractPlaylistId(input.Playlist)
-	playlist, playlistError := spotify.RequestPlaylistInfo(playlistId, input.CountryCode)
+
+	playlist, playlistError := spotify.GetRecentPlaylist(playlistId, input.CountryCode)
 	if playlistError != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Error parsing playlist"})
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting playlist"})
 		return
 	}
-
-	database := database.Get()
 
 	player := models.Player{}
 	if input.PlayerId != uuid.Nil {

@@ -8,7 +8,7 @@ import { isPlayerKickedMessage, isGameSessionUpdateMessage, type ServerMessage, 
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
 import type { SocketConnection } from './API/SocketConnection';
 import { showToast } from '$lib/store/toasts';
-import { ToastType } from '$lib/types/Toast';
+import { ToastType } from '$lib/enums/ToastType';
 import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
 
 type GameUpdateCallback = (update: { game: GameSessionUpdate | null, me: Player | null }) => void;
@@ -26,10 +26,10 @@ export class GameSession {
 		if (!this.me) return goto(`/${this.gameId}/join`);
 
 		this.connection = await API.getSocketConnection(this.gameId);
-    this.connection.onMessage(this.handleMessage);
-    this.connection.onError(() => this.handleError(new Error("An error occurred with the connection.")));
-    this.connection.onClose(this.handleClose);
-    this.connection.start();
+    this.connection?.onMessage(this.handleMessage);
+    this.connection?.onError(() => this.handleError(new Error("An error occurred with the connection.")));
+    this.connection?.onClose(this.handleClose);
+    this.connection?.start();
 		this.requestUpdate();
 	};
 
