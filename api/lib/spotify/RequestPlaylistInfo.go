@@ -11,7 +11,11 @@ func RequestPlaylistInfo(playlistId string, countryCode string) (spotifyModels.P
 	path := "v1/playlists/" + url.QueryEscape(playlistId)
 
 	headers := []Header{}
-	params := []Param{{Name: "market", Value: countryCode}}
+	params := []Param{
+		{Name: "market", Value: countryCode},
+		{Name: "fields", Value: GetPlaylistModelFields()},
+	}
+
 	playlistResponse, playlistRequestError := ApiRequest(http.MethodGet, path, headers, params)
 	if playlistRequestError != nil {
 		return spotifyModels.Playlist{}, playlistRequestError
