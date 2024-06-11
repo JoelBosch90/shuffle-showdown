@@ -5,6 +5,7 @@ import (
 	"api/database/models"
 	gameHelpers "api/lib/game"
 	"errors"
+	"time"
 
 	uuid "github.com/satori/go.uuid"
 )
@@ -18,6 +19,7 @@ type PlayerState struct {
 }
 
 type GameState struct {
+	SentAt      time.Time      `json:"sentAt"`
 	Id          uuid.UUID      `json:"id"`
 	HasStarted  bool           `json:"hasStarted"`
 	HasFinished bool           `json:"hasFinished"`
@@ -94,6 +96,7 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 	}
 
 	return GameState{
+		SentAt:      time.Now(),
 		Id:          game.Id,
 		HasStarted:  game.HasStarted,
 		HasFinished: game.HasFinished,
