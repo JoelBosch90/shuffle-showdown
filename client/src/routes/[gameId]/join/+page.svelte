@@ -11,10 +11,13 @@
 	let player: Player | void | null = null;
 	let playerName = '';
 	let isOwner = false;
+	let isLoading = false;
 
 	const createPlayer = async () => {
+		isLoading = true;
 		if (!player?.id) await API.postPlayer(playerName);
 		else await API.patchPlayer(playerName);
+		isLoading = false;
 
 		if (!game?.id) goto("/");
 
@@ -63,7 +66,7 @@
 		</label>
 
 		<div class="button-row">
-			<button type="submit" class="filled">Join lobby</button>
+			<button type="submit" class="filled" disabled={isLoading}>Join lobby</button>
 		</div>
 	</form>
 </section>

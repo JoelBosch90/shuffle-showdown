@@ -3,9 +3,13 @@
 	import { API } from '$lib/services/API';
 
 	let playList = '';
+	let isLoading = false;
 
 	const createGame = async () => {
+		isLoading = true;
 		const game = await API.postGame(playList);
+		isLoading = false;
+		if (!game) return;
 
 		await goto(`/${game.id}/join`);
 	};
@@ -25,7 +29,7 @@
 
 		<input placeholder="Paste your Spotify Playlist link here..." bind:value={playList} />
 
-		<button type="submit" class="filled">Select playlist</button>
+		<button type="submit" class="filled" disabled={isLoading}>Select playlist</button>
 	</form>
 </section>
 

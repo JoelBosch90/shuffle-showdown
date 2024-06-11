@@ -30,6 +30,8 @@
 	let isPlaying: boolean;
 	$: isPlaying = false;
 
+	let isLoading = false;
+
 	let selectedAnswer: Answer | null = null;
 
 	let audioPlayer: AudioPlayer | null = null;
@@ -51,6 +53,7 @@
 
 	const onAnswerSubmit = () => {
 		if (!selectedAnswer) return;
+		isLoading = true;
 		session?.submitAnswer(selectedAnswer);
 		audioPlayer?.pause();
 	}
@@ -70,6 +73,7 @@
 		currentRound = getCurrentRound(update);
 		currentPlayer = findPlayerInGameSessionUpdate(update, currentRound?.playerId);
 		isPlaying = !!currentPlayer && currentPlayer.id === me?.id;
+		isLoading = false;
 
 		if (!update?.hasStarted) return goto(`/${gameId}/lobby`);
 	}
@@ -106,7 +110,7 @@
     </div>
 		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
 		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
-		<button class="filled" on:click={onAnswerSubmit}>
+		<button class="filled" on:click={onAnswerSubmit} disabled={isLoading}>
 			Select answer
 		</button>
 	</div>

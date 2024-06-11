@@ -36,5 +36,16 @@ button, .button
 
   // Subtly light up the button when the cursor hovers it or when it is selected
   // to show that it is an interactive element.
-  &:hover, &:focus { filter: brightness(135%); }
+  &:not(:disabled) {
+    &:hover, &:focus { filter: brightness(135%); }
+  }
+
+  &:disabled {
+    // Make sure that the button is not clickable when it is disabled.
+    cursor: not-allowed;
+
+    // Use a more muted color for the text.
+    background-color: var(--purple-light);
+    filter: grayscale(65%);
+  }
 }

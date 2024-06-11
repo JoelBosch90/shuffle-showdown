@@ -8,6 +8,7 @@
 	const gameId = $page.params.gameId;
 	let shareUrl: string | null = null;
 	let session: GameSession | void | null = null;
+	let isLoading = false;
 
 	let me: Player | null;
 	$: me = null;
@@ -15,12 +16,18 @@
 	let players: Player[];
 	$: players = [];
 
+	const onClick = () => {
+		isLoading = true;
+		session?.startGame();
+	}
+
 	onMount(async () => {
 		shareUrl = `${window.location.origin}/${gameId}/join`;
 		if (!session) session = new GameSession(gameId);
 		session.onUpdate(({ game: newGame, me: newMe }) => {
 			me = newMe;
 			players = newGame?.players ?? [];
+			isLoading = false;
 
 			if (newGame?.hasStarted) return goto(`/${gameId}/play`);
 		})
@@ -67,7 +74,7 @@
 	{#if me?.isOwner}
 		<p>Once everyone is connected, click the button below to start the game.</p>
 		<div class="button-row">
-			<button class="filled" on:click={session?.startGame}>Start game</button>
+			<button class="filled" on:click={onClick} disabled={isLoading}>Start game</button>
 		</div>
 	{:else}
 		<p>Wait for the game owner to start the game.</p>
