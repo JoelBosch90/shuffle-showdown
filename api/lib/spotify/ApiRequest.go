@@ -1,6 +1,7 @@
 package spotify
 
 import (
+	"log"
 	"net/http"
 )
 
@@ -18,6 +19,9 @@ const SPOTIFY_API_URL = "https://api.spotify.com/"
 
 func ApiRequest(method string, path string, headers []Header, params []Param) (*http.Response, error) {
 	url := SPOTIFY_API_URL + path
+
+	log.Println("URL: ", url)
+	log.Println("PARAMS: ", params)
 
 	// Create a new HTTP request
 	request, requestError := http.NewRequest(method, url, nil)

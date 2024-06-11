@@ -1,12 +1,11 @@
 package spotify
 
 import (
-	spotifyModels "api/lib/spotify/models"
 	"reflect"
 	"strings"
 )
 
-func GetModelFields(model interface{}) string {
+func GetSpotifyModelFields(model interface{}) string {
 	modelType := reflect.TypeOf(model)
 	modelFields := make([]string, 0, modelType.NumField())
 
@@ -28,7 +27,7 @@ func GetModelFields(model interface{}) string {
 }
 
 func handleStructType(field reflect.StructField, fieldName string) string {
-	nestedModelFields := GetModelFields(reflect.New(field.Type).Elem().Interface())
+	nestedModelFields := GetSpotifyModelFields(reflect.New(field.Type).Elem().Interface())
 
 	return fieldName + "(" + nestedModelFields + ")"
 }
@@ -37,13 +36,9 @@ func handleSliceType(field reflect.StructField, fieldName string) string {
 	sliceType := field.Type.Elem()
 
 	if sliceType.Kind() == reflect.Struct {
-		nestedModelFields := GetModelFields(reflect.New(sliceType).Elem().Interface())
+		nestedModelFields := GetSpotifyModelFields(reflect.New(sliceType).Elem().Interface())
 		return fieldName + "(" + nestedModelFields + ")"
 	}
 
 	return fieldName
-}
-
-func GetPlaylistModelFields() string {
-	return GetModelFields(spotifyModels.Playlist{})
 }

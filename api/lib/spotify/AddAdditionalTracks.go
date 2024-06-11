@@ -3,13 +3,28 @@ package spotify
 import (
 	spotifyModels "api/lib/spotify/models"
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 )
 
+func getCountryParam(params []Param) Param {
+	for _, param := range params {
+		if param.Name == "market" {
+			return param
+		}
+	}
+
+	return Param{}
+}
+
 func AddAdditionalTracks(playListInfo *spotifyModels.Playlist, path string, playListHeaders []Header, playListParams []Param) ([]spotifyModels.Item, error) {
 	allAdditionalTrackItems := []spotifyModels.Item{}
-	tracksParams := append(playListParams, Param{Name: "limit", Value: strconv.Itoa(playListInfo.Tracks.Limit)})
+	tracksParams := []Param{
+		getCountryParam(playListParams),
+		{Name: "fields", Value: GetSpotifyModelFields(spotifyModels.Tracks{})},
+		{Name: "limit", Value: strconv.Itoa(playListInfo.Tracks.Limit)},
+	}
 	offset := playListInfo.Tracks.Offset + playListInfo.Tracks.Limit
 
 	// Get all the other Track Items
@@ -28,6 +43,8 @@ func AddAdditionalTracks(playListInfo *spotifyModels.Playlist, path string, play
 		if additionalTracksDecodeError != nil {
 			return []spotifyModels.Item{}, additionalTracksDecodeError
 		}
+
+		log.Println("RESPONSE: ", additionalTracks)
 
 		allAdditionalTrackItems = append(allAdditionalTrackItems, additionalTracks.Items...)
 

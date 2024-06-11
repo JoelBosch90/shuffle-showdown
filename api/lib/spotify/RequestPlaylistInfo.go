@@ -13,7 +13,7 @@ func RequestPlaylistInfo(playlistId string, countryCode string) (spotifyModels.P
 	headers := []Header{}
 	params := []Param{
 		{Name: "market", Value: countryCode},
-		{Name: "fields", Value: GetPlaylistModelFields()},
+		{Name: "fields", Value: GetSpotifyModelFields(spotifyModels.Playlist{})},
 	}
 
 	playlistResponse, playlistRequestError := ApiRequest(http.MethodGet, path, headers, params)
