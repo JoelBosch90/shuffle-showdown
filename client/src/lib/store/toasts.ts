@@ -10,13 +10,19 @@ const DEFAULT_TOAST: Toast = {
   timeout: Timeout.TOAST,
 };
 
+const formatText = (text: string) => {
+  const withUpperCaseFirst = text.charAt(0).toUpperCase() + text.slice(1);
+  const withPeriod = withUpperCaseFirst.endsWith('.') ? withUpperCaseFirst : `${withUpperCaseFirst}.`;
+  return withPeriod;
+}
 
 export const toasts = writable<Toast[]>([]);
 let latestId = 0;
 
 export const showToast = (toast: Omit<Toast, 'id'>) => {
-  console.debug('showToast', toast)
   const newToast = { ...DEFAULT_TOAST, ...toast, id: latestId++ };
+  newToast.message = formatText(newToast.message);
+  
   toasts.update(all => [...all, newToast]);
 
   if (newToast.timeout) {
