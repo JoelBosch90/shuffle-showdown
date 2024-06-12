@@ -5,6 +5,7 @@
 	import { API } from '$lib/services/API';
 	import { type GameUpdate } from '$lib/types/GameUpdate';
 	import { type Player } from '$lib/types/Player';
+	import LoadingButton from '$lib/components/LoadingButton.svelte';
 
 	const gameId = $page.params.gameId;
 	let game: GameUpdate | void | null = null;
@@ -66,7 +67,9 @@
 		</label>
 
 		<div class="button-row">
-			<button type="submit" class="filled" disabled={isLoading}>Join lobby</button>
+      <LoadingButton type="submit" isLoading={isLoading}>
+        Join lobby
+      </LoadingButton>
 		</div>
 	</form>
 </section>

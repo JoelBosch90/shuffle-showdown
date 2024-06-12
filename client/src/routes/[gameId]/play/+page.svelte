@@ -11,6 +11,7 @@
 	import type { Answer } from '$lib/types/Answer';
 	import { GameSession } from '$lib/services/GameSession';
 	import { findPlayerInGameSessionUpdate } from '$lib/helpers/findPlayerInGameSessionUpdate';
+	import LoadingButton from '$lib/components/LoadingButton.svelte';
 
 	const gameId = $page.params.gameId;
 	let session: GameSession | void | null = null;
@@ -110,9 +111,10 @@
     </div>
 		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
 		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
-		<button class="filled" on:click={onAnswerSubmit} disabled={isLoading}>
-			Select answer
-		</button>
+
+    <LoadingButton isLoading={isLoading} onClick={onAnswerSubmit}>
+      Select answer
+    </LoadingButton>
 	</div>
 	<svelte:component this={Celebration} bind:this={celebration} />
 </div>

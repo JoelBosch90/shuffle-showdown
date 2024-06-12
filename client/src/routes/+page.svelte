@@ -1,5 +1,6 @@
 <script>
 	import { goto } from '$app/navigation';
+	import LoadingButton from '$lib/components/LoadingButton.svelte';
 	import { API } from '$lib/services/API';
 
 	let playList = '';
@@ -29,7 +30,9 @@
 
 		<input placeholder="Paste your Spotify Playlist link here..." bind:value={playList} />
 
-		<button type="submit" class="filled" disabled={isLoading}>Select playlist</button>
+    <LoadingButton type="submit" isLoading={isLoading}>
+      Select playlist
+    </LoadingButton>
 	</form>
 </section>
 

@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { GameSession } from '$lib/services/GameSession';
 	import type { Player } from '$lib/types/Player';
+	import LoadingButton from '$lib/components/LoadingButton.svelte';
 
 	const gameId = $page.params.gameId;
 	let shareUrl: string | null = null;
@@ -74,7 +75,9 @@
 	{#if me?.isOwner}
 		<p>Once everyone is connected, click the button below to start the game.</p>
 		<div class="button-row">
-			<button class="filled" on:click={onClick} disabled={isLoading}>Start game</button>
+      <LoadingButton isLoading={isLoading} onClick={onClick}>
+        Start game
+      </LoadingButton>
 		</div>
 	{:else}
 		<p>Wait for the game owner to start the game.</p>

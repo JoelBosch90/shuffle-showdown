@@ -32,12 +32,12 @@ button, .button
     color: var(--white);
     background-color: var(--purple);
     border-radius: var(--border-radius);
-  }
 
-  // Subtly light up the button when the cursor hovers it or when it is selected
-  // to show that it is an interactive element.
-  &:not(:disabled) {
-    &:hover, &:focus { filter: brightness(135%); }
+    // Subtly light up the button when the cursor hovers it or when it is selected
+    // to show that it is an interactive element.
+    &:not(:disabled) {
+      &:hover, &:focus { background-color: var(--purple-light); }
+    }
   }
 
   &:disabled {
