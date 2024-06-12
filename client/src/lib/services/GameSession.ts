@@ -53,6 +53,8 @@ export class GameSession {
   };
 
   private handleError = (error: Error) => {
+    if (error.message === "player identification failed") return goto(`/${this.gameId}/join`);
+
     showToast({
       type: ToastType.Error,
       message: error.message,
