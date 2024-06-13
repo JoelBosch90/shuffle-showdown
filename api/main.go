@@ -6,6 +6,6 @@ import (
 )
 
 func main() {
-	router.Run()
 	go database.PurgeDaily()
+	router.Run()
 }
