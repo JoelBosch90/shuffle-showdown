@@ -1,7 +1,7 @@
 package database
 
 import (
-	"api/database/helpers/upsert"
+	"api/database/upsert"
 	"reflect"
 	"time"
 

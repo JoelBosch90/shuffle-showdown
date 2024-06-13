@@ -82,12 +82,10 @@ services:
     # that is not set in this file is expected to be supplied through
     # environment variables.
     environment:
-      # Tell the API where to reach the client and the API.
-      API_URL: http://localhost:8010/api/
-      CLIENT_URL: http://localhost:8010/
       SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
       SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      GIN_MODE: release
 
     # We can expose the api service in the container network.
     expose:

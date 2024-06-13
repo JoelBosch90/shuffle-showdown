@@ -1,7 +1,7 @@
 package spotify
 
 import (
-	databaseHelpers "api/database/helpers"
+	databaseHelpers "api/database"
 	"api/database/models"
 	spotifyModels "api/lib/spotify/models"
 	"errors"

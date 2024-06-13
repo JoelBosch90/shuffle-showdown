@@ -3,7 +3,6 @@ package spotify
 import (
 	spotifyModels "api/lib/spotify/models"
 	"encoding/json"
-	"log"
 	"net/http"
 	"strconv"
 )
@@ -43,8 +42,6 @@ func AddAdditionalTracks(playListInfo *spotifyModels.Playlist, path string, play
 		if additionalTracksDecodeError != nil {
 			return []spotifyModels.Item{}, additionalTracksDecodeError
 		}
-
-		log.Println("RESPONSE: ", additionalTracks)
 
 		allAdditionalTrackItems = append(allAdditionalTrackItems, additionalTracks.Items...)
 

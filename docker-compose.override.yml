@@ -51,6 +51,15 @@ services:
       context: ./api/
       dockerfile: development.dockerfile
 
+    # The api will need to some hosting information. Any external information
+    # that is not set in this file is expected to be supplied through
+    # environment variables.
+    environment:
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      GIN_MODE: debug
+
     # We want to bind the changes inside the container to a local folder so that
     # we can update the code in real time.
     volumes:
