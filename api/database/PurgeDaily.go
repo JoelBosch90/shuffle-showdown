@@ -20,6 +20,6 @@ func purgeAll() error {
 }
 
 func PurgeDaily() {
-	gocron.Every(1).Minute().Do(purgeAll)
+	gocron.Every(1).Day().At("00:00:00").Do(purgeAll)
 	<-gocron.Start()
 }
