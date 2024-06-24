@@ -27,20 +27,6 @@
     return artists.map((artist) => artist.name).join(', ');
   };
 
-  const moveUp = () => {
-    updateGuess(guessIndex - 1);
-  };
-
-  const moveDown = () => {
-    updateGuess(guessIndex + 1);
-  };
-
-  const updateGuess = (newIndex: number) => {
-    if (disabled) return;
-
-    guessIndex = Math.min(cards.length - 1, Math.max(newIndex, 0));
-  };
-
   const selectAnswer = () => {
     if (disabled) return;
 
@@ -56,7 +42,7 @@
   const sortWonTracks = (a: WonTrack, b: WonTrack) => {
     const aReleaseYear = a.track.releaseYear ?? 0;
     const bReleaseYear = b.track.releaseYear ?? 0;
-    return aReleaseYear - bReleaseYear;
+    return bReleaseYear - aReleaseYear;
   };
 
   let trackCards: Card[];
@@ -66,23 +52,13 @@
   $: guessIndex = Math.ceil(wonTracks.length / 2);
 
   let cards: Card[];
-  $: cards = [...trackCards.slice(0, guessIndex), guessCard, ...trackCards.slice(guessIndex)];
+  $: cards = [...trackCards.slice(0, guessIndex), ...trackCards.slice(guessIndex), ...trackCards.slice(0, guessIndex), ...trackCards.slice(guessIndex)];
   $: cards, selectAnswer();
 </script>
 
-<div class="chronology" class:disabled={disabled}>
+  <ol class="chronology" class:disabled={disabled}>
   {#each cards as card, cardIndex}
-    <div
-      role="button"
-      tabindex="0"
-      class="card"
-    >
-      {#if cardIndex === guessIndex}
-        <button class="top-half" on:click={moveUp}></button>
-        <button class="bottom-half" on:click={moveDown}></button>
-        <i class="fa-solid fa-arrow-up"></i>
-      {/if}
-
+    <li class="card" style="--normalized-index: {cardIndex - 1.5}">
       <h2>{card.releaseYear}</h2>
 
       {#if card.name}
@@ -92,13 +68,9 @@
       {#if card.artists}
         <p>{card.artists}</p>
       {/if}
-
-      {#if cardIndex === guessIndex}
-        <i class="fa-solid fa-arrow-down"></i>
-      {/if}
-    </div>
+    </li>
   {/each}
-</div>
+</ol>
 
 <style lang="scss">
   .chronology {
@@ -109,28 +81,39 @@
     align-items: center;
     gap: 1rem;
     padding: 1rem;
+    width: 100%;
 
     // Make sure the cards can be scrolled through only vertically.
     overflow-y: auto;
     overflow-x: hidden;
 
+    .selection {
+      display: flex;
+      gap: 1rem;
+    }
+
     .card {
       --card-border-radius: 1rem;
+      --normalized-index: 0;
+      --centered-index: max(var(--normalized-index), -1 * var(--normalized-index));
+      margin-left: calc(var(--normalized-index) * -5em);
+      width: calc(10em  - var(--centered-index) * 2em);
+      font-size: calc(1em - var(--centered-index) * 0.25em);
 
+      list-style: none;
       position: relative;
       display: flex;
       box-sizing: border-box;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      width: 100%;
       gap: 0.5rem;
       padding: var(--card-border-radius);
       border-radius: var(--card-border-radius);
       box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
 
       h2 {
-        font-size: 4rem;
+        font-size: 4em;
       }
 
       p, h2 {
@@ -155,6 +138,11 @@
         border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
         bottom: 0;
       }
+    }
+
+    .ghost {
+      opacity: 0.5;
+      position: absolute;
     }
 
     &.disabled {
