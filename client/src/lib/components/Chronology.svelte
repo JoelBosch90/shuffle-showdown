@@ -81,6 +81,11 @@
     box-sizing: border-box;
     overflow: hidden;
 
+    .selection {
+      display: flex;
+      gap: 1rem;
+    }
+
     .card {
       --card-border-radius: 1rem;
       --normalized-index: 0;
@@ -136,6 +141,11 @@
         opacity: 0.5;
         border: 2px dashed var(--gray-dark);
       }
+    }
+
+    .ghost {
+      opacity: 0.5;
+      position: absolute;
     }
 
     &.disabled {
