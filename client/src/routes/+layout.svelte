@@ -5,7 +5,7 @@
 </script>
 
 <div class="app">
-  <Toasts />
+  	<Toasts />
 
 	<main>
 		<slot />
@@ -25,8 +25,8 @@
 		background-color: var(--white);
 
 		main {
-			flex: 1;
 			display: flex;
+			flex: 1;
 			flex-direction: column;
 			padding: 1rem;
 			max-width: 64rem;

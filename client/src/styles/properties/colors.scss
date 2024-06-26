@@ -4,12 +4,15 @@
  */
 :root
 {
-  --purple: #642CA9;
-  --purple-light: #B38DE2;
-  --white: #F0F2EF;
-  --red: #E03616;
-  --orange: #FA7921;
-  --green: #47A025;
-  --yellow: #E3CD29;
-  --blue: #2A7DE1;
+  --purple: rgba(100, 44, 169, 1);
+  --purple-light: rgba(179, 141, 226, 1);
+  --white: rgba(240, 242, 239, 1);
+  --gray: rgba(160, 160, 160, 1);
+  --gray-light: rgba(224, 224, 224, 1);
+  --gray-dark: rgba(112, 112, 112, 1);
+  --red: rgba(224, 54, 22, 1);
+  --orange: rgba(250, 121, 33, 1);
+  --green: rgba(71, 160, 37, 1);
+  --yellow: rgba(227, 205, 41, 1);
+  --blue: rgba(42, 125, 225, 1);
 }
