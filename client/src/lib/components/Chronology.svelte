@@ -52,9 +52,60 @@
   };
 
   const onWheelEvent = (event: WheelEvent) => {
-    const direction = event.deltaY + event.deltaX > 0 ? 1 : -1;
+    const direction = (event.deltaY + event.deltaX) > 0 ? 1 : -1;
 
-    guessIndex = Math.min(Math.max(0, guessIndex + direction), trackCards.length);
+    guessIndex = clampGuessIndex(guessIndex + direction);
+  };
+
+  const clampGuessIndex = (newGuessIndex: number) => {
+    return Math.min(Math.max(0, newGuessIndex), trackCards.length);
+  };
+
+  const getClientLocation = (event: MouseEvent | TouchEvent) => {
+    if (event instanceof MouseEvent) {
+      return {
+        x: event.clientX,
+        y: event.clientY,
+      };
+    }
+    return {
+      x: event.touches[0].clientX,
+      y: event.touches[0].clientY,
+    };
+  };
+
+  const onMoveStart = (event: MouseEvent | TouchEvent) => {
+    const { x: startX, y: startY } = getClientLocation(event);
+    const startGuessIndex = guessIndex;
+    const containerDiagonal = Math.hypot(container.clientWidth, container.clientHeight);
+
+    const onMove = (event: MouseEvent | TouchEvent) => {
+      const { x: currentX, y: currentY } = getClientLocation(event);
+      const deltaX = currentX - startX;
+      const deltaY = currentY - startY;
+
+      const distance = Math.hypot(deltaX, deltaY);
+      const indexChange = Math.floor((distance / containerDiagonal) * trackCards.length);
+      const direction = (deltaX + deltaY) > 0 ? 1 : -1;
+
+      guessIndex = clampGuessIndex(startGuessIndex + direction * indexChange);
+    };
+
+    const onMoveEnd = () => {
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onMoveEnd);
+      window.removeEventListener('touchcancel', onMoveEnd);
+
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onMoveEnd);
+    };
+
+    window.addEventListener('touchmove', onMove);
+    window.addEventListener('touchend', onMoveEnd);
+    window.addEventListener('touchcancel', onMoveEnd);
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onMoveEnd);
   };
 
   let trackCards: Card[];
@@ -69,6 +120,8 @@
 
   onMount(() => {
     container.addEventListener('wheel', onWheelEvent);
+    container.addEventListener('mousedown', onMoveStart);
+    container.addEventListener('touchstart', onMoveStart);
   });
 </script>
 
@@ -205,7 +258,7 @@
 
     &.disabled {
       .card {
-        cursor: not-allowed;
+        cursor: grab;
         color: var(--gray-dark);
       }
     }
