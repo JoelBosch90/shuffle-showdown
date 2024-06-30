@@ -77,16 +77,15 @@
   const onMoveStart = (event: MouseEvent | TouchEvent) => {
     const { x: startX, y: startY } = getClientLocation(event);
     const startGuessIndex = guessIndex;
-    const containerDiagonal = Math.hypot(container.clientWidth, container.clientHeight);
 
     const onMove = (event: MouseEvent | TouchEvent) => {
       const { x: currentX, y: currentY } = getClientLocation(event);
-      const deltaX = currentX - startX;
-      const deltaY = currentY - startY;
+      const deltaX = (currentX - startX) / container.clientWidth;
+      const deltaY = (currentY - startY) / container.clientHeight;
 
       const distance = Math.hypot(deltaX, deltaY);
-      const indexChange = Math.floor((distance / containerDiagonal) * trackCards.length);
-      const direction = (deltaX + deltaY) > 0 ? 1 : -1;
+      const indexChange = Math.floor((distance + 0.5) * trackCards.length);
+      const direction = (deltaY - deltaX) > 0 ? 1 : -1;
 
       guessIndex = clampGuessIndex(startGuessIndex + direction * indexChange);
     };
@@ -147,10 +146,20 @@
     container-name: chronology;
     position: relative;
     width: 100%;
+    padding: min(50%, 8rem);
     flex-grow: 1;
-    padding: 8rem;
     box-sizing: border-box;
     overflow: hidden;
+
+    user-select: none;
+    -webkit-user-select: none;
+
+    &.disabled {
+      .card {
+        cursor: grab;
+        color: var(--gray-dark);
+      }
+    }
 
     .card {
       --card-border-radius: 1rem;
@@ -160,13 +169,6 @@
       --default-vertical-distance: 32cqh;
       --default-horizontal-distance: 35cqw;
       --distance-increase: -0.125;
-
-      @container chronology (min-height: 20rem) {
-        --default-vertical-distance: 6rem;
-      }
-      @container chronology (min-width: 20rem) {
-        --default-horizontal-distance: 7rem;
-      }
 
       display: flex;
       box-sizing: border-box;
@@ -254,12 +256,21 @@
         opacity: 0.5;
         border: 2px dashed var(--gray-dark);
       }
-    }
 
-    &.disabled {
-      .card {
-        cursor: grab;
-        color: var(--gray-dark);
+      @container chronology (min-height: 20rem) {
+        --default-vertical-distance: 6rem;
+      }
+
+      @container chronology (min-width: 20rem) {
+        --default-horizontal-distance: 7rem;
+      }
+
+      @container chronology (max-height: 18rem) {
+        height: 10rem;
+
+        h2 { font-size: 2em; }
+        p { font-size: 1em;  }
+        .track { font-size: 1.25em; }
       }
     }
   }
