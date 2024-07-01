@@ -6,8 +6,6 @@
   import { getCurrentRound} from '$lib/helpers/getCurrentRound';
   import { findPlayerInGameSessionUpdate } from '$lib/helpers/findPlayerInGameSessionUpdate';
   import { Timeout } from '$lib/enums/Timeout';
-	import { showToast } from '$lib/store/toasts';
-	import { ToastType } from '$lib/enums/ToastType';
 
   type CelebrationUpdate = {
     oldUpdate: GameSessionUpdate | null,
@@ -48,10 +46,6 @@
     return undefined;
   }
 
-  const findRound = (update: GameSessionUpdate, roundIndex: number) => {
-    return update?.rounds.find((round) => round.number === roundIndex);
-  }
-
   const sleep = async (ms: number) : Promise<void> => {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -72,10 +66,8 @@
     if (!track?.name) return;
 
     const winner = findWinner(update, track.previewUrl);
-    const round = findRound(update, roundIndex);
-    if (!round) return showToast({ message: 'Round not found', type: ToastType.Error });
+    const player = winner ?? findPlayerInGameSessionUpdate(update, update.rounds[roundIndex].playerId);
 
-    const player = winner ?? findPlayerInGameSessionUpdate(update, round.playerId);
     const isOtherPlayer = player?.id !== me?.id;
     const hasWon = !!winner;
 
@@ -111,18 +103,21 @@
 
     if (update.hasFinished) await celebrateEnd(update, newMe);
 
-    const lastRound = getCurrentRound(currentGame)?.number ?? 0;
+    const lastSeenRound = getCurrentRound(currentGame)?.number ?? 0;
     const currentRound = getCurrentRound(update)?.number ?? 0;
-    if (lastRound >= currentRound) return;
+    if (lastSeenRound >= currentRound) return;
 
-    for (let celebratedRound = lastRound; celebratedRound < currentRound; celebratedRound++) {
+    for (let celebratedRound = lastSeenRound; celebratedRound < currentRound; celebratedRound++) {
       celebrateRound(update, celebratedRound, newMe);
     }
   }
 
   export const update = async ({ oldUpdate, newUpdate, oldMe, newMe }: CelebrationUpdate) => {
     if (!newUpdate || !newMe) return;
+
     if (!oldUpdate && 'rounds' in newUpdate && newUpdate.rounds.length > 0) await celebrateStart(newMe);
+    if (!oldUpdate && newUpdate.hasFinished) await celebrateEnd(newUpdate, newMe);
+
 		if (newUpdate?.hasFinished) celebrateEnd(newUpdate, newMe);
 		else processCelebrations(oldUpdate, newUpdate, newMe);
   }
@@ -157,7 +152,6 @@
 
 <style lang="scss">
   .celebration {
-    z-index: var(--overlay-level);
     position: absolute;
     inset: 0;
 

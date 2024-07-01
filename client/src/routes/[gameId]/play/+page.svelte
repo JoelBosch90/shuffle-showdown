@@ -137,7 +137,6 @@
 		flex-direction: column;
 		gap: 1rem;
 		align-items: center;
-		width: 100%;
 	}
 
   .game-info {

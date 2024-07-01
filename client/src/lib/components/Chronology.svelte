@@ -2,7 +2,6 @@
   import type { WonTrack } from '$lib/types/WonTrack';
   import type { Artist } from '$lib/types/Artist';
   import type { Answer } from '$lib/types/Answer';
-	import { onMount } from 'svelte';
 
   export let disabled: boolean = false;
   export let wonTracks: WonTrack[] = [];
@@ -12,19 +11,34 @@
     releaseYear: string;
     name?: string;
     artists?: string;
-    isGuess?: boolean;
   }
 
-  let container: HTMLOListElement;
-
-  const UNKNOWN_RELEASE_YEAR = "???";
   const guessCard: Card = {
-    releaseYear: UNKNOWN_RELEASE_YEAR,
-    isGuess: true,
+    releaseYear: "???",
   }
+
+  const trackToCard = ({ track }: WonTrack) : Card => ({
+    releaseYear: track.releaseYear?.toString() ?? '???',
+    name: track.name,
+    artists: joinArtists(track.artists),
+  });
 
   const joinArtists = (artists: Artist[] = []) => {
     return artists.map((artist) => artist.name).join(', ');
+  };
+
+  const moveUp = () => {
+    updateGuess(guessIndex - 1);
+  };
+
+  const moveDown = () => {
+    updateGuess(guessIndex + 1);
+  };
+
+  const updateGuess = (newIndex: number) => {
+    if (disabled) return;
+
+    guessIndex = Math.min(cards.length - 1, Math.max(newIndex, 0));
   };
 
   const selectAnswer = () => {
@@ -39,238 +53,114 @@
     });
   };
 
-  const trackToCard = ({ track }: WonTrack) : Card => ({
-    releaseYear: track.releaseYear?.toString() ?? UNKNOWN_RELEASE_YEAR,
-    name: track.name,
-    artists: joinArtists(track.artists),
-  });
-
   const sortWonTracks = (a: WonTrack, b: WonTrack) => {
     const aReleaseYear = a.track.releaseYear ?? 0;
     const bReleaseYear = b.track.releaseYear ?? 0;
     return aReleaseYear - bReleaseYear;
   };
 
-  const onWheelEvent = (event: WheelEvent) => {
-    const direction = (event.deltaY + event.deltaX) > 0 ? 1 : -1;
-
-    guessIndex = clampGuessIndex(guessIndex + direction);
-  };
-
-  const clampGuessIndex = (newGuessIndex: number) => {
-    return Math.min(Math.max(0, newGuessIndex), trackCards.length);
-  };
-
-  const getClientLocation = (event: MouseEvent | TouchEvent) => {
-    if (event instanceof MouseEvent) {
-      return {
-        x: event.clientX,
-        y: event.clientY,
-      };
-    }
-    return {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY,
-    };
-  };
-
-  const onMoveStart = (event: MouseEvent | TouchEvent) => {
-    const { x: startX, y: startY } = getClientLocation(event);
-    const startGuessIndex = guessIndex;
-
-    const onMove = (event: MouseEvent | TouchEvent) => {
-      const { x: currentX, y: currentY } = getClientLocation(event);
-      const deltaX = (currentX - startX) / container.clientWidth;
-      const deltaY = (currentY - startY) / container.clientHeight;
-
-      const distance = Math.hypot(deltaX, deltaY);
-      const indexChange = Math.floor((distance + 0.5) * trackCards.length);
-      const direction = (deltaY - deltaX) > 0 ? 1 : -1;
-
-      guessIndex = clampGuessIndex(startGuessIndex + direction * indexChange);
-    };
-
-    const onMoveEnd = () => {
-      window.removeEventListener('touchmove', onMove);
-      window.removeEventListener('touchend', onMoveEnd);
-      window.removeEventListener('touchcancel', onMoveEnd);
-
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onMoveEnd);
-    };
-
-    window.addEventListener('touchmove', onMove);
-    window.addEventListener('touchend', onMoveEnd);
-    window.addEventListener('touchcancel', onMoveEnd);
-
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onMoveEnd);
-  };
-
   let trackCards: Card[];
   $: trackCards = wonTracks.toSorted(sortWonTracks).map(trackToCard);
 
   let guessIndex: number;
-  $: guessIndex = Math.ceil(trackCards.length / 2);
+  $: guessIndex = Math.ceil(wonTracks.length / 2);
 
   let cards: Card[];
   $: cards = [...trackCards.slice(0, guessIndex), guessCard, ...trackCards.slice(guessIndex)];
   $: cards, selectAnswer();
-
-  onMount(() => {
-    container.addEventListener('wheel', onWheelEvent);
-    container.addEventListener('mousedown', onMoveStart);
-    container.addEventListener('touchstart', onMoveStart);
-  });
 </script>
 
-<ol class="chronology" class:disabled={disabled} bind:this="{container}">
+<div class="chronology" class:disabled={disabled}>
   {#each cards as card, cardIndex}
-    <li class="card {card.isGuess ? 'guess' : ''}" style="--normalized-index: {cardIndex - guessIndex}">
+    <div
+      role="button"
+      tabindex="0"
+      class="card"
+    >
+      {#if cardIndex === guessIndex}
+        <button class="top-half" on:click={moveUp}></button>
+        <button class="bottom-half" on:click={moveDown}></button>
+        <i class="fa-solid fa-arrow-up"></i>
+      {/if}
+
       <h2>{card.releaseYear}</h2>
 
       {#if card.name}
-        <p class="track">{card.name}</p>
+        <p>{card.name}</p>
       {/if}
 
       {#if card.artists}
-        <p class="artist">{card.artists}</p>
+        <p>{card.artists}</p>
       {/if}
-    </li>
+
+      {#if cardIndex === guessIndex}
+        <i class="fa-solid fa-arrow-down"></i>
+      {/if}
+    </div>
   {/each}
-</ol>
+</div>
 
 <style lang="scss">
   .chronology {
-    container-type: size;
-    container-name: chronology;
-    position: relative;
-    width: 100%;
-    padding: min(50%, 8rem);
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
     box-sizing: border-box;
-    overflow: hidden;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
 
-    user-select: none;
-    -webkit-user-select: none;
-
-    &.disabled {
-      .card {
-        cursor: grab;
-        color: var(--gray-dark);
-      }
-    }
+    // Make sure the cards can be scrolled through only vertically.
+    overflow-y: auto;
+    overflow-x: hidden;
 
     .card {
       --card-border-radius: 1rem;
-      --normalized-index: 0;
-      --centered-index: max(var(--normalized-index), -1 * var(--normalized-index));
-      --aspect-ratio: 1 / 1.25;
-      --default-vertical-distance: 32cqh;
-      --default-horizontal-distance: 35cqw;
-      --distance-increase: -0.125;
 
+      position: relative;
       display: flex;
       box-sizing: border-box;
-      container-type: size;
-      container-name: card;
-      height: 16rem;
-      aspect-ratio: 1 / 1.25;
-      z-index: calc(var(--card-level) - var(--centered-index));
-
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform:
-        translateX(
-          calc(
-            -50% 
-            + max(
-              min(
-                var(--normalized-index) * var(--default-horizontal-distance)
-                - var(--distance-increase) * var(--centered-index) * var(--normalized-index) * var(--default-horizontal-distance),
-                2 * var(--default-horizontal-distance)
-              ),
-              -2 * var(--default-horizontal-distance)
-            )
-          )
-        )
-        translateY(
-          calc(
-            -50%
-            - max(
-              min(
-                var(--normalized-index) * var(--default-vertical-distance)
-                - var(--distance-increase) * var(--centered-index) * var(--normalized-index) * var(--default-vertical-distance),
-                2 * var(--default-vertical-distance)
-              ),
-              -2 * var(--default-vertical-distance)
-            )
-          )
-        )
-        scale(max(calc(1 - var(--centered-index) * 0.2), 0)
-      );
-      
-      list-style: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 0.2rem;
+      width: 100%;
+      gap: 0.5rem;
       padding: var(--card-border-radius);
       border-radius: var(--card-border-radius);
       box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
-      background-color: var(--white);
-      overflow: hidden;
-
-      transition:
-        transform var(--animation-speed-quick),
-        z-index var(--animation-speed-quick),
-        opacity var(--animation-speed-quick),
-        border var(--animation-speed-quick),
-        color var(--animation-speed-quick);
-
-      .track {
-        font-size: 2em;
-      }
-
-      p {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        font-size: 1.25em;
-      }
 
       h2 {
-        font-size: 5em;
+        font-size: 4rem;
       }
 
       p, h2 {
-        max-width: 100%;
         margin: 0;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        text-align: center;
       }
 
-      &.guess {
-        opacity: 0.5;
-        border: 2px dashed var(--gray-dark);
+      .top-half, .bottom-half {
+        box-sizing: border-box;
+        position: absolute;
+        width: 100%;
+        height: 50%;
+        left: 0;
+        cursor: pointer;
       }
 
-      @container chronology (min-height: 20rem) {
-        --default-vertical-distance: 6rem;
+      .top-half {
+        border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+        top: 0;
       }
 
-      @container chronology (min-width: 20rem) {
-        --default-horizontal-distance: 7rem;
+      .bottom-half {
+        border-radius: 0 0 var(--card-border-radius) var(--card-border-radius);
+        bottom: 0;
       }
+    }
 
-      @container chronology (max-height: 18rem) {
-        height: 10rem;
-
-        h2 { font-size: 2em; }
-        p { font-size: 1em;  }
-        .track { font-size: 1.25em; }
+    &.disabled {
+      .card {
+        cursor: not-allowed;
+        filter: invert(50%);
       }
     }
   }
