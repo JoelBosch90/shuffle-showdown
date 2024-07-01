@@ -80,12 +80,12 @@
 
     const onMove = (event: MouseEvent | TouchEvent) => {
       const { x: currentX, y: currentY } = getClientLocation(event);
-      const deltaX = (currentX - startX) / container.clientWidth;
-      const deltaY = (currentY - startY) / container.clientHeight;
+      const heightPercentageTraveled = (currentX - startX) / container.clientWidth;
+      const widthPercentageTraveled = (currentY - startY) / container.clientHeight;
 
-      const distance = Math.hypot(deltaX, deltaY);
-      const indexChange = Math.floor((distance + 0.5) * trackCards.length);
-      const direction = (deltaY - deltaX) > 0 ? 1 : -1;
+      const distance = Math.hypot(widthPercentageTraveled, heightPercentageTraveled);
+      const indexChange = Math.floor(distance * trackCards.length);
+      const direction = (widthPercentageTraveled - heightPercentageTraveled) > 0 ? 1 : -1;
 
       guessIndex = clampGuessIndex(startGuessIndex + direction * indexChange);
     };
@@ -151,12 +151,12 @@
     box-sizing: border-box;
     overflow: hidden;
 
+    cursor: grab;
     user-select: none;
     -webkit-user-select: none;
 
     &.disabled {
       .card {
-        cursor: grab;
         color: var(--gray-dark);
       }
     }
