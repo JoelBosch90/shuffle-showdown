@@ -62,16 +62,8 @@
   };
 
   const getClientLocation = (event: MouseEvent | TouchEvent) => {
-    if (event instanceof MouseEvent) {
-      return {
-        x: event.clientX,
-        y: event.clientY,
-      };
-    }
-    return {
-      x: event.touches[0].clientX,
-      y: event.touches[0].clientY,
-    };
+    if (event instanceof MouseEvent) return { x: event.clientX, y: event.clientY };
+    return { x: event.touches[0].clientX, y: event.touches[0].clientY };
   };
 
   const onMoveStart = (event: MouseEvent | TouchEvent) => {
@@ -80,8 +72,9 @@
 
     const onMove = (event: MouseEvent | TouchEvent) => {
       const { x: currentX, y: currentY } = getClientLocation(event);
-      const heightPercentageTraveled = (currentX - startX) / container.clientWidth;
-      const widthPercentageTraveled = (currentY - startY) / container.clientHeight;
+      const percentageOfScreenToTravelToMoveThroughAllOptions = 0.8;
+      const heightPercentageTraveled = (currentX - startX) / (container.clientWidth * percentageOfScreenToTravelToMoveThroughAllOptions);
+      const widthPercentageTraveled = (currentY - startY) / (container.clientHeight * percentageOfScreenToTravelToMoveThroughAllOptions);
 
       const distance = Math.hypot(widthPercentageTraveled, heightPercentageTraveled);
       const indexChange = Math.floor(distance * trackCards.length);
