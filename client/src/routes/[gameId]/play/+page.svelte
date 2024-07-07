@@ -14,7 +14,7 @@
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
   import { debounce } from '$lib/helpers/debounce';
 
-  const DEBOUNCE_WAIT_MILLISECONDS = 100;
+  const DEBOUNCE_WAIT_MILLISECONDS = 150;
 	const gameId = $page.params.gameId;
 	let session: GameSession | void | null = null;
 
