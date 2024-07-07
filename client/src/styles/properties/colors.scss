@@ -2,8 +2,7 @@
  *  This file contains the definitions for global styling properties related to
  *  colors.
  */
-:root
-{
+:root {
   --purple: rgba(100, 44, 169, 1);
   --purple-light: rgba(179, 141, 226, 1);
   --white: rgba(240, 242, 239, 1);
@@ -15,4 +14,18 @@
   --green: rgba(71, 160, 37, 1);
   --yellow: rgba(227, 205, 41, 1);
   --blue: rgba(42, 125, 225, 1);
+
+  --rainbow: linear-gradient(90deg,
+      var(--red),
+      var(--purple),
+      var(--purple),
+      var(--blue),
+      var(--blue),
+      var(--green),
+      var(--green),
+      var(--yellow),
+      var(--yellow),
+      var(--orange),
+      var(--orange),
+      var(--red));
 }

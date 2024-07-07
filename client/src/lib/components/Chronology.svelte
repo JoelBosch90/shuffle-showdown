@@ -164,6 +164,7 @@
     -webkit-user-select: none;
 
     &.disabled {
+      cursor: not-allowed;
       .card {
         color: var(--gray-dark);
       }
