@@ -137,12 +137,14 @@
   .chronology {
     container-type: size;
     container-name: chronology;
-    position: relative;
-    width: 100%;
-    padding: min(50%, 8rem);
+    display: flex;
     flex-grow: 1;
-    box-sizing: border-box;
+    width: 100%;
+    margin: 0;
+    padding: 0;
     overflow: hidden;
+    position: relative;
+    box-sizing: border-box;
 
     cursor: grab;
     user-select: none;
@@ -155,63 +157,78 @@
     }
 
     .card {
-      --card-border-radius: 1rem;
       --normalized-index: 0;
-      --centered-index: max(var(--normalized-index), -1 * var(--normalized-index));
-      --aspect-ratio: 1 / 1.25;
-      --default-vertical-distance: 32cqh;
-      --default-horizontal-distance: 35cqw;
-      --distance-increase: -0.125;
+      --card-padding: 1rem;
+      --card-min-height: 8rem;
+      --card-scale-height: 50cqh;
+      --card-max-height: 16rem;
+      --card-font-size: 12cqw;
+      --card-aspect-ratio: 1 / 1.25;
+      --card-box-shadow-space: 1rem;
+      --card-box-shadow-margin: 5px;
+      --default-vertical-distance: 15cqh;
+      --default-horizontal-distance: 15cqw;
+      --distance-step: 0.125;
+
+      $distance-from-guess-card: max(var(--normalized-index), -1 * var(--normalized-index));
+      $card-height: clamp(var(--card-min-height), var(--card-scale-height), var(--card-max-height));
 
       display: flex;
       box-sizing: border-box;
       container-type: size;
       container-name: card;
-      height: 16rem;
-      aspect-ratio: 1 / 1.25;
-      z-index: calc(var(--card-level) - var(--centered-index));
+
+      aspect-ratio: var(--card-aspect-ratio);
+      height: $card-height;
+      z-index: calc(var(--card-level) - $distance-from-guess-card);
 
       position: absolute;
-      top: 50%;
-      left: 50%;
+      top: calc(0% + var(--card-box-shadow-space));
+      left: calc(0% + var(--card-box-shadow-space));
+
+      $card-at-vertical-center: calc(50cqh - $card-height / 2 - var(--card-box-shadow-space));
+      $card-at-bottom: calc(100cqh - $card-height - var(--card-box-shadow-space) * 2);
+      $card-width: calc($card-height * var(--card-aspect-ratio));
+      $card-at-horizontal-center: calc(50cqw - $card-width / 2 - var(--card-box-shadow-space));
+      $card-at-right: calc(100cqw - $card-width - var(--card-box-shadow-space) * 2);
+      $direction: clamp(-1, var(--normalized-index), 1);
+      $non-zero-index: calc($distance-from-guess-card + 0.5);
+      $fraction: calc(1 / $non-zero-index);
+      $clamped-fraction: clamp(0, $fraction, 1);
+      $index-offset: calc($clamped-fraction - 1);
+      $card-offset: calc($index-offset * 50 * $direction);
+      
       transform:
-        translateX(
-          calc(
-            -50% 
-            + max(
-              min(
-                var(--normalized-index) * var(--default-horizontal-distance)
-                - var(--distance-increase) * var(--centered-index) * var(--normalized-index) * var(--default-horizontal-distance),
-                2 * var(--default-horizontal-distance)
-              ),
-              -2 * var(--default-horizontal-distance)
-            )
-          )
-        )
         translateY(
-          calc(
-            -50%
-            - max(
-              min(
-                var(--normalized-index) * var(--default-vertical-distance)
-                - var(--distance-increase) * var(--centered-index) * var(--normalized-index) * var(--default-vertical-distance),
-                2 * var(--default-vertical-distance)
-              ),
-              -2 * var(--default-vertical-distance)
-            )
+          clamp(
+            0%,
+            calc($card-at-vertical-center + $card-offset * 1cqh),
+            $card-at-bottom
           )
         )
-        scale(max(calc(1 - var(--centered-index) * 0.2), 0)
-      );
+        translateX(
+          clamp(
+            0%,
+            calc($card-at-horizontal-center - $card-offset * 1cqw),
+            $card-at-right
+          )
+        )
+        scale(
+          clamp(
+            0,
+            $clamped-fraction,
+            1
+          )
+        );
       
       list-style: none;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       gap: 0.2rem;
-      padding: var(--card-border-radius);
-      border-radius: var(--card-border-radius);
-      box-shadow: 0 0 1rem rgba(0, 0, 0, 0.1);
+      padding: var(--card-padding);
+      border-radius: var(--card-padding);
+      box-shadow: 0 0 calc(var(--card-box-shadow-space) - var(--card-box-shadow-margin)) rgba(255, 1, 213, 1);
       background-color: var(--white);
       overflow: hidden;
 
@@ -222,21 +239,6 @@
         border var(--animation-speed-quick),
         color var(--animation-speed-quick);
 
-      .track {
-        font-size: 2em;
-      }
-
-      p {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        font-size: 1.25em;
-      }
-
-      h2 {
-        font-size: 5em;
-      }
-
       p, h2 {
         max-width: 100%;
         margin: 0;
@@ -245,25 +247,24 @@
         text-align: center;
       }
 
+      p {
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        font-size: var(--card-font-size);
+
+        &.track {
+          font-size: calc(var(--card-font-size) * 1.5);
+        }
+      }
+
+      h2 {
+        font-size: calc(var(--card-font-size) * 3.75);
+      }
+
       &.guess {
-        opacity: 0.5;
+        opacity: 50%;
         border: 2px dashed var(--gray-dark);
-      }
-
-      @container chronology (min-height: 20rem) {
-        --default-vertical-distance: 6rem;
-      }
-
-      @container chronology (min-width: 20rem) {
-        --default-horizontal-distance: 7rem;
-      }
-
-      @container chronology (max-height: 18rem) {
-        height: 10rem;
-
-        h2 { font-size: 2em; }
-        p { font-size: 1em;  }
-        .track { font-size: 1.25em; }
       }
     }
   }

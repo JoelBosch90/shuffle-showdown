@@ -103,18 +103,20 @@
 
 <div class="container">
 	<div class="game-interface">
-    <div class="game-info">
-      <h1>Round {currentRound?.number}</h1>
-      {#if currentPlayer}
-        <p>Now playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name} ({currentPlayer.wonTracks?.length}/{gameUpdate?.songsToWin})</p>
-      {/if}
-    </div>
+		<div class="game-info">
+			<h1>Round {currentRound?.number}</h1>
+			{#if currentPlayer}
+				<p>Now playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name} ({currentPlayer.wonTracks?.length}/{gameUpdate?.songsToWin})</p>
+			{/if}
+		</div>
+
 		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
+
 		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
 
-    <LoadingButton isLoading={isLoading} onClick={onAnswerSubmit}>
-      Select answer
-    </LoadingButton>
+		<LoadingButton isLoading={isLoading} onClick={onAnswerSubmit}>
+			Select answer
+		</LoadingButton>
 	</div>
 	<svelte:component this={Celebration} bind:this={celebration} />
 </div>
