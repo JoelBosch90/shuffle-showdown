@@ -159,12 +159,12 @@
     .card {
       --normalized-index: 0;
       --card-padding: 1rem;
-      --card-min-height: 8rem;
-      --card-scale-height: 50cqh;
+      --card-min-height: 6rem;
+      --card-scale-height: 35cqh;
       --card-max-height: 16rem;
       --card-font-size: 12cqw;
       --card-aspect-ratio: 1 / 1.25;
-      --card-box-shadow-space: 1rem;
+      --card-box-shadow-space: 0rem;
       --card-box-shadow-margin: 5px;
       --default-vertical-distance: 15cqh;
       --default-horizontal-distance: 15cqw;
@@ -174,52 +174,50 @@
       $card-height: clamp(var(--card-min-height), var(--card-scale-height), var(--card-max-height));
 
       display: flex;
+      border: 1px solid deeppink;
       box-sizing: border-box;
       container-type: size;
       container-name: card;
+
+      position: absolute;
+      top: 0;
+      left: 0;
 
       aspect-ratio: var(--card-aspect-ratio);
       height: $card-height;
       z-index: calc(var(--card-level) - $distance-from-guess-card);
 
-      position: absolute;
-      top: calc(0% + var(--card-box-shadow-space));
-      left: calc(0% + var(--card-box-shadow-space));
-
-      $card-at-vertical-center: calc(50cqh - $card-height / 2 - var(--card-box-shadow-space));
-      $card-at-bottom: calc(100cqh - $card-height - var(--card-box-shadow-space) * 2);
-      $card-width: calc($card-height * var(--card-aspect-ratio));
-      $card-at-horizontal-center: calc(50cqw - $card-width / 2 - var(--card-box-shadow-space));
-      $card-at-right: calc(100cqw - $card-width - var(--card-box-shadow-space) * 2);
       $direction: clamp(-1, var(--normalized-index), 1);
-      $non-zero-index: calc($distance-from-guess-card + 0.5);
+      $non-zero-index: calc($distance-from-guess-card + 0.33);
       $fraction: calc(1 / $non-zero-index);
       $clamped-fraction: clamp(0, $fraction, 1);
-      $index-offset: calc($clamped-fraction - 1);
+      $scale: clamp(0, $clamped-fraction, 1);
+      $index-offset: calc($scale - 1);
       $card-offset: calc($index-offset * 50 * $direction);
+      $card-vertical-offset: calc($card-offset * 1cqh - $direction * $card-height * 0.33);
+      $card-horizontal-offset: calc($card-offset * 1cqw);
+
+      $size-scale: calc($scale * 0.5 + 0.5);
+      $reverse-size-scale: calc(1 - $size-scale);
+      $card-scaled-height: calc($card-height * $size-scale);
+      $card-scaled-width: calc($card-scaled-height * var(--card-aspect-ratio));
+      $card-scaling-height-loss: calc($reverse-size-scale * $card-height);
+
+      $card-at-top: calc(0% - $card-scaling-height-loss * 0.5);
+      $card-at-vertical-center: calc(50cqh - $card-scaled-height * 0.5 - $card-scaling-height-loss * 0.5);
+      $card-at-bottom: calc(100cqh - $card-height + $card-scaling-height-loss * 0.5);
       
+      $card-at-horizontal-center: calc(50cqw - $card-scaled-width / 2);
+      $card-at-right: calc(100cqw - $card-scaled-width);
       transform:
         translateY(
           clamp(
-            0%,
-            calc($card-at-vertical-center + $card-offset * 1cqh),
+            $card-at-top,
+            calc($card-at-vertical-center + $card-vertical-offset),
             $card-at-bottom
           )
         )
-        translateX(
-          clamp(
-            0%,
-            calc($card-at-horizontal-center - $card-offset * 1cqw),
-            $card-at-right
-          )
-        )
-        scale(
-          clamp(
-            0,
-            $clamped-fraction,
-            1
-          )
-        );
+        scale($size-scale);
       
       list-style: none;
       flex-direction: column;
@@ -228,7 +226,7 @@
       gap: 0.2rem;
       padding: var(--card-padding);
       border-radius: var(--card-padding);
-      box-shadow: 0 0 calc(var(--card-box-shadow-space) - var(--card-box-shadow-margin)) rgba(255, 1, 213, 1);
+      // box-shadow: 0 0 calc(var(--card-box-shadow-space) - var(--card-box-shadow-margin)) rgba(255, 1, 213, 1);
       background-color: var(--white);
       overflow: hidden;
 
