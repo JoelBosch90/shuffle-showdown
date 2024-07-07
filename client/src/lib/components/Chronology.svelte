@@ -17,6 +17,8 @@
 
   let container: HTMLOListElement;
 
+  const RATIO_OF_SCREEN_FOR_FULL_MOVE = 0.8;
+  const INDEX_CHANGE_FOR_FULL_MOVE = 4;
   const UNKNOWN_RELEASE_YEAR = "???";
   const guessCard: Card = {
     releaseYear: UNKNOWN_RELEASE_YEAR,
@@ -58,7 +60,7 @@
   };
 
   const clampGuessIndex = (newGuessIndex: number) => {
-    return Math.min(Math.max(0, newGuessIndex), trackCards.length);
+    return Math.max(0, Math.min(newGuessIndex, trackCards.length));
   };
 
   const getClientLocation = (event: MouseEvent | TouchEvent) => {
@@ -72,12 +74,11 @@
 
     const onMove = (event: MouseEvent | TouchEvent) => {
       const { x: currentX, y: currentY } = getClientLocation(event);
-      const percentageOfScreenToTravelToMoveThroughAllOptions = 0.8;
-      const heightPercentageTraveled = (currentX - startX) / (container.clientWidth * percentageOfScreenToTravelToMoveThroughAllOptions);
-      const widthPercentageTraveled = (currentY - startY) / (container.clientHeight * percentageOfScreenToTravelToMoveThroughAllOptions);
+      const heightPercentageTraveled = (currentX - startX) / (container.clientWidth * RATIO_OF_SCREEN_FOR_FULL_MOVE);
+      const widthPercentageTraveled = (currentY - startY) / (container.clientHeight * RATIO_OF_SCREEN_FOR_FULL_MOVE);
 
       const distance = Math.hypot(widthPercentageTraveled, heightPercentageTraveled);
-      const indexChange = Math.floor(distance * trackCards.length);
+      const indexChange = Math.floor(distance * INDEX_CHANGE_FOR_FULL_MOVE);
       const direction = (widthPercentageTraveled - heightPercentageTraveled) > 0 ? 1 : -1;
 
       guessIndex = clampGuessIndex(startGuessIndex + direction * indexChange);
@@ -237,17 +238,17 @@
       $card-at-top: start-value($card-height);
       $card-at-left: start-value($card-width);
 
-      @function end-value($side-unit, $card-side-length) {
-        @return calc(100 * $side-unit - ($card-side-length - reverse-scaled-value($card-side-length) * 0.5 + $card-scaled-box-shadow-space));
-      }
-      $card-at-bottom: end-value(1cqh, $card-height);
-      $card-at-right: end-value(1cqw, $card-width);
-
       @function middle-value($side-unit, $card-side-length) {
         @return calc(50 * $side-unit - (scaled-value($card-side-length) + reverse-scaled-value($card-side-length)) * 0.5);
       }
       $card-at-vertical-center: middle-value(1cqh, $card-height);
       $card-at-horizontal-center :middle-value(1cqw, $card-width);
+
+      @function end-value($side-unit, $card-side-length) {
+        @return calc(100 * $side-unit - ($card-side-length - reverse-scaled-value($card-side-length) * 0.5 + $card-scaled-box-shadow-space));
+      }
+      $card-at-bottom: end-value(1cqh, $card-height);
+      $card-at-right: end-value(1cqw, $card-width);
 
       $vertical-transform: translateY(clamp($card-at-top, calc($card-at-vertical-center + $card-vertical-offset), $card-at-bottom));
       $horizontal-transform: translateX(clamp($card-at-left, calc($card-at-horizontal-center - $card-horizontal-offset), $card-at-right));
