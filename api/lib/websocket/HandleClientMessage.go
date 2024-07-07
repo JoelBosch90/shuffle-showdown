@@ -18,7 +18,6 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		joinError := JoinHandler(message, client, pool)
 		if joinError != nil {
 			client.SendError(joinError.Error())
-			return
 		}
 
 	case ClientMessageTypeKickPlayer:
@@ -26,7 +25,6 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		kickError := KickPlayerHandler(message, client, pool)
 		if kickError != nil {
 			client.SendError(kickError.Error())
-			return
 		}
 
 	case ClientMessageStartGame:
@@ -34,7 +32,6 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		startGameError := StartGameHandler(message, client, pool)
 		if startGameError != nil {
 			client.SendError(startGameError.Error())
-			return
 		}
 
 	case ClientMessageSubmitAnswer:
@@ -42,7 +39,6 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		submitAnswerError := SubmitAnswerHandler(message, client, pool)
 		if submitAnswerError != nil {
 			client.SendError(submitAnswerError.Error())
-			return
 		}
 
 	case ClientMessageUpdateRequest:
@@ -50,7 +46,13 @@ func HandleClientMessage(message ClientMessage, client *Client, pool *Connection
 		broadcastError := BroadcastGameUpdate(client, pool)
 		if broadcastError != nil {
 			client.SendError(broadcastError.Error())
-			return
+		}
+
+	case ClientMessageUpdateAnswerSelection:
+
+		answerSelectionUpdateError := AnswerSelectionUpdateHandler(message, client, pool)
+		if answerSelectionUpdateError != nil {
+			client.SendError(answerSelectionUpdateError.Error())
 		}
 
 	default:

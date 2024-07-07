@@ -4,4 +4,5 @@ export enum ClientMessageType {
     StartGame = 'start-game',
     SubmitAnswer = 'submit-answer',
     UpdateRequest = 'update-request',
+    UpdateAnswerSelection = 'update-answer-selection'
 }

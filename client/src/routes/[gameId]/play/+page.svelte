@@ -12,7 +12,9 @@
 	import { GameSession } from '$lib/services/GameSession';
 	import { findPlayerInGameSessionUpdate } from '$lib/helpers/findPlayerInGameSessionUpdate';
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
+  import { debounce } from '$lib/helpers/debounce';
 
+  const DEBOUNCE_WAIT_MILLISECONDS = 300;
 	const gameId = $page.params.gameId;
 	let session: GameSession | void | null = null;
 
@@ -37,6 +39,8 @@
 
 	let audioPlayer: AudioPlayer | null = null;
 
+  let chronology: Chronology | null = null;
+
 	let celebration: Celebration | null = null;
 
 	const getCurrentRound = (update: GameSessionUpdate | null) : Round | null => {
@@ -48,8 +52,11 @@
 		return currentRound ?? null;
 	}
 
+  const debouncedAnswerSelectionUpdate = debounce((answer) => session?.updateAnswerSelection(answer as Answer), DEBOUNCE_WAIT_MILLISECONDS);
+
 	const onAnswerSelect = (answer: Answer) => {
 		selectedAnswer = answer;
+    debouncedAnswerSelectionUpdate(answer);
 	}
 
 	const onAnswerSubmit = () => {
@@ -85,6 +92,10 @@
       celebrate(gameUpdate);
       updatePage(gameUpdate);
     });
+    session.onAnswerSelectionUpdate(({ answerSelectionUpdate }) => {
+      if (answerSelectionUpdate?.answer?.guessIndex === undefined || answerSelectionUpdate.playerId === me?.id || isPlaying) return;
+      chronology?.selectIndex(answerSelectionUpdate.answer.guessIndex);
+    });
 
 		const latestUpdate = session.getCachedUpdate();
 		if (latestUpdate) updatePage(latestUpdate);
@@ -110,7 +121,7 @@
 			{/if}
 		</div>
 
-		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
+		<svelte:component this={Chronology} bind:this={chronology} wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
 
 		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
 

@@ -5,11 +5,12 @@ import uuid "github.com/satori/go.uuid"
 type ClientMessageType string
 
 const (
-	ClientMessageTypeJoin       ClientMessageType = "join"
-	ClientMessageTypeKickPlayer ClientMessageType = "kick-player"
-	ClientMessageStartGame      ClientMessageType = "start-game"
-	ClientMessageSubmitAnswer   ClientMessageType = "submit-answer"
-	ClientMessageUpdateRequest  ClientMessageType = "update-request"
+	ClientMessageTypeJoin              ClientMessageType = "join"
+	ClientMessageTypeKickPlayer        ClientMessageType = "kick-player"
+	ClientMessageStartGame             ClientMessageType = "start-game"
+	ClientMessageSubmitAnswer          ClientMessageType = "submit-answer"
+	ClientMessageUpdateRequest         ClientMessageType = "update-request"
+	ClientMessageUpdateAnswerSelection ClientMessageType = "update-answer-selection"
 )
 
 type ClientMessage struct {

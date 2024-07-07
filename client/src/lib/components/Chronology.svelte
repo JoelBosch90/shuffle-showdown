@@ -38,6 +38,7 @@
     onSelect({
       afterReleaseYear: cardBefore ? parseInt(cardBefore?.releaseYear ?? "") : undefined,
       beforeReleaseYear: cardAfter ? parseInt(cardAfter?.releaseYear ?? "") : undefined,
+      guessIndex: guessIndex,
     });
   };
 
@@ -99,6 +100,13 @@
 
     window.addEventListener('mousemove', onMove);
     window.addEventListener('mouseup', onMoveEnd);
+  };
+
+  export const selectIndex = (newIndex: number) => {
+    if (!disabled) return;
+    if (typeof newIndex !== 'number') return;
+
+    guessIndex = newIndex;
   };
 
   let trackCards: Card[];

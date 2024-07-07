@@ -8,11 +8,6 @@ import (
 	"errors"
 )
 
-type Answer struct {
-	AfterReleaseYear  *int `json:"afterReleaseYear"`
-	BeforeReleaseYear *int `json:"beforeReleaseYear"`
-}
-
 func SubmitAnswerHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
 	database := database.Get()
 	var game models.Game
@@ -30,7 +25,7 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 		return errors.New("not your turn")
 	}
 
-	var answer Answer
+	var answer gameHelpers.Answer
 	answerParseError := json.Unmarshal([]byte(message.Payload), &answer)
 	if answerParseError != nil {
 		return errors.New("could not parse answer")
