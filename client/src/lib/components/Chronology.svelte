@@ -55,6 +55,8 @@
   };
 
   const onWheelEvent = (event: WheelEvent) => {
+    if (disabled) return;
+
     const direction = (event.deltaY + event.deltaX) > 0 ? 1 : -1;
 
     guessIndex = clampGuessIndex(guessIndex + direction);
@@ -70,6 +72,8 @@
   };
 
   const onMoveStart = (event: MouseEvent | TouchEvent) => {
+    if (disabled) return;
+
     const { x: startX, y: startY } = getClientLocation(event);
     const startGuessIndex = guessIndex;
 
