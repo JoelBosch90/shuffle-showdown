@@ -106,7 +106,7 @@
 		<div class="game-info">
 			<h1>Round {currentRound?.number}</h1>
 			{#if currentPlayer}
-				<p>Now playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name} ({currentPlayer.wonTracks?.length}/{gameUpdate?.songsToWin})</p>
+				<p>Now playing: {isPlaying ? "you" : currentPlayer.name} ({currentPlayer.wonTracks?.length}/{gameUpdate?.songsToWin})</p>
 			{/if}
 		</div>
 
@@ -114,7 +114,7 @@
 
 		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
 
-		<LoadingButton isLoading={isLoading} onClick={onAnswerSubmit}>
+		<LoadingButton isLoading={isLoading} onClick={onAnswerSubmit} isDisabled={!isPlaying}>
 			Select answer
 		</LoadingButton>
 	</div>
