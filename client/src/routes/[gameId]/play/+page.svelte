@@ -112,8 +112,9 @@
 				answerSelectionUpdate?.answer?.guessIndex === undefined ||
 				answerSelectionUpdate.playerId === me?.id ||
 				isPlaying
-			)
+			) {
 				return;
+			}
 			chronology?.selectIndex(answerSelectionUpdate.answer.guessIndex);
 		});
 
