@@ -1,18 +1,18 @@
 <script>
 	import '@fortawesome/fontawesome-free/css/all.min.css';
 	import Toasts from '$lib/components/Toasts.svelte';
-	import Loadingborder from '$lib/components/LoadingBorder.svelte';
+	import ProgressBorder from '$lib/components/ProgressBorder.svelte';
 	import '../styles/global.scss';
 </script>
 
 <div class="app">
-	<Loadingborder>
+	<ProgressBorder>
 		<Toasts />
 
 		<main>
 			<slot />
 		</main>
-	</Loadingborder>
+	</ProgressBorder>
 </div>
 
 <style lang="scss">

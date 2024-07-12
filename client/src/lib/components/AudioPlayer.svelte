@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { setProgress } from '$lib/store/progress';
 	export let source = '';
 
 	let audio: HTMLAudioElement;
@@ -74,11 +75,11 @@
 		playing = false;
 
 		audio.addEventListener('loadedmetadata', () => {
-			maxProgress = audio?.duration;
+			setProgress({ progress: 0, max: audio?.duration });
 			volumeUpdate();
 		});
 		audio.addEventListener('timeupdate', () => {
-			progress = audio?.currentTime;
+			setProgress({ progress: audio?.currentTime });
 		});
 	});
 </script>
