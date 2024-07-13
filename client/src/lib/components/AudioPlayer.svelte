@@ -39,6 +39,7 @@
 		}
 
 		audio.volume = currentVolume / 100;
+		localStorage.setItem('volume', currentVolume.toString());
 	};
 
 	const muteUnmute = () => {
@@ -71,6 +72,7 @@
 
 	onMount(async () => {
 		isPlaying = false;
+		currentVolume = parseInt(localStorage.getItem('volume') ?? '100');
 
 		audio.addEventListener('loadedmetadata', () => {
 			setAudioProgress({ progress: 0, max: audio?.duration });
@@ -124,6 +126,13 @@
 		align-items: center;
 		justify-content: center;
 		gap: 1rem;
+
+		button {
+			i {
+				width: 1em;
+				aspect-ratio: 1;
+			}
+		}
 
 		.volume {
 			display: none;

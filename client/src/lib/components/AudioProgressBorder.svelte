@@ -12,6 +12,7 @@
 		maxDistance: number;
 	};
 
+	const MILLISECONDS_IN_SECOND = 1000;
 	const DEFAULT_PROGRESS: ProgressPerSide = {
 		top: 0,
 		right: 0,
@@ -86,15 +87,21 @@
 	};
 
 	audioProgressState.subscribe((newState) => {
-		console.log(newState);
 		currentUpdate = currentUpdate.then(() => update(newState));
 	});
 </script>
 
 <div
 	class="progress-background"
-	style="--top-progress: {currentProgress.top}px; --right-progress: {currentProgress.right}px; --bottom-progress: {currentProgress.bottom}px; --left-progress: {currentProgress.left}px; --progress-speed: {progressSpeed *
-		1000}ms; --border-width: {BORDER_WIDTH}px; --play-state: {isProgressing ? 'running' : 'paused'}"
+	style="
+    --border-width: {BORDER_WIDTH}px;
+    --top-progress: {currentProgress.top}px; 
+    --right-progress: {currentProgress.right}px; 
+    --bottom-progress: {currentProgress.bottom}px; 
+    --left-progress: {currentProgress.left}px; 
+    --progress-speed: {progressSpeed * MILLISECONDS_IN_SECOND}ms;
+    --play-state: {isProgressing ? 'running' : 'paused'}
+  "
 	bind:this={container}
 >
 	<div class="progress-slider-top"></div>
@@ -168,10 +175,12 @@
 		.content-wrapper {
 			position: absolute;
 			inset: var(--border-width);
-			border-radius: var(--border-width);
 			display: flex;
 			flex-direction: row;
 			justify-content: center;
+			border-radius: var(--border-width);
+			padding: 0.25rem;
+			box-sizing: border-box;
 			background-color: var(--progress-background-default);
 		}
 	}
