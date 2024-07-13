@@ -54,6 +54,7 @@ input {
     overflow: hidden;
     cursor: pointer;
     width: 100%;
+    margin: 0;
 
     &::-webkit-slider-runnable-track,
     &::-webkit-slider-thumb {

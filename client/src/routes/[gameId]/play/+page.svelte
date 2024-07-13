@@ -169,6 +169,9 @@
 
 <style lang="scss">
 	.container {
+		--margin-small: 0.25rem;
+		--margin-large: 1rem;
+
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -176,41 +179,41 @@
 		height: 100%;
 		width: 100%;
 		position: relative;
-	}
 
-	.card-field {
-		position: relative;
-		flex: 1;
-		overflow: hidden;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		align-items: center;
-		width: 100%;
+		.card-field {
+			position: relative;
+			flex: 1;
+			overflow: hidden;
+			display: flex;
+			width: 100%;
 
-		.round-info {
-			position: absolute;
-			top: 0;
-			left: 0;
-			pointer-events: none;
-			margin: 1rem 0 0 1rem;
+			.round-info,
+			.player-info {
+				position: absolute;
+				pointer-events: none;
+			}
+
+			.round-info {
+				top: 0;
+				left: 0;
+				margin: var(--margin-small) 0 0 var(--margin-small);
+			}
+
+			.player-info {
+				right: 0;
+				bottom: 0;
+				margin: 0 var(--margin-small) var(--margin-small) 0;
+			}
 		}
 
-		.player-info {
-			position: absolute;
-			right: 0;
-			bottom: 0;
-			pointer-events: none;
-			margin: 0 1rem 1rem 0;
+		.controls {
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			gap: 1rem;
+			align-items: center;
+			justify-content: space-between;
+			margin-top: var(--margin-small);
 		}
-	}
-
-	.controls {
-		width: 100%;
-		display: flex;
-		flex-direction: row;
-		gap: 1rem;
-		align-items: center;
-		justify-content: space-evenly;
 	}
 </style>

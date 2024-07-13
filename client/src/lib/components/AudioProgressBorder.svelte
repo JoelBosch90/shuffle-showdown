@@ -33,7 +33,7 @@
 		bottom: 0,
 		left: 0
 	};
-	const BORDER_WIDTH = 10;
+	const BORDER_WIDTH = 6;
 
 	let container: HTMLDivElement;
 	let currentUpdate = Promise.resolve();

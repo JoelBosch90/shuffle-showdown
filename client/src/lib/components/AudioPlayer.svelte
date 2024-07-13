@@ -113,49 +113,70 @@
 				<i class="fa-solid fa-play"></i>
 			{/if}
 		</button>
-		<button type="button" on:click={toggleMute}>
-			{#if currentVolume === 0 || muted}
-				<i class="fa-solid fa-volume-off"></i>
-			{:else if currentVolume < 50}
-				<i class="fa-solid fa-volume-low"></i>
-			{:else}
-				<i class="fa-solid fa-volume-high"></i>
-			{/if}
-		</button>
-		<input
-			type="range"
-			name="volume"
-			min="0"
-			max="100"
-			class="volume"
-			bind:value={currentVolume}
-			on:change={volumeUpdate}
-		/>
+		<div class="volume-controls">
+			<button type="button" on:click={toggleMute}>
+				{#if currentVolume === 0 || muted}
+					<i class="fa-solid fa-volume-off"></i>
+				{:else if currentVolume < 50}
+					<i class="fa-solid fa-volume-low"></i>
+				{:else}
+					<i class="fa-solid fa-volume-high"></i>
+				{/if}
+			</button>
+			<input
+				type="range"
+				name="volume"
+				min="0"
+				max="100"
+				class="volume"
+				bind:value={currentVolume}
+				on:change={volumeUpdate}
+			/>
+		</div>
 	</div>
 </div>
 
 <style lang="scss">
 	.controls {
+		--gap: 2.5rem;
+
 		display: flex;
 		flex-direction: row;
 		align-items: center;
 		justify-content: center;
-		gap: 1rem;
+		gap: var(--gap);
+		font-size: 1.5rem;
 
 		button {
+			display: flex;
+			align-items: center;
+
 			i {
 				width: 1em;
 				aspect-ratio: 1;
 			}
 		}
 
-		.volume {
-			display: none;
+		.volume-controls {
+			display: flex;
+			flex-direction: row;
+			gap: 1rem;
+			align-items: center;
+
+			.volume {
+				width: 0px;
+			}
 		}
 
 		@media (pointer: fine) {
-			.volume {
-				display: block;
+			.volume-controls:hover {
+				.volume {
+					width: 100%;
+					transition-property: width;
+					transition-timing-function: var(--animation-timing);
+					transition-duration: var(--animation-speed-quick);
+					transition-delay: 200ms;
+				}
 			}
 		}
 	}
