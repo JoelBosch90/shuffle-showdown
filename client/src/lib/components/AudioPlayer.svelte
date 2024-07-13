@@ -1,21 +1,18 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { setProgress } from '$lib/store/progress';
+	import { setAudioProgress } from '$lib/store/audioProgress';
 	export let source = '';
 
 	let audio: HTMLAudioElement;
 
 	let currentVolume: number;
-	$: currentVolume = 50;
+	$: currentVolume = 100;
 
 	let muted: boolean;
 	$: muted = audio?.muted;
 
-	let playing: boolean;
-	$: playing = false;
-
-	let progress: number;
-	$: progress = 0;
+	let isPlaying: boolean;
+	$: isPlaying = false;
 
 	let maxProgress: number;
 	$: maxProgress = 0;
@@ -29,7 +26,7 @@
 			pause();
 		}
 
-		playing = !(audio.paused || audio.ended);
+		isPlaying = !(audio.paused || audio.ended);
 	};
 
 	const volumeUpdate = () => {
@@ -52,7 +49,8 @@
 	};
 
 	const updatePlayState = () => {
-		playing = !(audio.paused || audio.ended);
+		isPlaying = !(audio.paused || audio.ended);
+		setAudioProgress({ isPlaying });
 	};
 
 	export const play = () => {
@@ -72,26 +70,27 @@
 	};
 
 	onMount(async () => {
-		playing = false;
+		isPlaying = false;
 
 		audio.addEventListener('loadedmetadata', () => {
-			setProgress({ progress: 0, max: audio?.duration });
+			setAudioProgress({ progress: 0, max: audio?.duration });
 			volumeUpdate();
 		});
 		audio.addEventListener('timeupdate', () => {
-			setProgress({ progress: audio?.currentTime });
+			setAudioProgress({ progress: audio?.currentTime });
 		});
+
+		// Loop in JavaScript rather than HTML so that we still get the
+		// completed timeupdate event.
+		audio.addEventListener('ended', play);
 	});
 </script>
 
 <div class="player">
-	<audio loop preload="auto" src={source} bind:this={audio}></audio>
-	<progress max={maxProgress} value={progress}>
-		<div class="progress-bar"></div>
-	</progress>
+	<audio preload="auto" src={source} bind:this={audio}></audio>
 	<div class="controls">
 		<button type="button" on:click={playPause}>
-			{#if playing}
+			{#if isPlaying}
 				<i class="fa-solid fa-pause"></i>
 			{:else}
 				<i class="fa-solid fa-play"></i>
@@ -119,9 +118,6 @@
 </div>
 
 <style lang="scss">
-	progress {
-		width: 100%;
-	}
 	.controls {
 		display: flex;
 		flex-direction: row;
