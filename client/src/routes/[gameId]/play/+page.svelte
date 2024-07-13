@@ -134,17 +134,7 @@
 </svelte:head>
 
 <div class="container">
-	<div class="game-interface">
-		<div class="game-info">
-			<h1>Round {currentRound?.number}</h1>
-			{#if currentPlayer}
-				<p>
-					Now playing: {isPlaying ? 'you' : currentPlayer.name} ({currentPlayer.wonTracks
-						?.length}/{gameUpdate?.songsToWin})
-				</p>
-			{/if}
-		</div>
-
+	<div class="card-field">
 		<svelte:component
 			this={Chronology}
 			bind:this={chronology}
@@ -153,17 +143,26 @@
 			disabled={!isPlaying}
 		/>
 
-		<div class="controls">
-			<svelte:component
-				this={AudioPlayer}
-				bind:this={audioPlayer}
-				source={currentRound?.track.previewUrl}
-			/>
+		<h2 class="round-info">Round {currentRound?.number}</h2>
 
-			<LoadingButton {isLoading} onClick={onAnswerSubmit} isDisabled={!isPlaying}>
-				Select answer
-			</LoadingButton>
-		</div>
+		{#if currentPlayer}
+			<p class="player-info">
+				Now playing: {isPlaying ? 'you' : currentPlayer.name} ({currentPlayer.wonTracks
+					?.length}/{gameUpdate?.songsToWin})
+			</p>
+		{/if}
+	</div>
+
+	<div class="controls">
+		<svelte:component
+			this={AudioPlayer}
+			bind:this={audioPlayer}
+			source={currentRound?.track.previewUrl}
+		/>
+
+		<LoadingButton {isLoading} onClick={onAnswerSubmit} isDisabled={!isPlaying}>
+			Select answer
+		</LoadingButton>
 	</div>
 	<svelte:component this={Celebration} bind:this={celebration} />
 </div>
@@ -179,7 +178,8 @@
 		position: relative;
 	}
 
-	.game-interface {
+	.card-field {
+		position: relative;
 		flex: 1;
 		overflow: hidden;
 		display: flex;
@@ -188,19 +188,29 @@
 		align-items: center;
 		width: 100%;
 
-		.game-info {
-			h1,
-			p {
-				text-align: center;
-				margin: 0;
-			}
+		.round-info {
+			position: absolute;
+			top: 0;
+			left: 0;
+			pointer-events: none;
+			margin: 1rem 0 0 1rem;
 		}
 
-		.controls {
-			display: flex;
-			flex-direction: column;
-			gap: 1rem;
-			align-items: center;
+		.player-info {
+			position: absolute;
+			right: 0;
+			bottom: 0;
+			pointer-events: none;
+			margin: 0 1rem 1rem 0;
 		}
+	}
+
+	.controls {
+		width: 100%;
+		display: flex;
+		flex-direction: row;
+		gap: 1rem;
+		align-items: center;
+		justify-content: space-evenly;
 	}
 </style>

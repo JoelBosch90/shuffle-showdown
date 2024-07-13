@@ -11,6 +11,12 @@
 		total: number;
 		maxDistance: number;
 	};
+	type ProgressSpeedPerSide = {
+		top: number;
+		right: number;
+		bottom: number;
+		left: number;
+	};
 
 	const MILLISECONDS_IN_SECOND = 1000;
 	const DEFAULT_PROGRESS: ProgressPerSide = {
@@ -21,13 +27,19 @@
 		total: 0,
 		maxDistance: 0
 	};
+	const DEFAULT_PROGRESS_SPEED: ProgressSpeedPerSide = {
+		top: 0,
+		right: 0,
+		bottom: 0,
+		left: 0
+	};
 	const BORDER_WIDTH = 10;
 
 	let container: HTMLDivElement;
 	let currentUpdate = Promise.resolve();
-	let progressSpeed = 0;
 	let isProgressing: boolean = false;
-	const currentProgress: ProgressPerSide = DEFAULT_PROGRESS;
+	const progressSpeed: ProgressSpeedPerSide = structuredClone(DEFAULT_PROGRESS_SPEED);
+	const currentProgress: ProgressPerSide = structuredClone(DEFAULT_PROGRESS);
 
 	const calculateTotalDistance = (clientHeight: number, clientWidth: number) =>
 		2 * (clientHeight + clientWidth);
@@ -59,24 +71,50 @@
 	};
 
 	const calculateAnimationTime = ({ total, maxDistance }: ProgressPerSide, max: number) => {
+		if (total === 0) return 0;
+
 		const oldTotal = currentProgress.total;
 		const pixelsToTravel = total - oldTotal;
-		const animationTime = (pixelsToTravel / maxDistance) * max;
 
-		return total === 0 ? 0 : animationTime;
+		return (pixelsToTravel / maxDistance) * max;
 	};
 
-	const animateProgress = async (progressPerSide: ProgressPerSide, max: number) => {
-		const animationTime = calculateAnimationTime(progressPerSide, max);
-		const { top, right, bottom, left, total, maxDistance } = progressPerSide;
+	const getAnimationSpeed = (
+		progressPerSide: ProgressPerSide,
+		animationTime: number
+	): ProgressSpeedPerSide => {
+		const { top, right, bottom, left } = progressPerSide;
 
-		progressSpeed = animationTime;
+		if (top === 0) return DEFAULT_PROGRESS_SPEED;
+		if (right === 0) return { ...DEFAULT_PROGRESS_SPEED, top: animationTime };
+		if (bottom === 0) return { ...DEFAULT_PROGRESS_SPEED, right: animationTime };
+		if (left === 0) return { ...DEFAULT_PROGRESS_SPEED, bottom: animationTime };
+		return { ...DEFAULT_PROGRESS_SPEED, left: animationTime };
+	};
+
+	const setAnimationSpeed = (speed: ProgressSpeedPerSide) => {
+		const { top, right, bottom, left } = speed;
+		progressSpeed.top = top;
+		progressSpeed.right = right;
+		progressSpeed.bottom = bottom;
+		progressSpeed.left = left;
+	};
+
+	const setProgress = (progress: ProgressPerSide) => {
+		const { top, right, bottom, left, total, maxDistance } = progress;
 		currentProgress.top = top;
 		currentProgress.right = right;
 		currentProgress.bottom = bottom;
 		currentProgress.left = left;
 		currentProgress.total = total;
 		currentProgress.maxDistance = maxDistance;
+	};
+
+	const animateProgress = async (progressPerSide: ProgressPerSide, max: number) => {
+		const animationTime = calculateAnimationTime(progressPerSide, max);
+
+		setAnimationSpeed(getAnimationSpeed(progressPerSide, animationTime));
+		setProgress(progressPerSide);
 
 		await wait(animationTime);
 	};
@@ -99,7 +137,10 @@
     --right-progress: {currentProgress.right}px; 
     --bottom-progress: {currentProgress.bottom}px; 
     --left-progress: {currentProgress.left}px; 
-    --progress-speed: {progressSpeed * MILLISECONDS_IN_SECOND}ms;
+    --top-progress-speed: {progressSpeed.top * MILLISECONDS_IN_SECOND}ms;
+    --right-progress-speed: {progressSpeed.right * MILLISECONDS_IN_SECOND}ms;
+    --bottom-progress-speed: {progressSpeed.bottom * MILLISECONDS_IN_SECOND}ms;
+    --left-progress-speed: {progressSpeed.left * MILLISECONDS_IN_SECOND}ms;
     --play-state: {isProgressing ? 'running' : 'paused'}
   "
 	bind:this={container}
@@ -119,7 +160,11 @@
 		--right-progress: 0px;
 		--bottom-progress: 0px;
 		--left-progress: 0px;
-		--progress-speed: 0s;
+
+		--top-progress-speed: 0s;
+		--right-progress-speed: 0s;
+		--bottom-progress-speed: 0s;
+		--left-progress-speed: 0s;
 
 		$progress-slider: calc(100% - 2 * var(--border-width));
 
@@ -141,15 +186,15 @@
 			position: absolute;
 			inset: 0;
 			background-color: var(--progress-background-default);
-			transition:
-				width var(--progress-speed) linear,
-				height var(--progress-speed) linear;
+			transition-property: width height;
+			transition-timing-function: linear;
 		}
 
 		.progress-slider-top {
 			bottom: $progress-slider;
 			left: auto;
 			width: calc(100% - var(--top-progress));
+			transition-duration: var(--top-progress-speed);
 		}
 
 		.progress-slider-right {
@@ -157,6 +202,7 @@
 			left: $progress-slider;
 			$right-height-available: calc(100% - var(--border-width));
 			height: calc($right-height-available - var(--right-progress));
+			transition-duration: var(--right-progress-speed);
 		}
 
 		.progress-slider-bottom {
@@ -164,12 +210,14 @@
 			top: $progress-slider;
 			$bottom-width-available: calc(100% - var(--border-width));
 			width: calc($bottom-width-available - var(--bottom-progress));
+			transition-duration: var(--bottom-progress-speed);
 		}
 
 		.progress-slider-left {
 			inset: var(--border-width) $progress-slider var(--border-width) 0;
 			$left-height-available: calc(100% - 2 * var(--border-width));
 			height: calc($left-height-available - var(--left-progress));
+			transition-duration: var(--left-progress-speed);
 		}
 
 		.content-wrapper {

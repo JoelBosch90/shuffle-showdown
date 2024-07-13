@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { setAudioProgress } from '$lib/store/audioProgress';
-	import type { HTMLElementEvent } from '$lib/types/HTMLElementEvent';
 	export let source = '';
 
 	let audio: HTMLAudioElement;
@@ -152,8 +151,10 @@
 
 		.volume {
 			display: none;
+		}
 
-			@media (pointer: fine) {
+		@media (pointer: fine) {
+			.volume {
 				display: block;
 			}
 		}
