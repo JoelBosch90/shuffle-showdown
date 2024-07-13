@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { setAudioProgress } from '$lib/store/audioProgress';
+	import type { HTMLElementEvent } from '$lib/types/HTMLElementEvent';
 	export let source = '';
 
 	let audio: HTMLAudioElement;
@@ -9,7 +10,7 @@
 	$: currentVolume = 100;
 
 	let muted: boolean;
-	$: muted = audio?.muted;
+	$: muted = false;
 
 	let isPlaying: boolean;
 	$: isPlaying = false;
@@ -29,24 +30,37 @@
 		isPlaying = !(audio.paused || audio.ended);
 	};
 
-	const volumeUpdate = () => {
+	const volumeUpdate = (event: Event) => {
 		if (!audio) return;
 
-		if (currentVolume === 0) {
+		const target = event?.currentTarget as HTMLInputElement;
+		const volume = parseInt(target?.value ?? '0');
+
+		if (volume === 0) {
 			muted = audio.muted = true;
 		} else {
 			muted = audio.muted = false;
 		}
 
-		audio.volume = currentVolume / 100;
+		setVolume(volume);
+	};
+
+	const setVolume = (volume: number) => {
+		if (!audio) return;
+
+		currentVolume = volume;
+		audio.volume = volume / 100;
 		localStorage.setItem('volume', currentVolume.toString());
 	};
 
-	const muteUnmute = () => {
+	const toggleMute = () => setMuted(!muted);
+
+	const setMuted = (toMute: boolean) => {
 		if (!audio) return;
 
-		muted = audio.muted = !muted;
+		muted = audio.muted = toMute;
 		currentVolume = muted ? 0 : audio.volume * 100;
+		localStorage.setItem('muted', muted.toString());
 	};
 
 	const updatePlayState = () => {
@@ -73,10 +87,12 @@
 	onMount(async () => {
 		isPlaying = false;
 		currentVolume = parseInt(localStorage.getItem('volume') ?? '100');
+		muted = localStorage.getItem('muted') === 'true';
 
 		audio.addEventListener('loadedmetadata', () => {
 			setAudioProgress({ progress: 0, max: audio?.duration });
-			volumeUpdate();
+			setVolume(currentVolume);
+			setMuted(muted);
 		});
 		audio.addEventListener('timeupdate', () => {
 			setAudioProgress({ progress: audio?.currentTime });
@@ -98,7 +114,7 @@
 				<i class="fa-solid fa-play"></i>
 			{/if}
 		</button>
-		<button type="button" on:click={muteUnmute}>
+		<button type="button" on:click={toggleMute}>
 			{#if currentVolume === 0 || muted}
 				<i class="fa-solid fa-volume-off"></i>
 			{:else if currentVolume < 50}
