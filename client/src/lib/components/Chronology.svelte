@@ -139,10 +139,18 @@
 
 	let trackCards: Card[] = [];
 	let guessIndex: number = 0;
+	let beforeTextIndex: number;
+	let afterTextIndex: number;
+	let isBeforeTextShown: boolean;
+	let isAfterTextShown: boolean;
 
 	let cards: Card[];
 	$: cards = [...trackCards?.slice(0, guessIndex), guessCard, ...trackCards?.slice(guessIndex)];
 	$: cards, selectAnswer();
+	$: cards, (beforeTextIndex = -1 * guessIndex - 1), (isBeforeTextShown = beforeTextIndex === -1);
+	$: cards,
+		(afterTextIndex = cards?.length - guessIndex),
+		(isAfterTextShown = afterTextIndex === 1);
 
 	onMount(() => {
 		container.addEventListener('wheel', onWheelEvent);
@@ -152,10 +160,16 @@
 </script>
 
 <ol class="chronology" class:disabled bind:this={container}>
+	<li
+		style="--normalized-index: {beforeTextIndex};"
+		class="time-hint {isBeforeTextShown ? '' : 'hidden'}"
+	>
+		<p>before</p>
+	</li>
 	{#each cards as card, cardIndex}
 		<li
 			class="card {card.isGuess ? 'guess' : ''}"
-			style="--normalized-index: {cardIndex - guessIndex}"
+			style="--normalized-index: {cardIndex - guessIndex};"
 		>
 			<h2>{card.releaseYear}</h2>
 
@@ -168,6 +182,12 @@
 			{/if}
 		</li>
 	{/each}
+	<li
+		style="--normalized-index: {afterTextIndex};"
+		class="time-hint {isAfterTextShown ? '' : 'hidden'}"
+	>
+		<p>after</p>
+	</li>
 </ol>
 
 <style lang="scss">
@@ -194,26 +214,33 @@
 			}
 		}
 
-		.card {
-			--normalized-index: 0;
-			--card-padding: 1rem;
-			--card-font-size: 12cqw;
-			--card-min-height: 6rem;
-			--card-scale-height: 50cqmin;
-			--card-max-height: 16rem;
-			--card-aspect-ratio: 1 / 1.25;
-			--card-box-shadow-space: 0.75rem;
-			--center-card-margin-percentage: 0.33;
+		--normalized-index: 0;
+		--card-padding: 1rem;
+		--card-font-size: 12cqw;
+		--card-min-height: 6rem;
+		--card-scale-height: 50cqmin;
+		--card-max-height: 16rem;
+		--card-aspect-ratio: 1 / 1.25;
+		--card-box-shadow-space: 0.75rem;
+		--center-card-margin-percentage: 0.33;
 
-			$normalized-index: var(--normalized-index);
-			$distance-from-guess-card: max($normalized-index, -1 * $normalized-index);
-			$card-height: clamp(var(--card-min-height), var(--card-scale-height), var(--card-max-height));
-			$card-width: calc($card-height * var(--card-aspect-ratio));
+		$normalized-index: var(--normalized-index);
+		$distance-from-guess-card: max($normalized-index, -1 * $normalized-index);
+		$card-height: clamp(var(--card-min-height), var(--card-scale-height), var(--card-max-height));
+		$card-width: calc($card-height * var(--card-aspect-ratio));
+
+		li {
+			list-style: none;
+			container-type: size;
+			container-name: li;
 
 			display: flex;
 			box-sizing: border-box;
-			container-type: size;
-			container-name: card;
+			flex-direction: column;
+			justify-content: center;
+			align-items: center;
+			gap: 0.2rem;
+			opacity: 1;
 
 			position: absolute;
 			top: 0;
@@ -221,18 +248,6 @@
 			aspect-ratio: var(--card-aspect-ratio);
 			height: $card-height;
 			z-index: calc(var(--card-level) - $distance-from-guess-card);
-
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			gap: 0.2rem;
-
-			list-style: none;
-			padding: var(--card-padding);
-			border-radius: var(--card-padding);
-			box-shadow: 0 0 var(--card-box-shadow-space) rgba(0, 0, 0, 0.25);
-			background-color: var(--white);
-			overflow: hidden;
 
 			transition:
 				transform var(--animation-speed-quick),
@@ -337,9 +352,33 @@
 				font-size: calc(var(--card-font-size) * 3.75);
 			}
 
-			&.guess {
-				opacity: 50%;
-				border: 2px dashed var(--gray-dark);
+			&.time-hint {
+				opacity: 0.5;
+			}
+
+			&.hidden {
+				opacity: 0;
+			}
+
+			&.card {
+				list-style: none;
+				padding: var(--card-padding);
+				border-radius: var(--card-padding);
+				box-shadow: 0 0 var(--card-box-shadow-space) rgba(0, 0, 0, 0.25);
+				background-color: var(--white);
+				overflow: hidden;
+
+				transition:
+					transform var(--animation-speed-quick),
+					z-index var(--animation-speed-quick),
+					opacity var(--animation-speed-quick),
+					border var(--animation-speed-quick),
+					color var(--animation-speed-quick);
+
+				&.guess {
+					opacity: 50%;
+					border: 2px dashed var(--gray-dark);
+				}
 			}
 		}
 	}
