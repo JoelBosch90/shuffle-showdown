@@ -7,11 +7,10 @@
 
 <div class="app">
 	<AudioProgressBorder>
-		<Toasts />
-
 		<main>
 			<slot />
 		</main>
+		<Toasts />
 	</AudioProgressBorder>
 </div>
 
