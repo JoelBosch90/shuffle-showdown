@@ -28,11 +28,13 @@
 	<form on:submit|preventDefault={createGame}>
 		<h1>Select your playlist</h1>
 
-		<input placeholder="Paste your Spotify Playlist link here..." bind:value={playList} />
+		<input
+			type="text"
+			placeholder="Paste your Spotify Playlist link here..."
+			bind:value={playList}
+		/>
 
-    <LoadingButton type="submit" isLoading={isLoading}>
-      Select playlist
-    </LoadingButton>
+		<LoadingButton type="submit" {isLoading}>Select playlist</LoadingButton>
 	</form>
 </section>
 

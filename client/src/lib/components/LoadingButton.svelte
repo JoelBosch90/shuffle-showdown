@@ -20,7 +20,7 @@
 		padding: 3px;
 
 		&.loading {
-			background: var(--rainbow);
+			background: var(--rainbow-line);
 			background-size: var(--animation-background-flow-size);
 			animation: animation-background-flow 10s linear infinite reverse;
 

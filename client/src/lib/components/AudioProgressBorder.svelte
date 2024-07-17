@@ -153,6 +153,18 @@
 </div>
 
 <style lang="scss">
+	@property --rainbow-twirl-angle {
+		syntax: '<angle>';
+		inherits: true;
+		initial-value: 0turn;
+	}
+
+	@keyframes rainbow-twirl {
+		to {
+			--rainbow-twirl-angle: 1turn;
+		}
+	}
+
 	.progress-background {
 		--progress-background-default: var(--white);
 		--border-width: 0px;
@@ -166,16 +178,26 @@
 		--bottom-progress-speed: 0s;
 		--left-progress-speed: 0s;
 
+		--rainbow-twirl-angle: 0turn;
+
 		$progress-slider: calc(100% - 2 * var(--border-width));
 
 		display: flex;
 		width: 100%;
 		padding: var(--border-width);
-		background-color: var(--progress-background-default);
 
-		background: var(--rainbow);
-		background-size: var(--animation-background-flow-size);
-		animation: animation-background-flow 10s linear infinite reverse;
+		// background-position: center center;
+		background: conic-gradient(
+			from var(--rainbow-twirl-angle),
+			var(--red) 0%,
+			var(--purple) 16.667%,
+			var(--blue) 33.333%,
+			var(--green) 50%,
+			var(--yellow) 66.667%,
+			var(--orange) 83.333%,
+			var(--red) 100%
+		);
+		animation: rainbow-twirl 3s linear infinite;
 		animation-play-state: var(--play-state);
 
 		.progress-slider-top,
