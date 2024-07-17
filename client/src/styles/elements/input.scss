@@ -1,16 +1,9 @@
 /**
  *  Basic styling for the input elements.
  */
-input
-{
-  // Use a transparent background.
-  background: transparent;
-
-  // Set a clear border to distinguish the input field from the background.
-  border: 2px solid var(--purple);
-  border-radius: var(--border-radius);
-
-  padding: .5em;
+input {
+  --brightness-hover: 185%;
+  --brightness-focus: 145%;
 
   // Get rid of the default outline.
   outline: none;
@@ -20,11 +13,159 @@ input
   font-family: inherit;
   font-size: inherit;
 
-  // Use an animation for hover and focus effects.
-  transition-duration: var(--animation-speed-quick);
-  transition-property: filter;
+  &[type='text'] {
+    // Use a transparent background.
+    background: transparent;
 
-  // Subtly light up the input field when the cursor hovers it or when it is
-  // selected to show that it is an interactive element.
-  &:hover, &:focus { filter: brightness(185%); }
+    // Set a clear border to distinguish the input field from the background.
+    border: 2px solid var(--purple);
+    border-radius: var(--border-radius);
+
+    padding: .5em;
+
+    // Use an animation for hover and focus effects.
+    transition-duration: var(--animation-speed-quick);
+    transition-property: filter;
+
+    // Subtly light up the input field when the cursor hovers it or when it is
+    // selected to show that it is an interactive element.
+    &:not(:disabled) {
+
+      &:hover,
+      &:focus {
+        filter: brightness(var(--brightness-hover));
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+    }
+  }
+
+  &[type='range'] {
+    --thumb-height: 1rem;
+    --thumb-color: var(--purple);
+    --track-height: 0.2rem;
+    --track-color: var(--gray-light);
+
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    overflow: hidden;
+    cursor: pointer;
+    width: 100%;
+    margin: 0;
+
+    &::-webkit-slider-runnable-track,
+    &::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      position: relative;
+      transition: all ease 100ms;
+      height: var(--thumb-height);
+    }
+
+    &::-webkit-slider-runnable-track {
+      background: linear-gradient(var(--track-color) 0 0) scroll no-repeat center / 100% var(--track-height);
+    }
+
+    &::-webkit-slider-thumb {
+      --clip-edges: 0.1rem;
+      --clip-top: calc((var(--thumb-height) - var(--track-height)) / 2);
+      --clip-bottom: calc(var(--thumb-height) - var(--clip-top));
+      --clip-further: 100%;
+      --box-fill: calc(-100vmax - var(--thumb-height)) 0 0 100vmax var(--thumb-color);
+
+      width: var(--thumb-height);
+      background: linear-gradient(var(--thumb-color) 0 0) scroll no-repeat left center / 50% calc(var(--track-height));
+      background-color: var(--thumb-color);
+      box-shadow: calc(-100vmax - var(--thumb-height)) 0 0 100vmax var(--thumb-color);
+      border-radius: var(--thumb-height);
+
+      clip-path: polygon(100% 0px,
+          var(--clip-edges) 0px,
+          0 var(--clip-top),
+          -100vmax var(--clip-top),
+          -100vmax var(--clip-bottom),
+          0 var(--clip-bottom),
+          var(--clip-edges) 100%,
+          100% 100%);
+    }
+
+    &::-moz-range-track,
+    &::-moz-range-thumb,
+    &::-moz-range-progress {
+      appearance: none;
+      transition: all ease 100ms;
+      background: var(--thumb-color);
+    }
+
+    &::-moz-range-thumb {
+      border: 0;
+      width: var(--thumb-height);
+      height: var(--thumb-height);
+      border-radius: var(--thumb-height);
+      cursor: grab;
+    }
+
+    &::-moz-range-track {
+      width: 100%;
+      background: var(--track-color);
+    }
+
+    &::-moz-range-track,
+    &::-moz-range-progress {
+      height: var(--track-height);
+    }
+
+    &:not(:disabled) {
+
+      &:focus {
+        outline: none;
+
+        &::-webkit-slider-thumb {
+          filter: brightness(var(--brightness-focus));
+        }
+
+        &::-moz-range-thumb,
+        &::-moz-range-progress {
+          filter: brightness(var(--brightness-focus));
+        }
+      }
+
+      &:hover {
+        &::-webkit-slider-thumb {
+          filter: brightness(var(--brightness-hover));
+          cursor: grab;
+        }
+
+        &::-moz-range-thumb,
+        &::-moz-range-progress {
+          filter: brightness(var(--brightness-hover));
+          cursor: grab;
+        }
+      }
+
+      &:active {
+        &::-webkit-slider-thumb {
+          cursor: grabbing;
+        }
+
+        &::-moz-range-thumb {
+          cursor: grabbing;
+        }
+      }
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+
+      &::-webkit-slider-thumb {
+        background-color: var(--gray-dark);
+      }
+
+      &::-moz-range-thumb {
+        background-color: var(--gray-dark);
+      }
+    }
+  }
 }

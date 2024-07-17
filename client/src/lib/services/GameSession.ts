@@ -3,8 +3,9 @@ import { API } from '$lib/services/API';
 import { type Player } from '$lib/types/Player';
 import { type GameUpdate } from '$lib/types/GameUpdate';
 import { type GameSessionUpdate } from '$lib/types/GameSessionUpdate';
+import { type AnswerSelectionUpdate } from '$lib/types/AnswerSelectionUpdate';
 import { type Answer } from '$lib/types/Answer';
-import { isPlayerKickedMessage, isGameSessionUpdateMessage, type ServerMessage, type GameSessionUpdateMessage, isErrorMessage } from '$lib/types/ServerMessage';
+import { isPlayerKickedMessage, isGameSessionUpdateMessage, isAnswerSelectionUpdateMessage, type ServerMessage, type GameSessionUpdateMessage, type AnswerSelectionUpdateMessage, isErrorMessage } from '$lib/types/ServerMessage';
 import { ClientMessageType } from '$lib/enums/ClientMessageType';
 import type { SocketConnection } from './API/SocketConnection';
 import { showToast } from '$lib/store/toasts';
@@ -12,11 +13,13 @@ import { ToastType } from '$lib/enums/ToastType';
 import { WebSocketCloseCode } from '$lib/enums/WebSocketCloseCode';
 
 type GameUpdateCallback = (update: { game: GameSessionUpdate | null, me: Player | null }) => void;
+type AnswerSelectionCallback = (update: { answerSelectionUpdate: AnswerSelectionUpdate | null }) => void;
 
 export class GameSession {
   private lastUpdate: GameUpdate | GameSessionUpdate | null = null;
   private me: Player | null = null;
   private updateCallbacks: GameUpdateCallback[] = [];
+  private answerSelectionCallbacks: AnswerSelectionCallback[] = [];	
   private connection: SocketConnection | null = null;
 
   constructor(private gameId: string) {}
@@ -34,11 +37,13 @@ export class GameSession {
   };
 
   public onUpdate = (callback: GameUpdateCallback) => this.updateCallbacks.push(callback);
+  public onAnswerSelectionUpdate = (callback: AnswerSelectionCallback) => this.answerSelectionCallbacks.push(callback);
 
   private handleMessage = (message: ServerMessage) => {
     if (isErrorMessage(message)) return this.handleError(new Error(message.payload.message));
     if (isPlayerKickedMessage(message)) return goto("/");
     if (isGameSessionUpdateMessage(message)) return this.handleUpdate(message);
+    if (isAnswerSelectionUpdateMessage(message)) return this.handleAnswerSelectionUpdate(message);
   };
 
   private handleClose = (event: CloseEvent) => {
@@ -74,6 +79,10 @@ export class GameSession {
     }));
   };
 
+  private handleAnswerSelectionUpdate = (message: AnswerSelectionUpdateMessage) => {
+    this.answerSelectionCallbacks.forEach((callback) => callback({ answerSelectionUpdate: message.payload }));
+  }
+
   public getCachedUpdate = () => {
     if (this.lastUpdate && this.me) return {
       game: this.lastUpdate,
@@ -103,6 +112,13 @@ export class GameSession {
   public submitAnswer = (answer: Answer) => {
     if (this.connection) this.connection.send({
       type: ClientMessageType.SubmitAnswer,
+      payload: JSON.stringify(answer),
+    });
+  }
+
+  public updateAnswerSelection = (answer: Answer) => {
+    if (this.connection) this.connection.send({
+      type: ClientMessageType.UpdateAnswerSelection,
       payload: JSON.stringify(answer),
     });
   }

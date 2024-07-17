@@ -5,9 +5,10 @@ import uuid "github.com/satori/go.uuid"
 type ServerMessageType string
 
 const (
-	ServerMessageTypeGameSessionUpdate ServerMessageType = "game-session-update"
-	ServerMessageTypeKickedPlayer      ServerMessageType = "kicked-player"
-	ServerMessageTypeError             ServerMessageType = "error"
+	ServerMessageTypeAnswerSelectionUpdate ServerMessageType = "answer-selection-update"
+	ServerMessageTypeGameSessionUpdate     ServerMessageType = "game-session-update"
+	ServerMessageTypeKickedPlayer          ServerMessageType = "kicked-player"
+	ServerMessageTypeError                 ServerMessageType = "error"
 )
 
 type ServerMessage struct {

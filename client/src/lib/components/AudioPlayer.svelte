@@ -1,123 +1,184 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-    export let source = "";
+	import { setAudioProgress } from '$lib/store/audioProgress';
+	export let source = '';
+	export let disabled = false;
 
-    let audio: HTMLAudioElement;
-    
-    let currentVolume: number;
-    $: currentVolume = 50;
+	let audio: HTMLAudioElement;
 
-    let muted: boolean;
-    $: muted = audio?.muted;
+	let currentVolume: number;
+	$: currentVolume = 100;
 
-    let playing: boolean;
-    $: playing = false;
+	let muted: boolean;
+	$: muted = false;
 
-    let progress: number;
-    $: progress = 0;
+	let isPlaying: boolean;
+	$: isPlaying = false;
 
-    let maxProgress: number;
-    $: maxProgress = 0;
+	let maxProgress: number;
+	$: maxProgress = 0;
 
-    const playPause = () => {
-        if (!audio) return;
+	const playPause = () => {
+		if (!audio) return;
 
-        if (audio.paused || audio.ended) {
-            play();
-        } else {
-            pause();
-        }
+		if (audio.paused || audio.ended) {
+			play();
+		} else {
+			pause();
+		}
 
-        playing = !(audio.paused || audio.ended);
-    }
+		isPlaying = !(audio.paused || audio.ended);
+	};
 
-    const volumeUpdate = () => {
-        if (!audio) return;
+	const volumeUpdate = (event: Event) => {
+		if (!audio) return;
 
-        if (currentVolume === 0) {
-            muted = audio.muted = true;
-        } else {
-            muted = audio.muted = false;
-        }
+		const target = event?.currentTarget as HTMLInputElement;
+		const volume = parseInt(target?.value ?? '0');
 
-        audio.volume = currentVolume / 100;
-    }
+		if (volume === 0) {
+			muted = audio.muted = true;
+		} else {
+			muted = audio.muted = false;
+		}
 
-    const muteUnmute = () => {
-        if (!audio) return;
+		setVolume(volume);
+	};
 
-        muted = audio.muted = !muted;
-        currentVolume = muted ? 0 : audio.volume * 100;
-    }
+	const setVolume = (volume: number) => {
+		if (!audio) return;
 
-    const updatePlayState = () => {
-        playing = !(audio.paused || audio.ended);
-    }
+		currentVolume = volume;
+		audio.volume = volume / 100;
+		localStorage.setItem('volume', currentVolume.toString());
+	};
 
-    export const play = () => {
-        if (!audio) return;
+	const toggleMute = () => setMuted(!muted);
 
-        audio.play();
+	const setMuted = (toMute: boolean) => {
+		if (!audio) return;
 
-        updatePlayState();
-    }
+		muted = audio.muted = toMute;
+		currentVolume = muted ? 0 : audio.volume * 100;
+		localStorage.setItem('muted', muted.toString());
+	};
 
-    export const pause = () => {
-        if (!audio) return;
+	const updatePlayState = () => {
+		isPlaying = !(audio.paused || audio.ended);
+		setAudioProgress({ isPlaying });
+	};
 
-        audio.pause();
+	export const play = () => {
+		if (!audio) return;
 
-        updatePlayState();
-    }
+		audio.play();
+
+		updatePlayState();
+	};
+
+	export const pause = () => {
+		if (!audio) return;
+
+		audio.pause();
+
+		updatePlayState();
+	};
 
 	onMount(async () => {
-        playing = false;
+		isPlaying = false;
+		currentVolume = parseInt(localStorage.getItem('volume') ?? '100');
+		muted = localStorage.getItem('muted') === 'true';
 
-        audio.addEventListener('loadedmetadata', () => {
-            maxProgress = audio?.duration;
-            volumeUpdate();
-        });
-        audio.addEventListener('timeupdate', () => {
-            progress = audio?.currentTime;
-        });
+		audio.addEventListener('loadedmetadata', () => {
+			setAudioProgress({ progress: 0, max: audio?.duration });
+			setVolume(currentVolume);
+			setMuted(muted);
+		});
+		audio.addEventListener('timeupdate', () => {
+			setAudioProgress({ progress: audio?.currentTime });
+		});
+
+		// Loop in JavaScript rather than HTML so that we still get the
+		// completed timeupdate event.
+		audio.addEventListener('ended', play);
 	});
 </script>
 
 <div class="player">
-    <audio loop preload="auto" src="{source}" bind:this={audio}></audio>
-    <progress max="{maxProgress}" value={progress}>
-        <div class="progress-bar"></div>
-    </progress>
-    <div class="controls">
-        <button type="button" on:click={playPause}>
-            {#if playing}
-                <i class="fa-solid fa-pause"></i>
-            {:else}
-                <i class="fa-solid fa-play"></i>
-            {/if}
-        </button>
-        <button type="button" on:click={muteUnmute}>
-            {#if currentVolume === 0 || muted}
-                <i class="fa-solid fa-volume-off"></i>
-            {:else if currentVolume < 50}
-                <i class="fa-solid fa-volume-low"></i>
-            {:else}
-                <i class="fa-solid fa-volume-high"></i>
-            {/if}        
-        </button>
-        <input type="range" name="volume" min="0" max="100" bind:value={currentVolume} on:change={volumeUpdate} />
-    </div>
+	<audio preload="auto" src={source} bind:this={audio}></audio>
+	<div class="controls">
+		<button type="button" {disabled} on:click={playPause}>
+			{#if isPlaying}
+				<i class="fa-solid fa-pause"></i>
+			{:else}
+				<i class="fa-solid fa-play"></i>
+			{/if}
+		</button>
+		<div class="volume-controls">
+			<button type="button" on:click={toggleMute}>
+				{#if currentVolume === 0 || muted}
+					<i class="fa-solid fa-volume-off"></i>
+				{:else if currentVolume < 50}
+					<i class="fa-solid fa-volume-low"></i>
+				{:else}
+					<i class="fa-solid fa-volume-high"></i>
+				{/if}
+			</button>
+			<input
+				type="range"
+				name="volume"
+				min="0"
+				max="100"
+				class="volume"
+				bind:value={currentVolume}
+				on:change={volumeUpdate}
+			/>
+		</div>
+	</div>
 </div>
 
 <style lang="scss">
-    progress {
-        width: 100%;
-    }
-    .controls {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        justify-content: center;
-        gap: 1rem;
-    }
+	.controls {
+		--gap: 2.5rem;
+
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		justify-content: center;
+		gap: var(--gap);
+		font-size: 1.5rem;
+
+		button {
+			display: flex;
+			align-items: center;
+
+			i {
+				width: 1em;
+				aspect-ratio: 1;
+			}
+		}
+
+		.volume-controls {
+			display: flex;
+			flex-direction: row;
+			gap: 1rem;
+			align-items: center;
+
+			.volume {
+				width: 0px;
+			}
+		}
+
+		@media (pointer: fine) {
+			.volume-controls:hover {
+				.volume {
+					width: 100%;
+					transition-property: width;
+					transition-timing-function: var(--animation-timing);
+					transition-duration: var(--animation-speed-quick);
+					transition-delay: 200ms;
+				}
+			}
+		}
+	}
 </style>

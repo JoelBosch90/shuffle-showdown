@@ -3,4 +3,5 @@ export enum ServerMessageType {
     PlayerKicked = 'kicked-player',
     Error = 'error',
     GameSessionUpdate = 'game-session-update',
+    AnswerSelectionUpdate = 'answer-selection-update',
 }

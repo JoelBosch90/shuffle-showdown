@@ -10,9 +10,12 @@
 
 // Target all top level containers. Note thata  container with the ID of 'root'
 // is added by React to wrap the entire application.
-html, body, #root
-{  
+html,
+body,
+#root {
   // Make sure we take up all available space.
   position: absolute;
   inset: 0;
+
+  overscroll-behavior: none;
 }

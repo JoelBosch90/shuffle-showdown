@@ -1,0 +1,11 @@
+/**
+ *  This file contains the definitions for global styling properties related to
+ *  the box.
+ */
+:root {
+  --background-level: 1000;
+  --default-level: 2000;
+  --card-level: 3000;
+  --overlay-level: 4000;
+  --toast-level: 5000;
+}

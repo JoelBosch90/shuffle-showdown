@@ -12,7 +12,9 @@
 	import { GameSession } from '$lib/services/GameSession';
 	import { findPlayerInGameSessionUpdate } from '$lib/helpers/findPlayerInGameSessionUpdate';
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
+	import { debounce } from '$lib/helpers/debounce';
 
+	const DEBOUNCE_WAIT_MILLISECONDS = 150;
 	const gameId = $page.params.gameId;
 	let session: GameSession | void | null = null;
 
@@ -37,38 +39,58 @@
 
 	let audioPlayer: AudioPlayer | null = null;
 
+	let chronology: Chronology | null = null;
+
 	let celebration: Celebration | null = null;
 
-	const getCurrentRound = (update: GameSessionUpdate | null) : Round | null => {
+	const getCurrentRound = (update: GameSessionUpdate | null): Round | null => {
 		if (!update) return null;
 
 		const maxRoundNumber = Math.max(...update.rounds.map((round) => round.number));
 		const currentRound = update.rounds.find((round) => round.number === maxRoundNumber);
 
 		return currentRound ?? null;
-	}
+	};
+
+	const debouncedAnswerSelectionUpdate = debounce(
+		(answer) => session?.updateAnswerSelection(answer as Answer),
+		DEBOUNCE_WAIT_MILLISECONDS
+	);
 
 	const onAnswerSelect = (answer: Answer) => {
 		selectedAnswer = answer;
-	}
+		debouncedAnswerSelectionUpdate(answer);
+	};
 
 	const onAnswerSubmit = () => {
 		if (!selectedAnswer) return;
 		isLoading = true;
 		session?.submitAnswer(selectedAnswer);
 		audioPlayer?.pause();
-	}
+	};
 
-  const celebrate = ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
-    celebration?.update({
-      oldUpdate: gameUpdate,
-      newUpdate: update,
-      oldMe: me,
-      newMe
-    });
-  };
+	const celebrate = ({
+		game: update,
+		me: newMe
+	}: {
+		game: GameSessionUpdate | null;
+		me: Player | null;
+	}) => {
+		celebration?.update({
+			oldUpdate: gameUpdate,
+			newUpdate: update,
+			oldMe: me,
+			newMe
+		});
+	};
 
-	const updatePage = async ({ game: update, me: newMe }: { game: GameSessionUpdate | null, me: Player | null }) => {
+	const updatePage = async ({
+		game: update,
+		me: newMe
+	}: {
+		game: GameSessionUpdate | null;
+		me: Player | null;
+	}) => {
 		gameUpdate = update;
 		me = newMe;
 		currentRound = getCurrentRound(update);
@@ -77,14 +99,24 @@
 		isLoading = false;
 
 		if (!update?.hasStarted) return goto(`/${gameId}/lobby`);
-	}
+	};
 
 	onMount(async () => {
 		if (!session) session = new GameSession(gameId);
 		session.onUpdate((gameUpdate) => {
-      celebrate(gameUpdate);
-      updatePage(gameUpdate);
-    });
+			celebrate(gameUpdate);
+			updatePage(gameUpdate);
+		});
+		session.onAnswerSelectionUpdate(({ answerSelectionUpdate }) => {
+			if (
+				answerSelectionUpdate?.answer?.guessIndex === undefined ||
+				answerSelectionUpdate.playerId === me?.id ||
+				isPlaying
+			) {
+				return;
+			}
+			chronology?.selectIndex(answerSelectionUpdate.answer.guessIndex);
+		});
 
 		const latestUpdate = session.getCachedUpdate();
 		if (latestUpdate) updatePage(latestUpdate);
@@ -102,25 +134,45 @@
 </svelte:head>
 
 <div class="container">
-	<div class="game-interface">
-    <div class="game-info">
-      <h1>Round {currentRound?.number}</h1>
-      {#if currentPlayer}
-        <p>Now playing: {currentPlayer.id === me?.id ? "you" : currentPlayer.name} ({currentPlayer.wonTracks?.length}/{gameUpdate?.songsToWin})</p>
-      {/if}
-    </div>
-		<Chronology wonTracks={currentPlayer?.wonTracks} onSelect={onAnswerSelect} disabled={!isPlaying}/>
-		<svelte:component this={AudioPlayer} bind:this={audioPlayer} source="{currentRound?.track.previewUrl}" />
+	<div class="card-field">
+		<svelte:component
+			this={Chronology}
+			bind:this={chronology}
+			wonTracks={currentPlayer?.wonTracks}
+			onSelect={onAnswerSelect}
+			disabled={!isPlaying}
+		/>
 
-    <LoadingButton isLoading={isLoading} onClick={onAnswerSubmit}>
-      Select answer
-    </LoadingButton>
+		<h2 class="round-info">Round {currentRound?.number}</h2>
+
+		{#if currentPlayer}
+			<p class="player-info">
+				Now playing: {isPlaying ? 'you' : currentPlayer.name} ({currentPlayer.wonTracks
+					?.length}/{gameUpdate?.songsToWin})
+			</p>
+		{/if}
+	</div>
+
+	<div class="controls">
+		<svelte:component
+			this={AudioPlayer}
+			disabled={!isPlaying}
+			bind:this={audioPlayer}
+			source={currentRound?.track.previewUrl}
+		/>
+
+		<LoadingButton {isLoading} onClick={onAnswerSubmit} isDisabled={!isPlaying}>
+			Select answer
+		</LoadingButton>
 	</div>
 	<svelte:component this={Celebration} bind:this={celebration} />
 </div>
 
 <style lang="scss">
 	.container {
+		--margin-small: 0.25rem;
+		--margin-large: 1rem;
+
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -128,21 +180,41 @@
 		height: 100%;
 		width: 100%;
 		position: relative;
-	}
 
-	.game-interface {
-		flex: 1;
-		overflow: hidden;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		align-items: center;
-	}
+		.card-field {
+			position: relative;
+			flex: 1;
+			overflow: hidden;
+			display: flex;
+			width: 100%;
 
-  .game-info {
-    h1, p {
-      text-align: center;
-      margin: 0;
-    }
-  }
+			.round-info,
+			.player-info {
+				position: absolute;
+				pointer-events: none;
+			}
+
+			.round-info {
+				top: 0;
+				left: 0;
+				margin: var(--margin-small) 0 0 var(--margin-small);
+			}
+
+			.player-info {
+				right: 0;
+				bottom: 0;
+				margin: 0 var(--margin-small) var(--margin-small) 0;
+			}
+		}
+
+		.controls {
+			width: 100%;
+			display: flex;
+			flex-direction: row;
+			gap: 1rem;
+			align-items: center;
+			justify-content: space-between;
+			margin-top: var(--margin-small);
+		}
+	}
 </style>

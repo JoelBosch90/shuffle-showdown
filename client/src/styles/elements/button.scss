@@ -1,8 +1,8 @@
 /**
  *  Basic styling for the button elements.
  */
-button, .button
-{
+button,
+.button {
   // Use a dark background color.
   background-color: transparent;
 
@@ -26,6 +26,14 @@ button, .button
   transition-duration: var(--animation-speed-quick);
   transition-property: filter;
 
+  &:disabled {
+    // Make sure that the button is not clickable when it is disabled.
+    cursor: not-allowed;
+
+    // Make the color darker.
+    color: var(--gray-dark);
+  }
+
   // Use a more block-style button with an opaque background color.
   &.filled {
     padding: 0.5rem 1rem;
@@ -36,16 +44,20 @@ button, .button
     // Subtly light up the button when the cursor hovers it or when it is selected
     // to show that it is an interactive element.
     &:not(:disabled) {
-      &:hover, &:focus { background-color: var(--purple-light); }
+
+      &:hover,
+      &:focus {
+        background-color: var(--purple-light);
+      }
     }
-  }
 
-  &:disabled {
-    // Make sure that the button is not clickable when it is disabled.
-    cursor: not-allowed;
+    &:disabled {
+      // Make sure that the button is not clickable when it is disabled.
+      cursor: not-allowed;
 
-    // Use a more muted color for the text.
-    background-color: var(--purple-light);
-    filter: grayscale(65%);
+      // Use a more muted color for the text.
+      background-color: var(--purple-light);
+      filter: grayscale(65%);
+    }
   }
 }
