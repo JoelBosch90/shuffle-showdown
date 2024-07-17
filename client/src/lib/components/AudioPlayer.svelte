@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { setAudioProgress } from '$lib/store/audioProgress';
 	export let source = '';
+	export let disabled = false;
 
 	let audio: HTMLAudioElement;
 
@@ -106,7 +107,7 @@
 <div class="player">
 	<audio preload="auto" src={source} bind:this={audio}></audio>
 	<div class="controls">
-		<button type="button" on:click={playPause}>
+		<button type="button" {disabled} on:click={playPause}>
 			{#if isPlaying}
 				<i class="fa-solid fa-pause"></i>
 			{:else}

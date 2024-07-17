@@ -156,6 +156,7 @@
 	<div class="controls">
 		<svelte:component
 			this={AudioPlayer}
+			disabled={!isPlaying}
 			bind:this={audioPlayer}
 			source={currentRound?.track.previewUrl}
 		/>
