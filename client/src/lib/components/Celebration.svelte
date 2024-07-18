@@ -15,7 +15,7 @@
   };
 
   let track: Track;
-  let player: Player;
+  let currentPlayer: Player;
   let isOtherPlayer: boolean = true;
   let hasWon: boolean = false;
   let isfinalWin: boolean = false;
@@ -24,7 +24,7 @@
 
   const celebrate = (newTrack: Track, newPlayer: Player, newIsOtherPlayer: boolean, newHasWon: boolean, newIsfinalWin: boolean) => {
     track = newTrack;
-    player = newPlayer;
+    currentPlayer = newPlayer;
     isOtherPlayer = newIsOtherPlayer;
     hasWon = newHasWon;
     isfinalWin = newIsfinalWin;
@@ -124,13 +124,8 @@
 </script>
 
 <div class="celebration" class:hidden={!isCelebrating}>
-  {#if hasWon}
-    <h1>Amazing!</h1>
-    <p>{isOtherPlayer ? player?.name + " has" : "You have" } won a new track!</p>
-  {:else}
-    <h1>Oh no!</h1>
-    <p>{isOtherPlayer ? player?.name + " has" : "You have" } not won the track!</p>
-  {/if}
+    <h1>{hasWon ? "Amazing!" : "Oh no!"}</h1>
+    <p>{isOtherPlayer ? currentPlayer?.name + " has" : "You have"} {hasWon ? "" : "not"} won a new track!</p>
   {#if track}
     <div class="track">
       <h2>{track.releaseYear}</h2>
@@ -146,7 +141,7 @@
   {/if}
   {#if isfinalWin}
     <h1>Game Winner!</h1>
-    <p>Congratulations! {isOtherPlayer ? player?.name + " has" : "You have" } won the game!</p>
+    <p>Congratulations! {isOtherPlayer ? currentPlayer?.name + " has" : "You have" } won the game!</p>
   {/if}
 </div>
 
