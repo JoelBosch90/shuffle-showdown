@@ -5,7 +5,7 @@ import { handleError } from '$lib/helpers/handleError';
 export class API {
   private static socketConnection: SocketConnection | null = null;
 
-  private static connectToSocket = async (gameId: string) : Promise<SocketConnection> => {
+  private static connectToSocket = async (gameId: string): Promise<SocketConnection> => {
     if (API.socketConnection) {
       if (API.socketConnection.gameId === gameId) return API.socketConnection;
 
@@ -28,4 +28,5 @@ export class API {
   public static postGame = handleError(REST.postGame);
   public static patchPlayer = handleError(REST.patchPlayer);
   public static postPlayer = handleError(REST.postPlayer);
+  public static getMostPlayedPlaylists = handleError(REST.getMostPlayedPlaylists);
 }

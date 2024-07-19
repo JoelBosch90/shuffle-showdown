@@ -2,6 +2,7 @@ package router
 
 import (
 	game "api/router/endpoints/v1/game"
+	mostPlayedPlaylists "api/router/endpoints/v1/mostPlayedPlaylists"
 	player "api/router/endpoints/v1/player"
 
 	"github.com/gin-gonic/gin"
@@ -12,6 +13,8 @@ func Run() {
 
 	apiV1 := router.Group("/api/v1")
 	{
+		apiV1.GET("playlists/most-played", mostPlayedPlaylists.Get)
+
 		apiV1.POST("game", game.Post)
 		apiV1.GET("game/:id", game.Get)
 		apiV1.PATCH("game/:id", game.Patch)

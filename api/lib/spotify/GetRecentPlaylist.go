@@ -22,7 +22,7 @@ func getRecentPlaylistFromDatabase(playlistId string, countryCode string) (model
 		return models.Playlist{}, errors.New("playlist not found")
 	}
 
-	if playlist.CreatedAt.Before(time.Now().Add(-PLAYLIST_CACHE_TIME)) {
+	if playlist.UpdatedAt.Before(time.Now().Add(-PLAYLIST_CACHE_TIME)) {
 		return models.Playlist{}, errors.New("playlist too old")
 	}
 

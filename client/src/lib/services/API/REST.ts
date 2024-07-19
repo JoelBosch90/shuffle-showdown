@@ -6,6 +6,7 @@ import patchGame from './REST/game/patch';
 import postGame from './REST/game/post';
 import postPlayer from './REST/player/post';
 import patchPlayer from './REST/player/patch';
+import getMostPlayedPlaylists from './REST/mostPlayedPlaylists/get';
 
 const PLAYER_NAME = 'playerName';
 const PLAYER_ID = 'playerId';
@@ -13,7 +14,7 @@ const PLAYER_ID = 'playerId';
 export class REST {
   private static player: Player | null = null;
 
-  private static setPlayer(player: Player) : Player {
+  private static setPlayer(player: Player): Player {
     REST.player = player;
     const { id, name } = player;
 
@@ -23,7 +24,7 @@ export class REST {
     return REST.player;
   }
 
-  public static async getPlayerId() : Promise<string> {
+  public static async getPlayerId(): Promise<string> {
     const player = await REST.getPlayer();
 
     if (!player?.id) return '';
@@ -31,7 +32,7 @@ export class REST {
     return player.id;
   }
 
-  public static async getPlayer() : Promise<Player | null> {
+  public static async getPlayer(): Promise<Player | null> {
     if (REST.player) return REST.player;
 
     const id = localStorage.getItem('playerId');
@@ -47,7 +48,7 @@ export class REST {
     return REST.player;
   }
 
-  public static async postPlayer(playerName: string) : Promise<Player> {
+  public static async postPlayer(playerName: string): Promise<Player> {
     const playerId = await REST.getPlayerId();
 
     // If we don't have a player yet, create one.
@@ -61,7 +62,7 @@ export class REST {
     }
   }
 
-  public static async patchPlayer(playerName: string) : Promise<Player> {
+  public static async patchPlayer(playerName: string): Promise<Player> {
     const playerId = await REST.getPlayerId();
 
     if (!playerId) {
@@ -75,7 +76,7 @@ export class REST {
     }
   }
 
-  public static async postGame(playListString: string) : Promise<Player> {
+  public static async postGame(playListString: string): Promise<Player> {
     const playerId = await REST.getPlayerId();
     const game = await postGame(playListString, playerId || undefined);
 
@@ -84,7 +85,7 @@ export class REST {
     return game;
   };
 
-  public static async patchGame(settings: GameConfig) : Promise<GameUpdate> {
+  public static async patchGame(settings: GameConfig): Promise<GameUpdate> {
     const playerId = await REST.getPlayerId();
 
     if (!playerId) {
@@ -95,4 +96,5 @@ export class REST {
   }
 
   public static getGame = getGame;
+  public static getMostPlayedPlaylists = getMostPlayedPlaylists;
 }

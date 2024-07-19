@@ -3,6 +3,7 @@ package spotify
 import (
 	spotifyModels "api/lib/spotify/models"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 )
@@ -27,6 +28,9 @@ func RequestPlaylistInfo(playlistId string, countryCode string) (spotifyModels.P
 	decodeError := playlistDecoder.Decode(&playlistInfo)
 	if decodeError != nil {
 		return spotifyModels.Playlist{}, decodeError
+	}
+	if playlistInfo.Id == "" {
+		return spotifyModels.Playlist{}, errors.New("playlist empty")
 	}
 
 	if playlistInfo.Tracks.Limit >= playlistInfo.Tracks.Total {
