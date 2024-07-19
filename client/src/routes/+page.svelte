@@ -48,7 +48,7 @@
 	</div>
 
 	<form on:submit|preventDefault={() => createGame(playlistInput)}>
-		<h1>Select your playlist</h1>
+		<h1>Select a new playlist</h1>
 
 		<input
 			type="text"
@@ -76,14 +76,14 @@
 		h1 {
 			margin: 0;
 		}
-	}
 
-	li {
-		padding: 0;
+		li {
+			padding: 0;
 
-		button {
-			margin: 0.25rem 0;
-			color: var(--purple);
+			button {
+				margin: 0.25rem 0;
+				color: var(--purple);
+			}
 		}
 	}
 
