@@ -19,14 +19,17 @@ type PlayerState struct {
 }
 
 type GameState struct {
-	SentAt      time.Time      `json:"sentAt"`
-	Id          uuid.UUID      `json:"id"`
-	HasStarted  bool           `json:"hasStarted"`
-	HasFinished bool           `json:"hasFinished"`
-	SongsToWin  uint           `json:"songsToWin"`
-	Owner       models.Player  `json:"owner"`
-	Players     []PlayerState  `json:"players"`
-	Rounds      []models.Round `json:"rounds"`
+	SentAt      time.Time       `json:"sentAt"`
+	CreatedAt   time.Time       `json:"createdAt"`
+	UpdatedAt   time.Time       `json:"updatedAt"`
+	Playlist    models.Playlist `json:"playlist"`
+	Id          uuid.UUID       `json:"id"`
+	HasStarted  bool            `json:"hasStarted"`
+	HasFinished bool            `json:"hasFinished"`
+	SongsToWin  uint            `json:"songsToWin"`
+	Owner       models.Player   `json:"owner"`
+	Players     []PlayerState   `json:"players"`
+	Rounds      []models.Round  `json:"rounds"`
 }
 
 func isConnected(playerId uuid.UUID, lobby map[*Client]struct{}) bool {
@@ -80,7 +83,7 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 	var game models.Game
 
 	database := database.Get()
-	gameError := database.Preload("Rounds.Track.Artists").Preload("Owner").Where("id = ?", gameId).First(&game).Error
+	gameError := database.Preload("Rounds.Track.Artists").Preload("Owner").Preload("Playlist").Where("id = ?", gameId).First(&game).Error
 	if gameError != nil {
 		return GameState{}, errors.New("could not load game")
 	}
@@ -97,6 +100,9 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 
 	return GameState{
 		SentAt:      time.Now(),
+		CreatedAt:   game.CreatedAt,
+		UpdatedAt:   game.UpdatedAt,
+		Playlist:    game.Playlist,
 		Id:          game.Id,
 		HasStarted:  game.HasStarted,
 		HasFinished: game.HasFinished,
