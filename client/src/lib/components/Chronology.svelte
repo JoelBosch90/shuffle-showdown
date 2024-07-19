@@ -3,7 +3,6 @@
 	import type { Artist } from '$lib/types/Artist';
 	import type { Answer } from '$lib/types/Answer';
 	import { onMount } from 'svelte';
-	import AudioPlayer from './AudioPlayer.svelte';
 
 	export let disabled: boolean = false;
 	export let wonTracks: WonTrack[] = [];
