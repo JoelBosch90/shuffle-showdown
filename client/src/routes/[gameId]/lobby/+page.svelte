@@ -217,6 +217,8 @@
 			h3 {
 				margin: 0;
 				height: var(--share-title-height);
+        display: flex;
+        flex-direction: row;
 			}
 
 			canvas,
