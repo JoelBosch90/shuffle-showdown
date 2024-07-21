@@ -128,7 +128,7 @@
     <p>{isOtherPlayer ? currentPlayer?.name + " has" : "You have"} {hasWon ? "" : "not"} won a new track!</p>
   {#if track}
     <div class="track">
-      <h2>{track.releaseYear}</h2>
+      <h2>{track.album?.releaseYear}</h2>
 
       {#if track.name}
         <p>{track.name}</p>

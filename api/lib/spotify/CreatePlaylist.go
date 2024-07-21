@@ -9,18 +9,17 @@ import (
 )
 
 func CreatePlaylist(info spotifyModels.Playlist, countryCode string, database *gorm.DB) (models.Playlist, error) {
-	lastSongAdded, tracks, tracksError := CreateTracks(database, info.Tracks.Items)
+	tracks, tracksError := CreateTracks(database, info.Tracks.Items)
 	if tracksError != nil {
 		return models.Playlist{}, tracksError
 	}
 
 	upsertedPlaylist, upsertPlaylistError := databaseHelpers.Upsert(database, []interface{}{&models.Playlist{
-		Id:            info.Id,
-		Name:          info.Name,
-		CountryCode:   countryCode,
-		LastSongAdded: lastSongAdded,
-		TracksTotal:   uint(info.Tracks.Total),
-		Tracks:        tracks,
+		Id:          info.Id,
+		Name:        info.Name,
+		CountryCode: countryCode,
+		TracksTotal: uint(info.Tracks.Total),
+		Tracks:      tracks,
 	}})
 	if upsertPlaylistError != nil || len(upsertedPlaylist) == 0 {
 		return models.Playlist{}, upsertPlaylistError

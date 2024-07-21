@@ -22,13 +22,16 @@ func assertArtists(upsertedArtists []interface{}) ([]models.Artist, error) {
 	return artists, nil
 }
 
-func CreateArtists(database *gorm.DB, artists []spotifyModels.Artist) ([]models.Artist, error) {
+func CreateArtists(database *gorm.DB, items []spotifyModels.Item) ([]models.Artist, error) {
 	var artistsToCreate []interface{}
-	for _, artist := range artists {
-		artistsToCreate = append(artistsToCreate, &models.Artist{
-			Id:   artist.Id,
-			Name: artist.Name,
-		})
+
+	for _, item := range items {
+		for _, artist := range item.Track.Artists {
+			artistsToCreate = append(artistsToCreate, &models.Artist{
+				Id:   artist.Id,
+				Name: artist.Name,
+			})
+		}
 	}
 
 	upsertedArtists, upsertError := databaseHelpers.Upsert(database, artistsToCreate)

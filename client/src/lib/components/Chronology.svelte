@@ -43,14 +43,14 @@
 	};
 
 	const trackToCard = ({ track }: WonTrack): Card => ({
-		releaseYear: track.releaseYear?.toString() ?? UNKNOWN_RELEASE_YEAR,
+		releaseYear: track.album?.releaseYear?.toString() ?? UNKNOWN_RELEASE_YEAR,
 		name: track.name,
 		artists: joinArtists(track.artists)
 	});
 
 	const sortWonTracks = (a: WonTrack, b: WonTrack) => {
-		const aReleaseYear = a.track.releaseYear ?? 0;
-		const bReleaseYear = b.track.releaseYear ?? 0;
+		const aReleaseYear = a.track.album?.releaseYear ?? 0;
+		const bReleaseYear = b.track.album?.releaseYear ?? 0;
 		return aReleaseYear - bReleaseYear;
 	};
 

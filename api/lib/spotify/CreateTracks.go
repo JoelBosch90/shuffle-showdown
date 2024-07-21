@@ -19,16 +19,24 @@ func findArtistById(artists []models.Artist, id string) *models.Artist {
 	return nil
 }
 
-func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist) ([]interface{}, []interface{}, error) {
+func containsAlbum(albums []models.Album, id string) bool {
+	for _, album := range albums {
+		if album.Id == id {
+			return true
+		}
+	}
+
+	return false
+}
+
+func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist, createdAlbums []models.Album) ([]interface{}, []interface{}, error) {
 	var tracksToCreate []interface{}
 	var trackArtistsToCreate []interface{}
 
 	for _, item := range items {
 		track := item.Track
 
-		releaseYear, releaseMonth, releaseDay := ConvertReleaseDateToIntegers(track.Album.ReleaseDate)
-
-		if releaseYear == 0 || track.PreviewUrl == "" {
+		if track.PreviewUrl == "" || !containsAlbum(createdAlbums, track.Album.Id) {
 			continue
 		}
 
@@ -51,14 +59,12 @@ func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist)
 		}
 
 		tracksToCreate = append(tracksToCreate, &models.Track{
-			Id:           track.Id,
-			Name:         track.Name,
-			ReleaseYear:  releaseYear,
-			ReleaseMonth: releaseMonth,
-			ReleaseDay:   releaseDay,
-			Artists:      artists,
-			PreviewUrl:   track.PreviewUrl,
-			IsPlayable:   track.IsPlayable,
+			Id:         track.Id,
+			Name:       track.Name,
+			AlbumId:    track.Album.Id,
+			Artists:    artists,
+			PreviewUrl: track.PreviewUrl,
+			IsPlayable: track.IsPlayable,
 		})
 	}
 
@@ -67,6 +73,7 @@ func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist)
 
 func assertTracks(upsertedTracks []interface{}) ([]models.Track, error) {
 	tracks := make([]models.Track, len(upsertedTracks))
+
 	for index, upsertedTrack := range upsertedTracks {
 		upsertedTrack, ok := upsertedTrack.(models.Track)
 		if !ok {
@@ -78,40 +85,37 @@ func assertTracks(upsertedTracks []interface{}) ([]models.Track, error) {
 	return tracks, nil
 }
 
-func CreateTracks(database *gorm.DB, items []spotifyModels.Item) (string, []models.Track, error) {
-	var artistsToCreate []spotifyModels.Artist
-	var lastSongAdded string = ""
-
-	for _, item := range items {
-		lastSongAdded = item.AddedAt
-		artistsToCreate = append(artistsToCreate, item.Track.Artists...)
-	}
-
-	createdArtists, createdArtistError := CreateArtists(database, artistsToCreate)
+func CreateTracks(database *gorm.DB, items []spotifyModels.Item) ([]models.Track, error) {
+	createdArtists, createdArtistError := CreateArtists(database, items)
 	if createdArtistError != nil || len(createdArtists) == 0 {
-		return lastSongAdded, []models.Track{}, createdArtistError
+		return []models.Track{}, createdArtistError
 	}
 
-	tracksToCreate, trackArtistsToCreate, constructError := constructTracks(items, createdArtists)
+	createdAlbums, createdAlbumsError := CreateAlbums(database, items)
+	if createdAlbumsError != nil || len(createdAlbums) == 0 {
+		return []models.Track{}, createdAlbumsError
+	}
+
+	tracksToCreate, trackArtistsToCreate, constructError := constructTracks(items, createdArtists, createdAlbums)
 	if constructError != nil || len(tracksToCreate) == 0 {
-		return lastSongAdded, []models.Track{}, constructError
+		return []models.Track{}, constructError
 	}
 
 	upsertedTracks, upsertError := databaseHelpers.Upsert(database, tracksToCreate)
 	if upsertError != nil || len(upsertedTracks) == 0 {
-		return lastSongAdded, []models.Track{}, upsertError
+		return []models.Track{}, upsertError
 	}
 
 	_, trackArtistsUpsertError := databaseHelpers.Upsert(database, trackArtistsToCreate)
 	if trackArtistsUpsertError != nil {
-		return lastSongAdded, []models.Track{}, trackArtistsUpsertError
+		return []models.Track{}, trackArtistsUpsertError
 	}
 
 	// Use type assertion to convert upsertedTracks to []models.Track
 	tracks, assertError := assertTracks(upsertedTracks)
 	if assertError != nil {
-		return lastSongAdded, []models.Track{}, errors.New("could not convert upsertedTracks to []models.Track")
+		return []models.Track{}, errors.New("could not convert upsertedTracks to []models.Track")
 	}
 
-	return lastSongAdded, tracks, nil
+	return tracks, nil
 }

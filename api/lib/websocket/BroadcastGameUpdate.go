@@ -47,7 +47,7 @@ func createPlayersUpdate(gameId uuid.UUID, pool *ConnectionPool) ([]PlayerState,
 	var game models.Game
 
 	database := database.Get()
-	playersError := database.Preload("Players.WonTracks.Track.Artists").Where("id = ?", gameId).First(&game).Error
+	playersError := database.Preload("Players.WonTracks.Track.Artists").Preload("Players.WonTracks.Track.Album").Where("id = ?", gameId).First(&game).Error
 	if playersError != nil {
 		return update, errors.New("could not find players")
 	}
@@ -83,7 +83,7 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 	var game models.Game
 
 	database := database.Get()
-	gameError := database.Preload("Rounds.Track.Artists").Preload("Owner").Preload("Playlist").Where("id = ?", gameId).First(&game).Error
+	gameError := database.Preload("Rounds.Track.Artists").Preload("Rounds.Track.Album").Preload("Owner").Preload("Playlist").Where("id = ?", gameId).First(&game).Error
 	if gameError != nil {
 		return GameState{}, errors.New("could not load game")
 	}
