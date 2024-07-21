@@ -19,29 +19,62 @@ func findArtistById(artists []models.Artist, id string) *models.Artist {
 	return nil
 }
 
-func containsAlbum(albums []models.Album, id string) bool {
+func findAlbumById(albums []models.Album, id string) *models.Album {
 	for _, album := range albums {
 		if album.Id == id {
-			return true
+			return &album
 		}
 	}
 
-	return false
+	return nil
 }
 
-func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist, createdAlbums []models.Album) ([]interface{}, []interface{}, error) {
-	var tracksToCreate []interface{}
-	var trackArtistsToCreate []interface{}
+func findTrackById(tracks []models.Track, id string) *models.Track {
+	for _, track := range tracks {
+		if track.Id == id {
+			return &track
+		}
+	}
+
+	return nil
+}
+
+func getExistingTracks(database *gorm.DB, items []spotifyModels.Item) []models.Track {
+	var existingTracks []models.Track
+	var trackIds []string
 
 	for _, item := range items {
-		track := item.Track
+		trackIds = append(trackIds, item.Track.Id)
+	}
 
-		if track.PreviewUrl == "" || !containsAlbum(createdAlbums, track.Album.Id) {
+	database.Where("id IN (?)", trackIds).Find(&existingTracks)
+
+	return existingTracks
+}
+
+func getOldestAlbumId(newAlbum models.Album, existingTrack models.Track) string {
+	if newAlbum.ReleaseYear > existingTrack.Album.ReleaseYear {
+		return existingTrack.AlbumId
+	}
+
+	return newAlbum.Id
+}
+
+func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtists []models.Artist, createdAlbums []models.Album) ([]interface{}, []interface{}, error) {
+	var tracksToCreate []interface{}
+	var trackArtistsToCreate []interface{}
+	existingTracks := getExistingTracks(database, items)
+
+	for _, item := range items {
+		trackToCreate := item.Track
+		newAlbum := findAlbumById(createdAlbums, trackToCreate.Album.Id)
+
+		if trackToCreate.PreviewUrl == "" || newAlbum == nil {
 			continue
 		}
 
 		artistIds := []string{}
-		for _, artist := range track.Artists {
+		for _, artist := range trackToCreate.Artists {
 			artistIds = append(artistIds, artist.Id)
 		}
 
@@ -53,18 +86,19 @@ func constructTracks(items []spotifyModels.Item, createdArtists []models.Artist,
 			}
 
 			trackArtistsToCreate = append(trackArtistsToCreate, &models.TrackArtist{
-				TrackId:  track.Id,
+				TrackId:  trackToCreate.Id,
 				ArtistId: artistId,
 			})
 		}
 
+		existingTrack := findTrackById(existingTracks, trackToCreate.Id)
 		tracksToCreate = append(tracksToCreate, &models.Track{
-			Id:         track.Id,
-			Name:       track.Name,
-			AlbumId:    track.Album.Id,
+			Id:         trackToCreate.Id,
+			Name:       trackToCreate.Name,
+			AlbumId:    getOldestAlbumId(*newAlbum, *existingTrack),
 			Artists:    artists,
-			PreviewUrl: track.PreviewUrl,
-			IsPlayable: track.IsPlayable,
+			PreviewUrl: trackToCreate.PreviewUrl,
+			IsPlayable: trackToCreate.IsPlayable,
 		})
 	}
 
@@ -96,7 +130,7 @@ func CreateTracks(database *gorm.DB, items []spotifyModels.Item) ([]models.Track
 		return []models.Track{}, createdAlbumsError
 	}
 
-	tracksToCreate, trackArtistsToCreate, constructError := constructTracks(items, createdArtists, createdAlbums)
+	tracksToCreate, trackArtistsToCreate, constructError := constructTracks(database, items, createdArtists, createdAlbums)
 	if constructError != nil || len(tracksToCreate) == 0 {
 		return []models.Track{}, constructError
 	}
