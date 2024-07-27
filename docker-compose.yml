@@ -82,8 +82,10 @@ services:
     # that is not set in this file is expected to be supplied through
     # environment variables.
     environment:
-      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
-      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+      SPOTIFY_API_ID: ${SPOTIFY_API_ID}
+      SPOTIFY_API_SECRET: ${SPOTIFY_API_SECRET}
+      LAST_FM_API_KEY: ${LAST_FM_API_KEY}
+      LAST_FM_API_SECRET: ${LAST_FM_API_SECRET}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       GIN_MODE: release
 

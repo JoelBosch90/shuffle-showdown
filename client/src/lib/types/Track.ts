@@ -1,9 +1,10 @@
 import type { Artist } from './Artist';
-import type { Album } from './Album';
 export interface Track {
-    id?: string;
-    name?: string;
-    artists?: Artist[];
-    album?: Album;
-    previewUrl: string;
+  id?: string;
+  name?: string;
+  artists?: Artist[];
+  releaseYear?: number;
+  releaseMonth?: number;
+  releaseDay?: number;
+  previewUrl: string;
 }

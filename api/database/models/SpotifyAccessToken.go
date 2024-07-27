@@ -6,7 +6,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-type AccessToken struct {
+type SpotifyAccessToken struct {
 	Id          uuid.UUID `json:"id" gorm:"type:uuid; primaryKey;"`
 	CreatedAt   time.Time `json:"createdAt"`
 	UpdatedAt   time.Time `json:"updatedAt"`

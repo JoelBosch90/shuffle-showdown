@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-type SpotifyAccessToken struct {
+type Token struct {
 	AccessToken string `json:"access_token"`
 	TokenType   string `json:"token_type"`
 	ExpiresIn   int64  `json:"expires_in"`
@@ -17,21 +17,21 @@ type SpotifyAccessToken struct {
 
 const SPOTIFY_TOKEN_REQUEST_URL = "https://accounts.spotify.com/api/token"
 
-func RequestNewAccessToken() (models.AccessToken, error) {
+func RequestNewAccessToken() (models.SpotifyAccessToken, error) {
 	// Create a new HTTP request
 	request, requestError := http.NewRequest(http.MethodPost, SPOTIFY_TOKEN_REQUEST_URL, nil)
 	if requestError != nil {
-		return models.AccessToken{}, requestError
+		return models.SpotifyAccessToken{}, requestError
 	}
 
 	// Get the client ID and client secret from the environment
-	clientId := os.Getenv("SPOTIFY_CLIENT_ID")
+	clientId := os.Getenv("SPOTIFY_API_ID")
 	if clientId == "" {
-		return models.AccessToken{}, errors.New("missing Spotify client ID")
+		return models.SpotifyAccessToken{}, errors.New("missing Spotify client ID")
 	}
-	clientSecret := os.Getenv("SPOTIFY_CLIENT_SECRET")
+	clientSecret := os.Getenv("SPOTIFY_API_SECRET")
 	if clientSecret == "" {
-		return models.AccessToken{}, errors.New("missing Spotify client secret")
+		return models.SpotifyAccessToken{}, errors.New("missing Spotify client secret")
 	}
 
 	// Add the required headers
@@ -48,22 +48,22 @@ func RequestNewAccessToken() (models.AccessToken, error) {
 	client := &http.Client{}
 	response, responseError := client.Do(request)
 	if responseError != nil {
-		return models.AccessToken{}, responseError
+		return models.SpotifyAccessToken{}, responseError
 	}
 
 	// Parse the response
-	var accessToken SpotifyAccessToken
+	var accessToken Token
 	decoder := json.NewDecoder(response.Body)
 	decodeError := decoder.Decode(&accessToken)
 	if decodeError != nil {
-		return models.AccessToken{}, decodeError
+		return models.SpotifyAccessToken{}, decodeError
 	}
 
 	// Calculate the expiration time
 	expirationUnixTimestamp := time.Now().Unix() + accessToken.ExpiresIn
 
 	// Return the access token
-	return models.AccessToken{
+	return models.SpotifyAccessToken{
 		AccessToken: accessToken.AccessToken,
 		TokenType:   accessToken.TokenType,
 		ExpiresAt:   time.Unix(expirationUnixTimestamp, 0),

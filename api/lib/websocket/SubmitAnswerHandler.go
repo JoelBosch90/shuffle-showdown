@@ -12,7 +12,7 @@ func SubmitAnswerHandler(message ClientMessage, client *Client, pool *Connection
 	database := database.Get()
 	var game models.Game
 
-	gameError := database.Preload("Rounds.Track.Album").Preload("WonTracks.Track.Album").Where("id = ?", client.GameId).First(&game).Error
+	gameError := database.Preload("Rounds.Track").Preload("WonTracks.Track").Where("id = ?", client.GameId).First(&game).Error
 	if gameError != nil {
 		return errors.New("could not find game")
 	}

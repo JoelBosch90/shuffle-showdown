@@ -23,7 +23,7 @@ func getReleaseYears(tracks []models.Track) []uint {
 	years := []uint{}
 
 	for _, track := range tracks {
-		years = append(years, track.Album.ReleaseYear)
+		years = append(years, track.ReleaseYear)
 	}
 
 	return years
@@ -98,8 +98,8 @@ func VerifyAnswer(afterReleaseYear *int, beforeReleaseYear *int, playerId uuid.U
 	}
 
 	trackToWin := lastRound.Track
-	correctBefore := beforeReleaseYear == nil || trackToWin.Album.ReleaseYear <= uint(*beforeReleaseYear)
-	correctAfter := afterReleaseYear == nil || trackToWin.Album.ReleaseYear >= uint(*afterReleaseYear)
+	correctBefore := beforeReleaseYear == nil || trackToWin.ReleaseYear <= uint(*beforeReleaseYear)
+	correctAfter := afterReleaseYear == nil || trackToWin.ReleaseYear >= uint(*afterReleaseYear)
 
 	return correctBefore && correctAfter, nil
 }

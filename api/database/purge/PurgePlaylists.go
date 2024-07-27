@@ -30,10 +30,5 @@ func PurgePlaylists(database *gorm.DB) error {
 		return purgeArtistError
 	}
 
-	purgeAlbumError := database.Exec("DELETE FROM albums WHERE NOT EXISTS (SELECT 1 FROM tracks WHERE albums.id = tracks.album_id);").Error
-	if purgeAlbumError != nil {
-		return purgeAlbumError
-	}
-
 	return nil
 }

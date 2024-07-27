@@ -8,5 +8,5 @@ import (
 )
 
 func PurgeAccessTokens(database *gorm.DB) error {
-	return database.Delete(&models.AccessToken{}, "expires_at < ?", time.Now()).Error
+	return database.Delete(&models.SpotifyAccessToken{}, "expires_at < ?", time.Now()).Error
 }

@@ -11,33 +11,33 @@ import (
 
 const BUFFER_SECONDS int64 = 60
 
-func getTokenFromDatabase() (models.AccessToken, error) {
-	var token models.AccessToken
+func getTokenFromDatabase() (models.SpotifyAccessToken, error) {
+	var token models.SpotifyAccessToken
 	database := database.Get()
 
 	databaseError := database.Order("expires_at DESC").First(&token).Error
 	if databaseError != nil || token.AccessToken == "" {
-		return models.AccessToken{}, databaseError
+		return models.SpotifyAccessToken{}, databaseError
 	}
 
 	decryptedToken, decryptionError := security.Decrypt(token.AccessToken)
 	if decryptionError != nil {
-		return models.AccessToken{}, decryptionError
+		return models.SpotifyAccessToken{}, decryptionError
 	}
 
 	bufferedNow := time.Unix(time.Now().Unix()+BUFFER_SECONDS, 0)
 	if token.ExpiresAt.Before(bufferedNow) {
-		return models.AccessToken{}, nil
+		return models.SpotifyAccessToken{}, nil
 	}
 
-	return models.AccessToken{
+	return models.SpotifyAccessToken{
 		AccessToken: decryptedToken,
 		TokenType:   token.TokenType,
 		ExpiresAt:   token.ExpiresAt,
 	}, nil
 }
 
-func storeTokenInDatabase(token models.AccessToken) error {
+func storeTokenInDatabase(token models.SpotifyAccessToken) error {
 	database := database.Get()
 
 	encryptedToken, encryptionError := security.Encrypt(token.AccessToken)
@@ -45,7 +45,7 @@ func storeTokenInDatabase(token models.AccessToken) error {
 		return encryptionError
 	}
 
-	encryptedAccessToken := models.AccessToken{
+	encryptedAccessToken := models.SpotifyAccessToken{
 		Id:          uuid.NewV4(),
 		AccessToken: encryptedToken,
 		TokenType:   token.TokenType,
@@ -55,7 +55,7 @@ func storeTokenInDatabase(token models.AccessToken) error {
 	return database.Create(&encryptedAccessToken).Error
 }
 
-func GetAccessToken() (models.AccessToken, error) {
+func GetAccessToken() (models.SpotifyAccessToken, error) {
 	// Ignore database errors as there might not be any tokens in the database.
 	databaseToken, _ := getTokenFromDatabase()
 	if databaseToken.AccessToken != "" {
@@ -64,7 +64,7 @@ func GetAccessToken() (models.AccessToken, error) {
 
 	requestedToken, requestedTokenError := RequestNewAccessToken()
 	if requestedTokenError != nil {
-		return models.AccessToken{}, requestedTokenError
+		return models.SpotifyAccessToken{}, requestedTokenError
 	}
 
 	storeError := storeTokenInDatabase(requestedToken)

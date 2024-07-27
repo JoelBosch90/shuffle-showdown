@@ -4,6 +4,7 @@ import (
 	databaseHelpers "api/database"
 	"api/database/models"
 	spotifyModels "api/lib/spotify/models"
+	"api/lib/verification"
 	"errors"
 
 	"github.com/jinzhu/gorm"
@@ -13,16 +14,6 @@ func findArtistById(artists []models.Artist, id string) *models.Artist {
 	for _, artist := range artists {
 		if artist.Id == id {
 			return &artist
-		}
-	}
-
-	return nil
-}
-
-func findAlbumById(albums []models.Album, id string) *models.Album {
-	for _, album := range albums {
-		if album.Id == id {
-			return &album
 		}
 	}
 
@@ -52,24 +43,65 @@ func getExistingTracks(database *gorm.DB, items []spotifyModels.Item) []models.T
 	return existingTracks
 }
 
-func getOldestAlbumId(newAlbum models.Album, existingTrack models.Track) string {
-	if newAlbum.ReleaseYear > existingTrack.Album.ReleaseYear {
-		return existingTrack.AlbumId
+func getOldestReleaseYear(newTrack *models.Track, existingTrack *models.Track) uint {
+	if existingTrack == nil {
+		return newTrack.ReleaseYear
 	}
 
-	return newAlbum.Id
+	if newTrack.ReleaseYear > existingTrack.ReleaseYear {
+		return existingTrack.ReleaseYear
+	}
+
+	return newTrack.ReleaseYear
 }
 
-func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtists []models.Artist, createdAlbums []models.Album) ([]interface{}, []interface{}, error) {
+func getOldestReleaseMonth(newTrack *models.Track, existingTrack *models.Track) uint {
+	if existingTrack == nil {
+		return newTrack.ReleaseMonth
+	}
+
+	if newTrack.ReleaseYear < existingTrack.ReleaseYear {
+		return newTrack.ReleaseMonth
+	}
+
+	if newTrack.ReleaseYear == existingTrack.ReleaseYear && newTrack.ReleaseMonth > existingTrack.ReleaseMonth {
+		return existingTrack.ReleaseMonth
+	}
+
+	return newTrack.ReleaseMonth
+}
+
+func getOldestReleaseDay(newTrack *models.Track, existingTrack *models.Track) uint {
+	if existingTrack == nil {
+		return newTrack.ReleaseDay
+	}
+
+	if newTrack.ReleaseYear < existingTrack.ReleaseYear {
+		return newTrack.ReleaseDay
+	}
+
+	if newTrack.ReleaseYear == existingTrack.ReleaseYear && newTrack.ReleaseMonth < existingTrack.ReleaseMonth {
+		return newTrack.ReleaseDay
+	}
+
+	if newTrack.ReleaseYear == existingTrack.ReleaseYear && newTrack.ReleaseMonth == existingTrack.ReleaseMonth && newTrack.ReleaseDay > existingTrack.ReleaseDay {
+		return existingTrack.ReleaseDay
+	}
+
+	return newTrack.ReleaseDay
+}
+
+func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtists []models.Artist) ([]interface{}, []interface{}, error) {
 	var tracksToCreate []interface{}
 	var trackArtistsToCreate []interface{}
 	existingTracks := getExistingTracks(database, items)
 
 	for _, item := range items {
 		trackToCreate := item.Track
-		newAlbum := findAlbumById(createdAlbums, trackToCreate.Album.Id)
 
-		if trackToCreate.PreviewUrl == "" || newAlbum == nil {
+		releaseYear, releaseMonth, releaseDay := ConvertReleaseDateToIntegers(item.Album.ReleaseDate)
+
+		if releaseYear == 0 || trackToCreate.PreviewUrl == "" {
 			continue
 		}
 
@@ -91,15 +123,25 @@ func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtis
 			})
 		}
 
+		newDates := &models.Track{
+			ReleaseYear:  releaseYear,
+			ReleaseMonth: releaseMonth,
+			ReleaseDay:   releaseDay,
+		}
+
 		existingTrack := findTrackById(existingTracks, trackToCreate.Id)
-		tracksToCreate = append(tracksToCreate, &models.Track{
-			Id:         trackToCreate.Id,
-			Name:       trackToCreate.Name,
-			AlbumId:    getOldestAlbumId(*newAlbum, *existingTrack),
-			Artists:    artists,
-			PreviewUrl: trackToCreate.PreviewUrl,
-			IsPlayable: trackToCreate.IsPlayable,
-		})
+		trackUpdate := &models.Track{
+			Id:           trackToCreate.Id,
+			Name:         trackToCreate.Name,
+			ReleaseYear:  getOldestReleaseYear(newDates, existingTrack),
+			ReleaseMonth: getOldestReleaseMonth(newDates, existingTrack),
+			ReleaseDay:   getOldestReleaseDay(newDates, existingTrack),
+			Artists:      artists,
+			PreviewUrl:   trackToCreate.PreviewUrl,
+			IsPlayable:   trackToCreate.IsPlayable,
+		}
+
+		tracksToCreate = append(tracksToCreate, trackUpdate)
 	}
 
 	return tracksToCreate, trackArtistsToCreate, nil
@@ -120,35 +162,47 @@ func assertTracks(upsertedTracks []interface{}) ([]models.Track, error) {
 }
 
 func CreateTracks(database *gorm.DB, items []spotifyModels.Item) ([]models.Track, error) {
-	createdArtists, createdArtistError := CreateArtists(database, items)
-	if createdArtistError != nil || len(createdArtists) == 0 {
-		return []models.Track{}, createdArtistError
-	}
+	var tracks []models.Track
+	var assertError error
 
-	createdAlbums, createdAlbumsError := CreateAlbums(database, items)
-	if createdAlbumsError != nil || len(createdAlbums) == 0 {
-		return []models.Track{}, createdAlbumsError
-	}
+	createError := database.Transaction(func(transaction *gorm.DB) error {
+		createdArtists, createdArtistError := CreateArtists(database, items)
+		if createdArtistError != nil || len(createdArtists) == 0 {
+			return createdArtistError
+		}
 
-	tracksToCreate, trackArtistsToCreate, constructError := constructTracks(database, items, createdArtists, createdAlbums)
-	if constructError != nil || len(tracksToCreate) == 0 {
-		return []models.Track{}, constructError
-	}
+		tracksToCreate, trackArtistsToCreate, constructError := constructTracks(database, items, createdArtists)
+		if constructError != nil || len(tracksToCreate) == 0 {
+			return constructError
+		}
 
-	upsertedTracks, upsertError := databaseHelpers.Upsert(database, tracksToCreate)
-	if upsertError != nil || len(upsertedTracks) == 0 {
-		return []models.Track{}, upsertError
-	}
+		upsertedTracks, upsertError := databaseHelpers.Upsert(database, tracksToCreate)
+		if upsertError != nil || len(upsertedTracks) == 0 {
+			return upsertError
+		}
 
-	_, trackArtistsUpsertError := databaseHelpers.Upsert(database, trackArtistsToCreate)
-	if trackArtistsUpsertError != nil {
-		return []models.Track{}, trackArtistsUpsertError
-	}
+		_, trackArtistsUpsertError := databaseHelpers.Upsert(database, trackArtistsToCreate)
+		if trackArtistsUpsertError != nil {
+			return trackArtistsUpsertError
+		}
 
-	// Use type assertion to convert upsertedTracks to []models.Track
-	tracks, assertError := assertTracks(upsertedTracks)
-	if assertError != nil {
-		return []models.Track{}, errors.New("could not convert upsertedTracks to []models.Track")
+		// Use type assertion to convert upsertedTracks to []models.Track
+		tracks, assertError = assertTracks(upsertedTracks)
+		if assertError != nil {
+			return errors.New("could not convert upsertedTracks to []models.Track")
+		}
+
+		for _, track := range tracks {
+			verificationError := verification.CreateTrackVerification(database, track.Id)
+			if verificationError != nil {
+				return verificationError
+			}
+		}
+
+		return nil
+	})
+	if createError != nil {
+		return []models.Track{}, createError
 	}
 
 	return tracks, nil
