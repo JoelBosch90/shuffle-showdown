@@ -1,4 +1,4 @@
-package spotify
+package wikipedia
 
 import (
 	helpers "api/lib/helpers"
@@ -15,25 +15,15 @@ type Param struct {
 	Value string
 }
 
-const SPOTIFY_API_URL = "https://api.spotify.com/"
+const WIKIPEDIA_API_URL = "https://en.wikipedia.org/w/api.php"
 
-func ApiRequest(method string, path string, headers []Header, params []Param) (*http.Response, error) {
-	url := SPOTIFY_API_URL + path
-
+func ApiRequest(method string, headers []Header, params []Param) (*http.Response, error) {
 	// Create a new HTTP request
-	request, requestError := http.NewRequest(method, url, nil)
+	request, requestError := http.NewRequest(method, WIKIPEDIA_API_URL, nil)
 	if requestError != nil {
 		return nil, requestError
 	}
 
-	// Get an access token
-	accessToken, accessTokenError := GetAccessToken()
-	if accessTokenError != nil {
-		return nil, accessTokenError
-	}
-
-	// Add the authorization header.
-	request.Header.Add("Authorization", accessToken.TokenType+" "+accessToken.AccessToken)
 	request.Header.Add("User-Agent", helpers.UserAgent())
 
 	// Add the other headers.

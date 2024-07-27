@@ -3,6 +3,7 @@ package spotify
 import (
 	databaseHelpers "api/database"
 	"api/database/models"
+	helpers "api/lib/helpers"
 	spotifyModels "api/lib/spotify/models"
 	"api/lib/verification"
 	"errors"
@@ -43,52 +44,12 @@ func getExistingTracks(database *gorm.DB, items []spotifyModels.Item) []models.T
 	return existingTracks
 }
 
-func getOldestReleaseYear(newTrack *models.Track, existingTrack *models.Track) uint {
-	if existingTrack == nil {
-		return newTrack.ReleaseYear
+func getOldestDate(yearA uint, monthA uint, dayA uint, yearB uint, monthB uint, dayB uint) (uint, uint, uint) {
+	if helpers.IsOlderDateThan(yearA, monthA, dayA, yearB, monthB, dayB) {
+		return yearA, monthA, dayA
 	}
 
-	if newTrack.ReleaseYear > existingTrack.ReleaseYear {
-		return existingTrack.ReleaseYear
-	}
-
-	return newTrack.ReleaseYear
-}
-
-func getOldestReleaseMonth(newTrack *models.Track, existingTrack *models.Track) uint {
-	if existingTrack == nil {
-		return newTrack.ReleaseMonth
-	}
-
-	if newTrack.ReleaseYear < existingTrack.ReleaseYear {
-		return newTrack.ReleaseMonth
-	}
-
-	if newTrack.ReleaseYear == existingTrack.ReleaseYear && newTrack.ReleaseMonth > existingTrack.ReleaseMonth {
-		return existingTrack.ReleaseMonth
-	}
-
-	return newTrack.ReleaseMonth
-}
-
-func getOldestReleaseDay(newTrack *models.Track, existingTrack *models.Track) uint {
-	if existingTrack == nil {
-		return newTrack.ReleaseDay
-	}
-
-	if newTrack.ReleaseYear < existingTrack.ReleaseYear {
-		return newTrack.ReleaseDay
-	}
-
-	if newTrack.ReleaseYear == existingTrack.ReleaseYear && newTrack.ReleaseMonth < existingTrack.ReleaseMonth {
-		return newTrack.ReleaseDay
-	}
-
-	if newTrack.ReleaseYear == existingTrack.ReleaseYear && newTrack.ReleaseMonth == existingTrack.ReleaseMonth && newTrack.ReleaseDay > existingTrack.ReleaseDay {
-		return existingTrack.ReleaseDay
-	}
-
-	return newTrack.ReleaseDay
+	return yearB, monthB, dayB
 }
 
 func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtists []models.Artist) ([]interface{}, []interface{}, error) {
@@ -123,19 +84,17 @@ func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtis
 			})
 		}
 
-		newDates := &models.Track{
-			ReleaseYear:  releaseYear,
-			ReleaseMonth: releaseMonth,
-			ReleaseDay:   releaseDay,
+		existingTrack := findTrackById(existingTracks, trackToCreate.Id)
+		if existingTrack != nil {
+			releaseYear, releaseMonth, releaseDay = getOldestDate(releaseYear, releaseMonth, releaseDay, existingTrack.ReleaseYear, existingTrack.ReleaseMonth, existingTrack.ReleaseDay)
 		}
 
-		existingTrack := findTrackById(existingTracks, trackToCreate.Id)
 		trackUpdate := &models.Track{
 			Id:           trackToCreate.Id,
 			Name:         trackToCreate.Name,
-			ReleaseYear:  getOldestReleaseYear(newDates, existingTrack),
-			ReleaseMonth: getOldestReleaseMonth(newDates, existingTrack),
-			ReleaseDay:   getOldestReleaseDay(newDates, existingTrack),
+			ReleaseYear:  releaseYear,
+			ReleaseMonth: releaseMonth,
+			ReleaseDay:   releaseDay,
 			Artists:      artists,
 			PreviewUrl:   trackToCreate.PreviewUrl,
 			IsPlayable:   trackToCreate.IsPlayable,
