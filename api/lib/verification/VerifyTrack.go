@@ -3,7 +3,6 @@ package verification
 import (
 	models "api/database/models"
 	"api/lib/wikipedia"
-	"log"
 	"math"
 
 	"github.com/jinzhu/gorm"
@@ -22,13 +21,11 @@ func VerifyTrack(database *gorm.DB, trackId string) error {
 	}
 
 	newReleaseYear, newReleaseYearError := wikipedia.GetTrackReleaseYear(track.Name, artistNames)
-	log.Println("NEW RELEASE YEAR", newReleaseYear)
 	if newReleaseYearError != nil {
 		return newReleaseYearError
 	}
 
 	oldestReleaseYear := uint(math.Min(float64(newReleaseYear), float64(track.ReleaseYear)))
-	log.Println("OLDEST RELEASE YEAR", oldestReleaseYear)
 	if oldestReleaseYear != track.ReleaseYear {
 		database.Model(&track).Updates(models.Track{
 			ReleaseYear: oldestReleaseYear,

@@ -4,7 +4,6 @@ import (
 	gameHelpers "api/lib/game"
 	"encoding/json"
 	"errors"
-	"log"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -17,9 +16,6 @@ type SelectionUpdate struct {
 }
 
 func AnswerSelectionUpdateHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
-
-	log.Println("ClientMessageUpdateSelection", message)
-
 	var answer gameHelpers.Answer
 	answerParseError := json.Unmarshal([]byte(message.Payload), &answer)
 	if answerParseError != nil {
