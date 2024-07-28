@@ -21,7 +21,7 @@ func VerifyTrack(database *gorm.DB, trackId string) error {
 		artistNames = append(artistNames, artist.Name)
 	}
 
-	newReleaseYear, newReleaseYearError := wikipedia.GetTrackReleaseYear("Hotel California", artistNames)
+	newReleaseYear, newReleaseYearError := wikipedia.GetTrackReleaseYear(track.Name, artistNames)
 	log.Println("NEW RELEASE YEAR", newReleaseYear)
 	if newReleaseYearError != nil {
 		return newReleaseYearError
