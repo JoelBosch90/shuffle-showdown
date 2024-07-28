@@ -5,15 +5,14 @@ import (
 )
 
 type Track struct {
-	CreatedAt      time.Time  `json:"createdAt"`
-	UpdatedAt      time.Time  `json:"updatedAt"`
-	VerifiedAt     time.Time  `json:"verifiedAt"`
-	NewReleaseYear uint       `json:"newReleaseYear" gorm:"type:uint;"`
-	Id             string     `json:"id" gorm:"type:string; primaryKey;"`
-	Name           string     `json:"name" gorm:"type:string;"`
-	ReleaseYear    uint       `json:"releaseYear" gorm:"type:uint;"`
-	Artists        []Artist   `json:"artists" gorm:"many2many:track_artists;"`
-	PreviewUrl     string     `json:"previewUrl" gorm:"type:string;"`
-	IsPlayable     bool       `json:"isPlayable" gorm:"type:bool;"`
-	Playlists      []Playlist `json:"-" gorm:"many2many:playlist_tracks;"`
+	CreatedAt   time.Time  `json:"createdAt"`
+	UpdatedAt   time.Time  `json:"updatedAt"`
+	VerifiedAt  time.Time  `json:"verifiedAt"`
+	Id          string     `json:"id" gorm:"type:string; primaryKey;"`
+	Name        string     `json:"name" gorm:"type:string;"`
+	ReleaseYear uint       `json:"releaseYear" gorm:"type:uint;"`
+	Artists     []Artist   `json:"artists" gorm:"many2many:track_artists;"`
+	PreviewUrl  string     `json:"previewUrl" gorm:"type:string;"`
+	IsPlayable  bool       `json:"isPlayable" gorm:"type:bool;"`
+	Playlists   []Playlist `json:"-" gorm:"many2many:playlist_tracks;"`
 }

@@ -3,7 +3,6 @@ package wikipedia
 import (
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
-	"log"
 	"strings"
 )
 
@@ -96,58 +95,50 @@ func trySuggestion(trackTitle string, artistNames []string) (Response, uint) {
 func GetTrackReleaseYear(trackTitle string, artistNames []string) (uint, error) {
 	trackTitle = CleanTrackTitle(trackTitle)
 	originalResponse, releaseYear := trySuggestion(trackTitle, artistNames)
-	log.Println("RAW", artistNames, trackTitle, originalResponse, releaseYear)
 	if releaseYear != 0 {
 		return releaseYear, nil
 	}
 
 	var suggestion string
-	var r1 Response
 	suggestion = findSuggestionWithoutSuffix(originalResponse, trackTitle)
 	if suggestion != "" {
-		r1, releaseYear = trySuggestion(suggestion, artistNames)
+		_, releaseYear = trySuggestion(suggestion, artistNames)
 	}
-	log.Println("WITHOUT SUFFIX", suggestion, r1, releaseYear)
 	if releaseYear != 0 {
 		return releaseYear, nil
 	}
 
 	suggestion = findSuggestionWithSongSuffix(originalResponse)
 	if suggestion != "" {
-		r1, releaseYear = trySuggestion(suggestion, artistNames)
+		_, releaseYear = trySuggestion(suggestion, artistNames)
 	}
-	log.Println("WITH SONG SUFFIX", suggestion, r1, releaseYear)
 	if releaseYear != 0 {
 		return releaseYear, nil
 	}
 
 	suggestion = findSuggestionWithArtistSuffix(originalResponse, artistNames)
 	if suggestion != "" {
-		r1, releaseYear = trySuggestion(suggestion, artistNames)
+		_, releaseYear = trySuggestion(suggestion, artistNames)
 	}
-	log.Println("WITH ARTIST SUFFIX", suggestion, r1, releaseYear)
 	if releaseYear != 0 {
 		return releaseYear, nil
 	}
 
 	suggestion = createTrackTitleSuggestion(trackTitle, []string{})
 	if suggestion != "" {
-		r1, releaseYear = trySuggestion(suggestion, artistNames)
+		_, releaseYear = trySuggestion(suggestion, artistNames)
 	}
-	log.Println("MANUAL WITH SONG SUFFIX", suggestion, r1, releaseYear)
 	if releaseYear != 0 {
 		return releaseYear, nil
 	}
 
 	suggestion = createTrackTitleSuggestion(trackTitle, artistNames)
 	if suggestion != "" {
-		r1, releaseYear = trySuggestion(suggestion, artistNames)
+		_, releaseYear = trySuggestion(suggestion, artistNames)
 	}
-	log.Println("MANUAL WITH ARTIST SUFFIX", suggestion, r1, releaseYear)
 	if releaseYear != 0 {
 		return releaseYear, nil
 	}
 
-	log.Println("NOT A SONG PAGE", trackTitle, artistNames)
 	return 0, errors.New("not a song page")
 }

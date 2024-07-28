@@ -22,8 +22,8 @@ func VerifyTrack(database *gorm.DB, trackId string) error {
 	oldestReleaseYear := uint(math.Min(float64(newReleaseYear), float64(track.ReleaseYear)))
 	if oldestReleaseYear != track.ReleaseYear {
 		return database.Model(&track).Updates(models.Track{
-			NewReleaseYear: newReleaseYear,
-			VerifiedAt:     time.Now(),
+			ReleaseYear: oldestReleaseYear,
+			VerifiedAt:  time.Now(),
 		}).Error
 	}
 
