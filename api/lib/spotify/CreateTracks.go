@@ -52,6 +52,10 @@ func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtis
 	for _, item := range items {
 		trackToCreate := item.Track
 
+		// if trackToCreate.Name != "Antologia" {
+		// 	continue
+		// }
+
 		releaseYear, _, _ := ConvertReleaseDateToIntegers(item.Album.ReleaseDate)
 
 		if releaseYear == 0 || trackToCreate.PreviewUrl == "" {
@@ -142,14 +146,12 @@ func CreateTracks(database *gorm.DB, items []spotifyModels.Item) ([]models.Track
 		}
 
 		for _, track := range tracks {
-			verificationError := verification.CreateTrackVerification(database, track.Id)
-			if verificationError != nil {
-				return verificationError
-			}
+			verification.VerifyTrack(database, track.Id)
 		}
 
 		return nil
 	})
+
 	if createError != nil {
 		return []models.Track{}, createError
 	}

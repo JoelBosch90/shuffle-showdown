@@ -4,35 +4,30 @@ import (
 	models "api/database/models"
 	"api/lib/wikipedia"
 	"math"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
 
 func VerifyTrack(database *gorm.DB, trackId string) error {
 	track := models.Track{}
-	fetchError := database.Model(&track).Preload("Artists").Where("id = ?", trackId).First(&track).Error
-	if fetchError != nil {
-		return fetchError
-	}
+	database.Model(&track).Preload("Artists").Where("id = ?", trackId).First(&track)
 
 	artistNames := []string{}
 	for _, artist := range track.Artists {
 		artistNames = append(artistNames, artist.Name)
 	}
 
-	newReleaseYear, newReleaseYearError := wikipedia.GetTrackReleaseYear(track.Name, artistNames)
-	if newReleaseYearError != nil {
-		return newReleaseYearError
-	}
-
+	newReleaseYear, _ := wikipedia.GetTrackReleaseYear(track.Name, artistNames)
 	oldestReleaseYear := uint(math.Min(float64(newReleaseYear), float64(track.ReleaseYear)))
 	if oldestReleaseYear != track.ReleaseYear {
-		database.Model(&track).Updates(models.Track{
-			ReleaseYear: oldestReleaseYear,
-		})
-
-		return nil
+		return database.Model(&track).Updates(models.Track{
+			NewReleaseYear: newReleaseYear,
+			VerifiedAt:     time.Now(),
+		}).Error
 	}
 
-	return nil
+	return database.Model(&track).Updates(models.Track{
+		VerifiedAt: time.Now(),
+	}).Error
 }
