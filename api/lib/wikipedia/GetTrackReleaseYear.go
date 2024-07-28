@@ -15,7 +15,7 @@ type Response struct {
 }
 
 func parseSongCategory(category wikipediaModels.Category) (bool, uint) {
-	regex := regexp.MustCompile(`Category:\d{1-4} songs`)
+	regex := regexp.MustCompile(`Category:(?P<releaseYear>\d{1,4}) songs`)
 	match := regex.FindStringSubmatch(category.Title)
 
 	if match == nil {
@@ -46,7 +46,7 @@ func GetTrackReleaseYear(trackName string, artistNames []string) (uint, error) {
 	headers := []Header{}
 	params := []Param{
 		{Name: "action", Value: "query"},
-		{Name: "prop", Value: "revisions|categories"},
+		{Name: "prop", Value: "categories"},
 		{Name: "titles", Value: trackName},
 		{Name: "utf8", Value: "1"},
 		{Name: "format", Value: "json"},
@@ -64,11 +64,6 @@ func GetTrackReleaseYear(trackName string, artistNames []string) (uint, error) {
 	decodeError := decoder.Decode(&formattedResponse)
 	if decodeError != nil {
 		return 0, decodeError
-	}
-
-	revisions := formattedResponse.Query.Pages[0].Revisions
-	if len(revisions) == 0 {
-		return 0, errors.New("no revisions found")
 	}
 
 	page := formattedResponse.Query.Pages[0]
