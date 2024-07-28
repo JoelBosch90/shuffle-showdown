@@ -3,10 +3,10 @@ package spotify
 import (
 	databaseHelpers "api/database"
 	"api/database/models"
-	helpers "api/lib/helpers"
 	spotifyModels "api/lib/spotify/models"
 	"api/lib/verification"
 	"errors"
+	"math"
 
 	"github.com/jinzhu/gorm"
 )
@@ -44,14 +44,6 @@ func getExistingTracks(database *gorm.DB, items []spotifyModels.Item) []models.T
 	return existingTracks
 }
 
-func getOldestDate(yearA uint, monthA uint, dayA uint, yearB uint, monthB uint, dayB uint) (uint, uint, uint) {
-	if helpers.IsOlderDateThan(yearA, monthA, dayA, yearB, monthB, dayB) {
-		return yearA, monthA, dayA
-	}
-
-	return yearB, monthB, dayB
-}
-
 func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtists []models.Artist) ([]interface{}, []interface{}, error) {
 	var tracksToCreate []interface{}
 	var trackArtistsToCreate []interface{}
@@ -60,7 +52,7 @@ func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtis
 	for _, item := range items {
 		trackToCreate := item.Track
 
-		releaseYear, releaseMonth, releaseDay := ConvertReleaseDateToIntegers(item.Album.ReleaseDate)
+		releaseYear, _, _ := ConvertReleaseDateToIntegers(item.Album.ReleaseDate)
 
 		if releaseYear == 0 || trackToCreate.PreviewUrl == "" {
 			continue
@@ -86,18 +78,16 @@ func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtis
 
 		existingTrack := findTrackById(existingTracks, trackToCreate.Id)
 		if existingTrack != nil {
-			releaseYear, releaseMonth, releaseDay = getOldestDate(releaseYear, releaseMonth, releaseDay, existingTrack.ReleaseYear, existingTrack.ReleaseMonth, existingTrack.ReleaseDay)
+			releaseYear = uint(math.Min(float64(releaseYear), float64(existingTrack.ReleaseYear)))
 		}
 
 		trackUpdate := &models.Track{
-			Id:           trackToCreate.Id,
-			Name:         trackToCreate.Name,
-			ReleaseYear:  releaseYear,
-			ReleaseMonth: releaseMonth,
-			ReleaseDay:   releaseDay,
-			Artists:      artists,
-			PreviewUrl:   trackToCreate.PreviewUrl,
-			IsPlayable:   trackToCreate.IsPlayable,
+			Id:          trackToCreate.Id,
+			Name:        trackToCreate.Name,
+			ReleaseYear: releaseYear,
+			Artists:     artists,
+			PreviewUrl:  trackToCreate.PreviewUrl,
+			IsPlayable:  trackToCreate.IsPlayable,
 		}
 
 		tracksToCreate = append(tracksToCreate, trackUpdate)

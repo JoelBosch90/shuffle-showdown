@@ -2,8 +2,8 @@ package verification
 
 import (
 	models "api/database/models"
-	"api/lib/helpers"
 	"api/lib/wikipedia"
+	"math"
 
 	"github.com/jinzhu/gorm"
 )
@@ -20,16 +20,15 @@ func VerifyTrack(database *gorm.DB, trackId string) error {
 		artistNames = append(artistNames, artist.Name)
 	}
 
-	newReleaseYear, newReleaseMonth, newReleaseDay, newReleaseDateError := wikipedia.GetTrackReleaseDate(track.Name, artistNames)
-	if newReleaseDateError != nil {
-		return newReleaseDateError
+	newReleaseYear, newReleaseYearError := wikipedia.GetTrackReleaseYear(track.Name, artistNames)
+	if newReleaseYearError != nil {
+		return newReleaseYearError
 	}
 
-	if helpers.IsOlderDateThan(newReleaseYear, newReleaseMonth, newReleaseDay, track.ReleaseYear, track.ReleaseMonth, track.ReleaseDay) {
+	oldestReleaseYear := uint(math.Min(float64(newReleaseYear), float64(track.ReleaseYear)))
+	if oldestReleaseYear != track.ReleaseYear {
 		database.Model(&track).Updates(models.Track{
-			ReleaseYear:  newReleaseYear,
-			ReleaseMonth: newReleaseMonth,
-			ReleaseDay:   newReleaseDay,
+			ReleaseYear: oldestReleaseYear,
 		})
 
 		return nil

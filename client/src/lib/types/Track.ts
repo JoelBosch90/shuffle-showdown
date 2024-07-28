@@ -4,7 +4,5 @@ export interface Track {
   name?: string;
   artists?: Artist[];
   releaseYear?: number;
-  releaseMonth?: number;
-  releaseDay?: number;
   previewUrl: string;
 }
