@@ -4,12 +4,14 @@ import (
 	databaseHelpers "api/database"
 	"api/database/models"
 	spotifyModels "api/lib/spotify/models"
-	"api/lib/verification"
 	"errors"
 	"math"
+	"time"
 
 	"github.com/jinzhu/gorm"
 )
+
+var zeroTime = time.Time{}
 
 func findArtistById(artists []models.Artist, id string) *models.Artist {
 	for _, artist := range artists {
@@ -139,10 +141,6 @@ func CreateTracks(database *gorm.DB, items []spotifyModels.Item) ([]models.Track
 		tracks, assertError = assertTracks(upsertedTracks)
 		if assertError != nil {
 			return errors.New("could not convert upsertedTracks to []models.Track")
-		}
-
-		for _, track := range tracks {
-			verification.VerifyTrack(database, track.Id)
 		}
 
 		return nil

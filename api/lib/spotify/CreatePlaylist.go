@@ -4,6 +4,7 @@ import (
 	databaseHelpers "api/database"
 	"api/database/models"
 	spotifyModels "api/lib/spotify/models"
+	"api/lib/verification"
 
 	"github.com/jinzhu/gorm"
 )
@@ -13,6 +14,8 @@ func CreatePlaylist(info spotifyModels.Playlist, countryCode string, database *g
 	if tracksError != nil {
 		return models.Playlist{}, tracksError
 	}
+
+	go verification.VerifyTracks()
 
 	upsertedPlaylist, upsertPlaylistError := databaseHelpers.Upsert(database, []interface{}{&models.Playlist{
 		Id:          info.Id,
