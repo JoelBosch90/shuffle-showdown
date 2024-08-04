@@ -1,6 +1,7 @@
 package wikipedia
 
 import (
+	helpers "api/lib/helpers"
 	languages "api/lib/wikipedia/languages"
 	languageModels "api/lib/wikipedia/languages/models"
 	wikipediaModels "api/lib/wikipedia/models"
@@ -9,8 +10,13 @@ import (
 
 func getTitleSuggestions(languagePack languageModels.Pack, trackTitle string, artistNames []string) []string {
 	var titleSuggestions []string = []string{trackTitle}
+
 	for _, formatter := range languagePack.RedirectFormatters.TitleBasedFormatters {
-		titleSuggestions = append(titleSuggestions, formatter(trackTitle, artistNames))
+		newSuggestion := formatter(trackTitle, artistNames)
+
+		if newSuggestion != "" && !helpers.IncludesString(titleSuggestions, newSuggestion) {
+			titleSuggestions = append(titleSuggestions, newSuggestion)
+		}
 	}
 
 	return titleSuggestions
@@ -18,8 +24,13 @@ func getTitleSuggestions(languagePack languageModels.Pack, trackTitle string, ar
 
 func getLinkSuggestions(languagePack languageModels.Pack, page wikipediaModels.Page, trackTitle string, artistNames []string) []string {
 	var linkSuggestions []string = []string{trackTitle}
+
 	for _, formatter := range languagePack.RedirectFormatters.LinkBasedFormatters {
-		linkSuggestions = append(linkSuggestions, formatter(page, trackTitle, artistNames))
+		newSuggestion := formatter(page, trackTitle, artistNames)
+
+		if newSuggestion != "" && !helpers.IncludesString(linkSuggestions, newSuggestion) {
+			linkSuggestions = append(linkSuggestions, newSuggestion)
+		}
 	}
 
 	return linkSuggestions

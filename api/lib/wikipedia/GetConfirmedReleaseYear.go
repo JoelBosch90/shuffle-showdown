@@ -1,7 +1,6 @@
 package wikipedia
 
 import (
-	"api/lib/helpers"
 	languageModels "api/lib/wikipedia/languages/models"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
@@ -68,7 +67,7 @@ func GetConfirmedReleaseYear(languagePack languageModels.Pack, response wikipedi
 		}
 	}
 
-	if !helpers.IncludesStrings(confirmedArtists, artistNames) {
+	if len(confirmedArtists) == 0 {
 		return 0, errors.New("artists not confirmed")
 	}
 

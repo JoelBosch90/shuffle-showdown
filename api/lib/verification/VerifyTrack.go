@@ -18,7 +18,11 @@ func VerifyTrack(database *gorm.DB, trackId string) error {
 		artistNames = append(artistNames, artist.Name)
 	}
 
-	newReleaseYear, _ := wikipedia.GetTrackReleaseYear(track.Name, artistNames)
+	newReleaseYear, newReleaseYearError := wikipedia.GetTrackReleaseYear(track.Name, artistNames)
+	if newReleaseYearError != nil {
+		return newReleaseYearError
+	}
+
 	oldestReleaseYear := uint(math.Min(float64(newReleaseYear), float64(track.ReleaseYear)))
 	if oldestReleaseYear != track.ReleaseYear {
 		return database.Model(&track).Updates(models.Track{
@@ -27,5 +31,7 @@ func VerifyTrack(database *gorm.DB, trackId string) error {
 		}).Error
 	}
 
-	return nil
+	return database.Model(&track).Updates(models.Track{
+		VerifiedAt: time.Now(),
+	}).Error
 }

@@ -5,9 +5,11 @@ import (
 )
 
 func FormatTrackTitleWithArtistNamesSongSuffix(trackTitle string, artistNames []string) string {
+	cleanTitle := FormatCleanTrackTitle(trackTitle, artistNames)
+
 	if len(artistNames) == 0 {
-		return trackTitle + " (song)"
+		return cleanTitle + " (song)"
 	}
 
-	return trackTitle + " (" + strings.Join(artistNames, " and ") + " song)"
+	return cleanTitle + " (" + strings.Join(artistNames, " and ") + " song)"
 }
