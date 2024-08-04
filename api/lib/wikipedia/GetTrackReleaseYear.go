@@ -5,7 +5,6 @@ import (
 	languageModels "api/lib/wikipedia/languages/models"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
-	"log"
 )
 
 func getTitleSuggestions(languagePack languageModels.Pack, trackTitle string, artistNames []string) []string {
@@ -50,17 +49,12 @@ func isPageMissing(response wikipediaModels.Response) bool {
 
 func GetTrackReleaseYear(trackTitle string, artistNames []string) (uint, error) {
 	languageMaps := languages.Map
-	trackTitle = "Wish You were here"
-	artistNames = []string{"Incubus"}
 
 	for _, languagePack := range languageMaps {
 		titleSuggestions := getTitleSuggestions(languagePack, trackTitle, artistNames)
-		log.Println("TITLE SUGGESTIONS", titleSuggestions)
 
 		for _, suggestion := range titleSuggestions {
-			log.Println("PROCESSING TITLE SUGGESTION: ", suggestion)
 			response, releaseYear := trySuggestion(languagePack, suggestion, artistNames)
-			log.Println("PROCESSED TITLE SUGGESTION: ", response, releaseYear)
 
 			if releaseYear != 0 {
 				return releaseYear, nil
@@ -72,12 +66,9 @@ func GetTrackReleaseYear(trackTitle string, artistNames []string) (uint, error) 
 
 			firstPage := response.Query.Pages[0]
 			linkSuggestions := getLinkSuggestions(languagePack, firstPage, suggestion, artistNames)
-			log.Println("LINK SUGGESTIONS", linkSuggestions)
 
 			for _, suggestion := range linkSuggestions {
-				log.Println("PROCESSING LINK SUGGESTION: ", suggestion)
 				response, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
-				log.Println("PROCESSED LINK SUGGESTION: ", response, releaseYear)
 
 				if releaseYear != 0 {
 					return releaseYear, nil

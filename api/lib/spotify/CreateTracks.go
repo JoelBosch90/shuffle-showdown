@@ -53,9 +53,7 @@ func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtis
 
 	for _, item := range items {
 		trackToCreate := item.Track
-
-		// releaseYear, _, _ := ConvertReleaseDateToIntegers(item.Album.ReleaseDate)
-		releaseYear := uint(3000)
+		releaseYear := ConvertReleaseDateToReleaseYear(item.Album.ReleaseDate)
 
 		if releaseYear == 0 || trackToCreate.PreviewUrl == "" {
 			continue
