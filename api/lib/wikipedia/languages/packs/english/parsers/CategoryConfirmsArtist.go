@@ -6,7 +6,7 @@ import (
 )
 
 func CategoryConfirmsArtist(category models.Category, artistName string) bool {
-	regex := regexp.MustCompile("(?i)Category:\\s*" + regexp.QuoteMeta(artistName) + "(\\s+\\((band|group)\\))?\\s+(songs)?")
+	regex := regexp.MustCompile("(?i)Category:\\s*" + regexp.QuoteMeta(artistName) + "(\\s+\\((band|group|singer)\\))?\\s+(songs)?")
 	match := regex.FindStringSubmatch(category.Title)
 
 	return match != nil

@@ -1,5 +1,6 @@
 package models
 
 type Query struct {
-	Pages []Page `json:"pages"`
+	Redirects []Redirect `json:"redirects"`
+	Pages     []Page     `json:"pages"`
 }
