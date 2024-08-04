@@ -1,15 +1,15 @@
-package wikipedia
+package formatters
 
 import (
-	helpers "api/lib/helpers"
+	"api/lib/helpers"
 	"regexp"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
-/**
- *	CleanTrackTitle removes any remaster or mix suffixes from a track title.
- */
-func CleanTrackTitle(trackTitle string) string {
+func trimSuffix(trackTitle string) string {
 	/**
 	 *	^\W*(?P<song>.*)				Captures the song name
 	 *	\s+-\s*									Matches the separator between the song name and the remaster/mix
@@ -24,5 +24,13 @@ func CleanTrackTitle(trackTitle string) string {
 		return strings.TrimSpace(matches["song"])
 	}
 
-	return strings.TrimSpace(trackTitle)
+	return trackTitle
+}
+
+func FormatCleanTrackTitle(trackTitle string, _ []string) string {
+	withoutSuffix := trimSuffix(trackTitle)
+	withTrimmedSpaces := strings.TrimSpace(withoutSuffix)
+	withTitleCapitalization := cases.Title(language.English).String(withTrimmedSpaces)
+
+	return withTitleCapitalization
 }

@@ -1,11 +1,11 @@
-package wikipedia_languages_english
+package parsers
 
 import (
-	wikipediaModels "api/lib/wikipedia/models"
+	"api/lib/wikipedia/models"
 	"regexp"
 )
 
-func IsDisambiguationCategory(category wikipediaModels.Category) bool {
+func IsDisambiguationCategory(category models.Category) bool {
 	regex := regexp.MustCompile(`(?i)Category:\s*Disambiguation\s+pages`)
 	match := regex.FindStringSubmatch(category.Title)
 

@@ -3,6 +3,7 @@ package wikipedia
 import (
 	helpers "api/lib/helpers"
 	languages "api/lib/wikipedia/languages"
+	languageModels "api/lib/wikipedia/languages/models"
 	"net/http"
 )
 
@@ -16,8 +17,8 @@ type Param struct {
 	Value string
 }
 
-func ApiRequest(method string, headers []Header, params []Param, language languages.Language) (*http.Response, error) {
-	apiUrl := languages.LanguageMap[language].ApiUrl
+func ApiRequest(method string, headers []Header, params []Param, language languageModels.Language) (*http.Response, error) {
+	apiUrl := languages.Map[language].ApiUrl
 
 	// Create a new HTTP request
 	request, requestError := http.NewRequest(method, apiUrl, nil)

@@ -1,14 +1,14 @@
-package wikipedia_languages_english
+package parsers
 
 import (
 	"api/lib/helpers"
-	wikipediaModels "api/lib/wikipedia/models"
+	"api/lib/wikipedia/models"
 	"errors"
 	"regexp"
 	"strconv"
 )
 
-func GetReleaseYearFromCategory(category wikipediaModels.Category) (uint, error) {
+func GetReleaseYearFromCategory(category models.Category) (uint, error) {
 	regex := regexp.MustCompile(`(?i)Category:\s*(?P<year>\d{1,4})\s+(songs|ballads)`)
 	matches := helpers.GetNamedMatchesForRegex(regex, category.Title)
 

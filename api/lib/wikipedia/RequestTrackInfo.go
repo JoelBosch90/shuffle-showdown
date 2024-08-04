@@ -1,13 +1,14 @@
 package wikipedia
 
 import (
-	languages "api/lib/wikipedia/languages"
+	languageModels "api/lib/wikipedia/languages/models"
+	wikipediaModels "api/lib/wikipedia/models"
 	"encoding/json"
 	"net/http"
 )
 
-func RequestTrackInfo(language languages.Language, trackTitle string) (Response, error) {
-	var formattedResponse Response
+func RequestTrackInfo(language languageModels.Language, trackTitle string) (wikipediaModels.Response, error) {
+	var formattedResponse wikipediaModels.Response
 
 	headers := []Header{}
 	params := []Param{

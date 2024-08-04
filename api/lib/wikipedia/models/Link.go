@@ -1,4 +1,4 @@
-package wikipedia_models
+package models
 
 type Link struct {
 	Title string `json:"title"`

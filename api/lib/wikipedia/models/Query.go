@@ -1,4 +1,4 @@
-package wikipedia_models
+package models
 
 type Query struct {
 	Pages []Page `json:"pages"`

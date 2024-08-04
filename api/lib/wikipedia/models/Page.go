@@ -1,4 +1,4 @@
-package wikipedia_models
+package models
 
 type Page struct {
 	PageId     int        `json:"pageid"`

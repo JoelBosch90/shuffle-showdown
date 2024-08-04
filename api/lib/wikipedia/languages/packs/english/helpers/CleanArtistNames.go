@@ -1,7 +1,7 @@
-package wikipedia_languages_english
+package helpers
 
 import (
-	helpers "api/lib/helpers"
+	"api/lib/helpers"
 	"regexp"
 	"strings"
 )

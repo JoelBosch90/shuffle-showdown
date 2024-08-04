@@ -2,82 +2,33 @@ package wikipedia
 
 import (
 	languages "api/lib/wikipedia/languages"
+	languageModels "api/lib/wikipedia/languages/models"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
-	"strings"
+	"log"
 )
 
-type Response struct {
-	BatchComplete bool                  `json:"batchcomplete"`
-	Query         wikipediaModels.Query `json:"query"`
+func getTitleSuggestions(languagePack languageModels.Pack, trackTitle string, artistNames []string) []string {
+	var titleSuggestions []string = []string{trackTitle}
+	for _, formatter := range languagePack.RedirectFormatters.TitleBasedFormatters {
+		titleSuggestions = append(titleSuggestions, formatter(trackTitle, artistNames))
+	}
+
+	return titleSuggestions
 }
 
-func createTrackTitleSuggestion(trackTitle string, artistNames []string) string {
-	if len(artistNames) == 0 {
-		return trackTitle + " (song)"
+func getLinkSuggestions(languagePack languageModels.Pack, page wikipediaModels.Page, trackTitle string, artistNames []string) []string {
+	var linkSuggestions []string = []string{trackTitle}
+	for _, formatter := range languagePack.RedirectFormatters.LinkBasedFormatters {
+		linkSuggestions = append(linkSuggestions, formatter(page, trackTitle, artistNames))
 	}
 
-	return trackTitle + " (" + strings.Join(artistNames, " and ") + " song)"
+	return linkSuggestions
 }
 
-func findSuggestionWithoutSuffix(response Response, trackTitle string) string {
-	var suggestedTitle string = ""
-
-	if len(response.Query.Pages) == 0 {
-		return suggestedTitle
-	}
-
-	for _, link := range response.Query.Pages[0].Links {
-		suggestedTitle = ParseLinkForCapitalization(link, trackTitle)
-		if suggestedTitle != "" && suggestedTitle != trackTitle {
-			return suggestedTitle
-		}
-	}
-
-	return suggestedTitle
-}
-
-func findSuggestionWithSongSuffix(response Response) string {
-	var suggestedTitle string = ""
-
-	if len(response.Query.Pages) == 0 {
-		return suggestedTitle
-	}
-
-	for _, link := range response.Query.Pages[0].Links {
-		suggestedTitle = ParseLinkForSongSuffix(link)
-		if suggestedTitle != "" {
-			return suggestedTitle
-		}
-	}
-
-	return suggestedTitle
-}
-
-func findSuggestionWithArtistSuffix(response Response, artistNames []string) string {
-	var suggestedTitle string = ""
-
-	if len(response.Query.Pages) == 0 {
-		return suggestedTitle
-	}
-
-	for _, link := range response.Query.Pages[0].Links {
-		suggestedTitle = ParseLinkForArtistsSuffix(link, artistNames)
-		if suggestedTitle != "" {
-			return suggestedTitle
-		}
-		suggestedTitle = ParseLinkForArtistsSuffixWithCleaning(link, artistNames)
-		if suggestedTitle != "" {
-			return suggestedTitle
-		}
-	}
-
-	return suggestedTitle
-}
-
-func trySuggestion(languagePack languages.LanguagePack, trackTitle string, artistNames []string) (Response, uint) {
+func trySuggestion(languagePack languageModels.Pack, trackTitle string, artistNames []string) (wikipediaModels.Response, uint) {
 	if trackTitle == "" {
-		return Response{}, 0
+		return wikipediaModels.Response{}, 0
 	}
 
 	response, requestError := RequestTrackInfo(languagePack.Language, trackTitle)
@@ -93,65 +44,46 @@ func trySuggestion(languagePack languages.LanguagePack, trackTitle string, artis
 	return response, 0
 }
 
-func IsPageMissing(response Response) bool {
+func isPageMissing(response wikipediaModels.Response) bool {
 	return len(response.Query.Pages) == 0 || response.Query.Pages[0].Missing
 }
 
 func GetTrackReleaseYear(trackTitle string, artistNames []string) (uint, error) {
-	languageMaps := languages.LanguageMap
+	languageMaps := languages.Map
+	trackTitle = "Wish You were here"
+	artistNames = []string{"Incubus"}
 
 	for _, languagePack := range languageMaps {
-		trackTitle = CleanTrackTitle(trackTitle)
-		originalResponse, releaseYear := trySuggestion(languagePack, trackTitle, artistNames)
+		titleSuggestions := getTitleSuggestions(languagePack, trackTitle, artistNames)
+		log.Println("TITLE SUGGESTIONS", titleSuggestions)
 
-		if IsPageMissing(originalResponse) {
-			return 0, errors.New("page missing")
+		for _, suggestion := range titleSuggestions {
+			log.Println("PROCESSING TITLE SUGGESTION: ", suggestion)
+			response, releaseYear := trySuggestion(languagePack, suggestion, artistNames)
+			log.Println("PROCESSED TITLE SUGGESTION: ", response, releaseYear)
+
+			if releaseYear != 0 {
+				return releaseYear, nil
+			}
+
+			if isPageMissing(response) {
+				continue
+			}
+
+			firstPage := response.Query.Pages[0]
+			linkSuggestions := getLinkSuggestions(languagePack, firstPage, suggestion, artistNames)
+			log.Println("LINK SUGGESTIONS", linkSuggestions)
+
+			for _, suggestion := range linkSuggestions {
+				log.Println("PROCESSING LINK SUGGESTION: ", suggestion)
+				response, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
+				log.Println("PROCESSED LINK SUGGESTION: ", response, releaseYear)
+
+				if releaseYear != 0 {
+					return releaseYear, nil
+				}
+			}
 		}
-
-		if releaseYear != 0 {
-			return releaseYear, nil
-		}
-
-		// var suggestion string
-		// suggestion = findSuggestionWithoutSuffix(originalResponse, trackTitle)
-		// if suggestion != "" {
-		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
-		// }
-		// if releaseYear != 0 {
-		// 	return releaseYear, nil
-		// }
-
-		// suggestion = findSuggestionWithSongSuffix(originalResponse)
-		// if suggestion != "" {
-		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
-		// }
-		// if releaseYear != 0 {
-		// 	return releaseYear, nil
-		// }
-
-		// suggestion = findSuggestionWithArtistSuffix(originalResponse, artistNames)
-		// if suggestion != "" {
-		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
-		// }
-		// if releaseYear != 0 {
-		// 	return releaseYear, nil
-		// }
-
-		// suggestion = createTrackTitleSuggestion(trackTitle, []string{})
-		// if suggestion != "" {
-		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
-		// }
-		// if releaseYear != 0 {
-		// 	return releaseYear, nil
-		// }
-
-		// suggestion = createTrackTitleSuggestion(trackTitle, artistNames)
-		// if suggestion != "" {
-		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
-		// }
-		// if releaseYear != 0 {
-		// 	return releaseYear, nil
-		// }
 	}
 
 	return 0, errors.New("not a song page")
