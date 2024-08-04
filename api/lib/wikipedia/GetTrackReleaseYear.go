@@ -1,6 +1,7 @@
 package wikipedia
 
 import (
+	languages "api/lib/wikipedia/languages"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
 	"strings"
@@ -74,70 +75,83 @@ func findSuggestionWithArtistSuffix(response Response, artistNames []string) str
 	return suggestedTitle
 }
 
-func trySuggestion(trackTitle string, artistNames []string) (Response, uint) {
+func trySuggestion(languagePack languages.LanguagePack, trackTitle string, artistNames []string) (Response, uint) {
 	if trackTitle == "" {
 		return Response{}, 0
 	}
 
-	response, requestError := RequestTrackInfo(trackTitle)
+	response, requestError := RequestTrackInfo(languagePack.Language, trackTitle)
 	if requestError != nil {
 		return response, 0
 	}
 
-	releaseYear, mainCategory, artistsConfirmed := ParseResponseCategories(response, artistNames)
-	if mainCategory == "song" && artistsConfirmed {
+	releaseYear, releaseYearError := GetConfirmedReleaseYear(languagePack, response, artistNames)
+	if releaseYearError == nil {
 		return response, releaseYear
 	}
 
 	return response, 0
 }
 
+func IsPageMissing(response Response) bool {
+	return len(response.Query.Pages) == 0 || response.Query.Pages[0].Missing
+}
+
 func GetTrackReleaseYear(trackTitle string, artistNames []string) (uint, error) {
-	trackTitle = CleanTrackTitle(trackTitle)
-	originalResponse, releaseYear := trySuggestion(trackTitle, artistNames)
-	if releaseYear != 0 {
-		return releaseYear, nil
-	}
+	languageMaps := languages.LanguageMap
 
-	var suggestion string
-	suggestion = findSuggestionWithoutSuffix(originalResponse, trackTitle)
-	if suggestion != "" {
-		_, releaseYear = trySuggestion(suggestion, artistNames)
-	}
-	if releaseYear != 0 {
-		return releaseYear, nil
-	}
+	for _, languagePack := range languageMaps {
+		trackTitle = CleanTrackTitle(trackTitle)
+		originalResponse, releaseYear := trySuggestion(languagePack, trackTitle, artistNames)
 
-	suggestion = findSuggestionWithSongSuffix(originalResponse)
-	if suggestion != "" {
-		_, releaseYear = trySuggestion(suggestion, artistNames)
-	}
-	if releaseYear != 0 {
-		return releaseYear, nil
-	}
+		if IsPageMissing(originalResponse) {
+			return 0, errors.New("page missing")
+		}
 
-	suggestion = findSuggestionWithArtistSuffix(originalResponse, artistNames)
-	if suggestion != "" {
-		_, releaseYear = trySuggestion(suggestion, artistNames)
-	}
-	if releaseYear != 0 {
-		return releaseYear, nil
-	}
+		if releaseYear != 0 {
+			return releaseYear, nil
+		}
 
-	suggestion = createTrackTitleSuggestion(trackTitle, []string{})
-	if suggestion != "" {
-		_, releaseYear = trySuggestion(suggestion, artistNames)
-	}
-	if releaseYear != 0 {
-		return releaseYear, nil
-	}
+		// var suggestion string
+		// suggestion = findSuggestionWithoutSuffix(originalResponse, trackTitle)
+		// if suggestion != "" {
+		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
+		// }
+		// if releaseYear != 0 {
+		// 	return releaseYear, nil
+		// }
 
-	suggestion = createTrackTitleSuggestion(trackTitle, artistNames)
-	if suggestion != "" {
-		_, releaseYear = trySuggestion(suggestion, artistNames)
-	}
-	if releaseYear != 0 {
-		return releaseYear, nil
+		// suggestion = findSuggestionWithSongSuffix(originalResponse)
+		// if suggestion != "" {
+		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
+		// }
+		// if releaseYear != 0 {
+		// 	return releaseYear, nil
+		// }
+
+		// suggestion = findSuggestionWithArtistSuffix(originalResponse, artistNames)
+		// if suggestion != "" {
+		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
+		// }
+		// if releaseYear != 0 {
+		// 	return releaseYear, nil
+		// }
+
+		// suggestion = createTrackTitleSuggestion(trackTitle, []string{})
+		// if suggestion != "" {
+		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
+		// }
+		// if releaseYear != 0 {
+		// 	return releaseYear, nil
+		// }
+
+		// suggestion = createTrackTitleSuggestion(trackTitle, artistNames)
+		// if suggestion != "" {
+		// 	_, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
+		// }
+		// if releaseYear != 0 {
+		// 	return releaseYear, nil
+		// }
 	}
 
 	return 0, errors.New("not a song page")

@@ -2,6 +2,7 @@ package wikipedia
 
 import (
 	helpers "api/lib/helpers"
+	languages "api/lib/wikipedia/languages"
 	"net/http"
 )
 
@@ -15,11 +16,11 @@ type Param struct {
 	Value string
 }
 
-const WIKIPEDIA_API_URL = "https://en.wikipedia.org/w/api.php"
+func ApiRequest(method string, headers []Header, params []Param, language languages.Language) (*http.Response, error) {
+	apiUrl := languages.LanguageMap[language].ApiUrl
 
-func ApiRequest(method string, headers []Header, params []Param) (*http.Response, error) {
 	// Create a new HTTP request
-	request, requestError := http.NewRequest(method, WIKIPEDIA_API_URL, nil)
+	request, requestError := http.NewRequest(method, apiUrl, nil)
 	if requestError != nil {
 		return nil, requestError
 	}

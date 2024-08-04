@@ -1,11 +1,12 @@
 package wikipedia
 
 import (
+	languages "api/lib/wikipedia/languages"
 	"encoding/json"
 	"net/http"
 )
 
-func RequestTrackInfo(trackTitle string) (Response, error) {
+func RequestTrackInfo(language languages.Language, trackTitle string) (Response, error) {
 	var formattedResponse Response
 
 	headers := []Header{}
@@ -21,7 +22,7 @@ func RequestTrackInfo(trackTitle string) (Response, error) {
 		{Name: "redirects", Value: "1"},
 	}
 
-	response, requestError := ApiRequest(http.MethodGet, headers, params)
+	response, requestError := ApiRequest(http.MethodGet, headers, params, language)
 	if requestError != nil {
 		return formattedResponse, requestError
 	}

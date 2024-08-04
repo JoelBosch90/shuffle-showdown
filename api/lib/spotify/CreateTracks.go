@@ -5,6 +5,7 @@ import (
 	"api/database/models"
 	spotifyModels "api/lib/spotify/models"
 	"errors"
+	"log"
 	"math"
 	"time"
 
@@ -53,6 +54,11 @@ func constructTracks(database *gorm.DB, items []spotifyModels.Item, createdArtis
 
 	for _, item := range items {
 		trackToCreate := item.Track
+
+		if trackToCreate.Name != "All By Myself" {
+			log.Println("TRACK TO CREATE: ", trackToCreate.Name)
+			continue
+		}
 
 		releaseYear, _, _ := ConvertReleaseDateToIntegers(item.Album.ReleaseDate)
 

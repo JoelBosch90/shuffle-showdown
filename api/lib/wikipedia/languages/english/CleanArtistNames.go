@@ -1,4 +1,4 @@
-package wikipedia
+package wikipedia_languages_english
 
 import (
 	helpers "api/lib/helpers"
@@ -6,15 +6,23 @@ import (
 	"strings"
 )
 
-func CleanArtistName(artistName string) string {
+func removeLeadingThe(artistName string) string {
 	regex := regexp.MustCompile(`(?i)(^The\s)?(?P<name>.*)\s*$`)
 	matches := helpers.GetNamedMatchesForRegex(regex, artistName)
 
 	if len(matches) != 0 {
-		return strings.TrimSpace(matches["name"])
+		return matches["name"]
 	}
 
-	return strings.TrimSpace(artistName)
+	return artistName
+}
+
+func CleanArtistName(artistName string) string {
+	withoutSpace := strings.TrimSpace(artistName)
+	withoutDiacritics := helpers.RemoveDiacritics(withoutSpace)
+	withoutThe := removeLeadingThe(withoutDiacritics)
+
+	return withoutThe
 }
 
 func CleanArtistNames(artistNames []string) []string {

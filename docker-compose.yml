@@ -12,6 +12,8 @@ services:
   proxy:
     container_name: shuffle.proxy.production
 
+    restart: always
+
     # We can use the latest version of Nginx.
     image: nginx:1.25.4-alpine
 

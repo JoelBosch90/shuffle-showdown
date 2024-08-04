@@ -6,6 +6,9 @@ import (
 	"strings"
 )
 
+/**
+ *	CleanTrackTitle removes any remaster or mix suffixes from a track title.
+ */
 func CleanTrackTitle(trackTitle string) string {
 	/**
 	 *	^\W*(?P<song>.*)				Captures the song name
