@@ -15,7 +15,7 @@ func trimDashedSuffix(trackTitle string) string {
 	 *	\s+-\s+						Matches the separator between the song name and the suffix
 	 *	.*								Matches any suffix
 	 */
-	regex := regexp.MustCompile(`(?i)^\W*(?P<song>.*)\s+-\s+.*`)
+	regex := regexp.MustCompile(`(?i)^(?P<song>.*?)\s+-\s+.*`)
 	matches := helpers.GetNamedMatchesForRegex(regex, trackTitle)
 
 	if len(matches) != 0 {
@@ -31,7 +31,7 @@ func trimBracketedSuffix(trackTitle string) string {
 	 *	\s+\(.*\)$			  Matches the separator around the bracketed suffix
 	 *	.*								Matches any suffix
 	 */
-	regex := regexp.MustCompile(`(?i)^\W*(?P<song>.*)\s+\(.*\)\s*`)
+	regex := regexp.MustCompile(`(?i)^(?P<song>.*)\s+\(.*\)\s*`)
 	matches := helpers.GetNamedMatchesForRegex(regex, trackTitle)
 
 	if len(matches) != 0 {
@@ -61,7 +61,7 @@ func uncapitalizeArticles(trackTitle string) string {
 	/**
 	 *	\b(?i)(a|an|the)\b	Matches the articles
 	 */
-	regex := regexp.MustCompile(`\b(?i)(a|an|the)\b`)
+	regex := regexp.MustCompile(`\b(?i)(a|an|the|of|to)\b`)
 	return regex.ReplaceAllStringFunc(trackTitle, func(match string) string {
 		return strings.ToLower(match)
 	})

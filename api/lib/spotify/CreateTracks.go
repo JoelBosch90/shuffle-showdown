@@ -6,12 +6,9 @@ import (
 	spotifyModels "api/lib/spotify/models"
 	"errors"
 	"math"
-	"time"
 
 	"github.com/jinzhu/gorm"
 )
-
-var zeroTime = time.Time{}
 
 func findArtistById(artists []models.Artist, id string) *models.Artist {
 	for _, artist := range artists {

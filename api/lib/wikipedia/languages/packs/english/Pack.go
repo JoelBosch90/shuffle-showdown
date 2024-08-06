@@ -15,7 +15,7 @@ var Pack = models.Pack{
 		RecognizeRedirectParsers: []models.RecognizeRedirectParser{parsers.IsDisambiguationCategory, parsers.IsUnprintworthyRedirectCategory},
 	},
 	RedirectFormatters: models.RedirectFormatters{
-		LinkBasedFormatters:  []models.LinkBasedFormatter{formatters.FindLinkWithOtherCapitalization, formatters.FindLinkWithSongSuffix, formatters.FindLinkWithArtistsSuffix, formatters.FindLinkWithFirstArtistSuffix},
+		LinkBasedFormatters:  []models.LinkBasedFormatter{formatters.FindLinkWithOtherCapitalization, formatters.FindLinkWithSongSuffix, formatters.FindLinkWithArtistsSuffix, formatters.FindLinkWithAnyArtistSuffix},
 		TitleBasedFormatters: []models.TitleBasedFormatter{formatters.FormatCleanTrackTitle, formatters.FormatTrackTitleWithArtistNamesSongSuffix, formatters.FormatTrackTitleWithOnlySongSuffix, formatters.FormatTrackTitleWithFirstrArtistNameSongSuffix},
 	},
 }

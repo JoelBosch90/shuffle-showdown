@@ -41,14 +41,26 @@ func removeLeadingPrefix(artistName string) string {
 	return artistName
 }
 
+func removeTrailingGuestArtists(artistName string) string {
+	regex := regexp.MustCompile(`(?i)(?P<name>.*)(\s+featuring\s+.*|\s+ft\..*|\s+&\s+.*|\s+with\s+.*|\s+and\s+.*)$`)
+	matches := helpers.GetNamedMatchesForRegex(regex, artistName)
+
+	if len(matches) != 0 {
+		return matches["name"]
+	}
+
+	return artistName
+}
+
 func CleanArtistName(artistName string) string {
 	withoutSpace := strings.TrimSpace(artistName)
 	withoutDiacritics := helpers.RemoveDiacritics(withoutSpace)
 	withoutThe := removeLeadingThe(withoutDiacritics)
 	withoutAsterisk := removeLeadingAsterisk(withoutThe)
 	withoutPrefix := removeLeadingPrefix(withoutAsterisk)
+	withoutGuestArtists := removeTrailingGuestArtists(withoutPrefix)
 
-	return withoutPrefix
+	return withoutGuestArtists
 }
 
 func CleanArtistNames(artistNames []string) []string {
