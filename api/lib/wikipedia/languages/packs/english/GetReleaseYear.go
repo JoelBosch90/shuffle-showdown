@@ -1,13 +1,18 @@
-package wikipedia
+package english
 
 import (
 	languageModels "api/lib/wikipedia/languages/models"
+	parsers "api/lib/wikipedia/languages/packs/english/parsers"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
 )
 
-func isRedirectPage(categoryParsers languageModels.CategoryParsers, category wikipediaModels.Category) bool {
-	for _, IsRedirect := range categoryParsers.RecognizeRedirectParsers {
+var releaseYearParsers = []languageModels.ReleaseYearParser{parsers.GetReleaseYearFromCategory, parsers.GetReleaseYearFromSinglesCategory}
+var confirmArtistParsers = []languageModels.ConfirmArtistParser{parsers.CategoryConfirmsArtist, parsers.CategoryConfirmsCleanedArtist}
+var recognizeRedirectParsers = []languageModels.RecognizeRedirectParser{parsers.IsDisambiguationCategory, parsers.IsUnprintworthyRedirectCategory}
+
+func isRedirectPage(category wikipediaModels.Category) bool {
+	for _, IsRedirect := range recognizeRedirectParsers {
 		if IsRedirect(category) {
 			return true
 		}
@@ -16,8 +21,8 @@ func isRedirectPage(categoryParsers languageModels.CategoryParsers, category wik
 	return false
 }
 
-func getReleaseYearFromCategory(categoryParsers languageModels.CategoryParsers, category wikipediaModels.Category) (uint, error) {
-	for _, releaseYearParser := range categoryParsers.ReleaseYearParsers {
+func getReleaseYearFromCategory(category wikipediaModels.Category) (uint, error) {
+	for _, releaseYearParser := range releaseYearParsers {
 		parsedReleaseYear, parseError := releaseYearParser(category)
 		if parseError == nil && parsedReleaseYear != 0 {
 			return parsedReleaseYear, nil
@@ -27,8 +32,8 @@ func getReleaseYearFromCategory(categoryParsers languageModels.CategoryParsers, 
 	return 0, errors.New("no release year found")
 }
 
-func categoryConfirmsArtist(categoryParsers languageModels.CategoryParsers, category wikipediaModels.Category, artistName string) bool {
-	for _, confirmArtistParser := range categoryParsers.ConfirmArtistParsers {
+func categoryConfirmsArtist(category wikipediaModels.Category, artistName string) bool {
+	for _, confirmArtistParser := range confirmArtistParsers {
 		if confirmArtistParser(category, artistName) {
 			return true
 		}
@@ -45,23 +50,22 @@ func categoryConfirmsArtist(categoryParsers languageModels.CategoryParsers, cate
  * 	2. Returns an error if no song category is found, or if the artists were not confirmed.
  *  3. Returns the release year otherwise.
  */
-func GetConfirmedReleaseYear(languagePack languageModels.Pack, response wikipediaModels.Response, artistNames []string) (uint, error) {
+func GetReleaseYear(response wikipediaModels.Response, artistNames []string) (uint, error) {
 	var releaseYear uint = uint(0)
 	var confirmedArtists = []string{}
-	categoryParsers := languagePack.CategoryParsers
 
 	for _, category := range response.Query.Pages[0].Categories {
-		if isRedirectPage(categoryParsers, category) {
+		if isRedirectPage(category) {
 			return 0, errors.New("redirect page")
 		}
 
-		foundReleaseYear, releaseYearError := getReleaseYearFromCategory(categoryParsers, category)
-		if releaseYearError == nil {
+		foundReleaseYear, releaseYearError := getReleaseYearFromCategory(category)
+		if releaseYearError == nil && foundReleaseYear != 0 && (releaseYear == 0 || foundReleaseYear < releaseYear) {
 			releaseYear = uint(foundReleaseYear)
 		}
 
 		for _, artistName := range artistNames {
-			if categoryConfirmsArtist(categoryParsers, category, artistName) {
+			if categoryConfirmsArtist(category, artistName) {
 				confirmedArtists = append(confirmedArtists, artistName)
 			}
 		}

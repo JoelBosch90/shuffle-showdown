@@ -5,8 +5,9 @@ import (
 )
 
 var Pack = models.Pack{
-	Language:           models.Dutch,
-	ApiUrl:             "https://nl.wikipedia.org/w/api.php",
-	CategoryParsers:    models.CategoryParsers{},
-	RedirectFormatters: models.RedirectFormatters{},
+	Language:            models.Dutch,
+	ApiUrl:              "https://nl.wikipedia.org/w/api.php",
+	GetLinkSuggestions:  GetLinkSuggestions,
+	GetTitleSuggestions: GetTitleSuggestions,
+	GetReleaseYear:      GetReleaseYear,
 }

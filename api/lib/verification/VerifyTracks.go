@@ -41,7 +41,7 @@ func VerifyTracks() error {
 	verifiedTrackId := ""
 
 	for {
-		error := database.Transaction(func(transaction *gorm.DB) error {
+		transactionError := database.Transaction(func(transaction *gorm.DB) error {
 			if verifiedTrackId != "" {
 				completeError := completeCheck(transaction, verifiedTrackId)
 				if completeError != nil {
@@ -67,8 +67,8 @@ func VerifyTracks() error {
 			return nil
 		})
 
-		if error != nil {
-			if error.Error() == "database is locked" {
+		if transactionError != nil {
+			if transactionError.Error() == "database is locked" {
 				time.Sleep(RETRY_INTERVAL)
 				continue
 			}
