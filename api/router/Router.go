@@ -13,7 +13,7 @@ import (
 
 func testVerification(context *gin.Context) {
 	database := database.Get()
-	trackTitle := "Herz über Kopf"
+	trackTitle := "Sapés comme jamais (feat. Niska) - Pilule bleue"
 
 	var tracks []models.Track
 	database.Model(&models.Track{}).Where("name = ?", trackTitle).Scan(&tracks)

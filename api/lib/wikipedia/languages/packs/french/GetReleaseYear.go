@@ -1,15 +1,16 @@
-package dutch
+package french
 
 import (
 	languageModels "api/lib/wikipedia/languages/models"
-	parsers "api/lib/wikipedia/languages/packs/dutch/parsers"
+	parsers "api/lib/wikipedia/languages/packs/french/parsers"
 	genericParsers "api/lib/wikipedia/languages/packs/generic/parsers"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
+	"regexp"
 	"strings"
 )
 
-var releaseYearParsers = []languageModels.ReleaseYearParser{parsers.GetReleaseYearFromSinglesCategory}
+var releaseYearParsers = []languageModels.ReleaseYearParser{parsers.GetReleaseYear}
 var confirmArtistParsers = []languageModels.ConfirmArtistParser{parsers.CategoryConfirmsArtist}
 var recognizeRedirectParsers = []languageModels.RecognizeRedirectParser{}
 
@@ -44,6 +45,30 @@ func categoryConfirmsArtist(category wikipediaModels.Category, artistName string
 	return false
 }
 
+func isArtistCategory(category wikipediaModels.Category) bool {
+	regex := regexp.MustCompile(`(?i)Catégorie:\\s*Chanson interprétée par.*`)
+	match := regex.FindStringSubmatch(category.Title)
+
+	return len(match) > 0
+}
+
+func isDifferentArtistCategory(category wikipediaModels.Category, artistNames []string) bool {
+	if !isArtistCategory(category) {
+		return false
+	}
+
+	for _, artistName := range artistNames {
+		regex := regexp.MustCompile("(?i).*" + artistName + ".*")
+		match := regex.FindStringSubmatch(category.Title)
+
+		if len(match) > 0 {
+			return false
+		}
+	}
+
+	return true
+}
+
 /**
  *  1. Loops through the categories of the response.
  *		1. Checks if the category is a redirection page for an early return.
@@ -66,8 +91,8 @@ func GetReleaseYear(response wikipediaModels.Response, artistNames []string) (ui
 		if releaseYearError == nil && foundReleaseYear != 0 {
 			if releaseYear == 0 {
 				releaseYear = uint(foundReleaseYear)
-			} else {
-				return 0, errors.New("multiple release years found")
+			} else if releaseYear != uint(foundReleaseYear) {
+				return 0, errors.New("conflicting release years found")
 			}
 		}
 
@@ -76,9 +101,13 @@ func GetReleaseYear(response wikipediaModels.Response, artistNames []string) (ui
 				confirmedArtists = append(confirmedArtists, artistName)
 			}
 		}
+
+		if isDifferentArtistCategory(category, artistNames) {
+			return 0, errors.New("could not confirm artist")
+		}
 	}
 
-	if len(confirmedArtists) == 0 && !genericParsers.TitleConfirmsArtist(firstPage.Title, strings.Join(artistNames, " en ")) {
+	if len(confirmedArtists) == 0 && !genericParsers.TitleConfirmsArtist(firstPage.Title, strings.Join(artistNames, " et ")) {
 		return 0, errors.New("artists not confirmed")
 	}
 

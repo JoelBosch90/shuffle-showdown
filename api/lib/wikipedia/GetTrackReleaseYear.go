@@ -5,7 +5,6 @@ import (
 	languageModels "api/lib/wikipedia/languages/models"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
-	"log"
 )
 
 func trySuggestion(languagePack languageModels.Pack, trackTitle string, artistNames []string) (wikipediaModels.Response, uint) {
@@ -38,7 +37,6 @@ func GetTrackReleaseYear(trackTitle string, artistNames []string) (uint, error) 
 
 		for _, suggestion := range titleSuggestions {
 			response, releaseYear := trySuggestion(languagePack, suggestion, artistNames)
-			log.Println("\n\nTRIED: ", suggestion, "\nARTISTS: ", artistNames, "\nYEAR: ", releaseYear, "\nRESPONSE: ", response)
 
 			if releaseYear != 0 {
 				return releaseYear, nil
@@ -53,7 +51,6 @@ func GetTrackReleaseYear(trackTitle string, artistNames []string) (uint, error) 
 
 			for _, suggestion := range linkSuggestions {
 				response, releaseYear = trySuggestion(languagePack, suggestion, artistNames)
-				log.Println("\n\nTRIED: ", suggestion, "\nARTISTS: ", artistNames, "\nYEAR: ", releaseYear, "\nRESPONSE: ", response)
 
 				if releaseYear != 0 {
 					return releaseYear, nil

@@ -3,8 +3,10 @@ package english
 import (
 	languageModels "api/lib/wikipedia/languages/models"
 	parsers "api/lib/wikipedia/languages/packs/english/parsers"
+	genericParsers "api/lib/wikipedia/languages/packs/generic/parsers"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
+	"strings"
 )
 
 var releaseYearParsers = []languageModels.ReleaseYearParser{parsers.GetReleaseYearFromCategory, parsers.GetReleaseYearFromSinglesCategory}
@@ -53,8 +55,9 @@ func categoryConfirmsArtist(category wikipediaModels.Category, artistName string
 func GetReleaseYear(response wikipediaModels.Response, artistNames []string) (uint, error) {
 	var releaseYear uint = uint(0)
 	var confirmedArtists = []string{}
+	firstPage := response.Query.Pages[0]
 
-	for _, category := range response.Query.Pages[0].Categories {
+	for _, category := range firstPage.Categories {
 		if isRedirectPage(category) {
 			return 0, errors.New("redirect page")
 		}
@@ -71,7 +74,7 @@ func GetReleaseYear(response wikipediaModels.Response, artistNames []string) (ui
 		}
 	}
 
-	if len(confirmedArtists) == 0 {
+	if len(confirmedArtists) == 0 && !genericParsers.TitleConfirmsArtist(firstPage.Title, strings.Join(artistNames, " and ")) {
 		return 0, errors.New("artists not confirmed")
 	}
 

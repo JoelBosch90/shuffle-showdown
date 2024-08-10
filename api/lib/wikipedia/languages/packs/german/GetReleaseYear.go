@@ -2,13 +2,14 @@ package german
 
 import (
 	languageModels "api/lib/wikipedia/languages/models"
+	genericParsers "api/lib/wikipedia/languages/packs/generic/parsers"
 	parsers "api/lib/wikipedia/languages/packs/german/parsers"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
-	"log"
+	"strings"
 )
 
-var releaseYearParsers = []languageModels.ReleaseYearParser{parsers.GetReleaseYearFromSinglesCategory}
+var releaseYearParsers = []languageModels.ReleaseYearParser{parsers.GetReleaseYear}
 var confirmArtistParsers = []languageModels.ConfirmArtistParser{parsers.CategoryConfirmsArtist}
 var recognizeRedirectParsers = []languageModels.RecognizeRedirectParser{}
 
@@ -54,40 +55,34 @@ func categoryConfirmsArtist(category wikipediaModels.Category, artistName string
 func GetReleaseYear(response wikipediaModels.Response, artistNames []string) (uint, error) {
 	var releaseYear uint = uint(0)
 	var confirmedArtists = []string{}
+	firstPage := response.Query.Pages[0]
 
-	for _, category := range response.Query.Pages[0].Categories {
+	for _, category := range firstPage.Categories {
 		if isRedirectPage(category) {
-			log.Println("IS REDIRECT PAGE")
 			return 0, errors.New("redirect page")
 		}
 
 		foundReleaseYear, releaseYearError := getReleaseYearFromCategory(category)
-		log.Println("FOUND RELEASE YEAR", foundReleaseYear, releaseYearError)
 		if releaseYearError == nil && foundReleaseYear != 0 {
 			if releaseYear == 0 {
-				log.Println("RELEASE YEAR FOUND", foundReleaseYear)
 				releaseYear = uint(foundReleaseYear)
 			} else {
-				log.Println("MULTIPLE RELEASE YEARS FOUND")
 				return 0, errors.New("multiple release years found")
 			}
 		}
 
 		for _, artistName := range artistNames {
 			if categoryConfirmsArtist(category, artistName) {
-				log.Println("CONFIRMED ARTIST", artistName)
 				confirmedArtists = append(confirmedArtists, artistName)
 			}
 		}
 	}
 
-	if len(confirmedArtists) == 0 {
-		log.Println("ARTISTS NOT CONFIRMED")
+	if len(confirmedArtists) == 0 && !genericParsers.TitleConfirmsArtist(firstPage.Title, strings.Join(artistNames, " und ")) {
 		return 0, errors.New("artists not confirmed")
 	}
 
 	if releaseYear == 0 {
-		log.Println("NO RELEASE YEAR FOUND")
 		return 0, errors.New("no release year found")
 	}
 

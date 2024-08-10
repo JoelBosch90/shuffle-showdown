@@ -8,8 +8,8 @@ import (
 	"strconv"
 )
 
-func GetReleaseYearFromSinglesCategory(category models.Category) (uint, error) {
-	regex := regexp.MustCompile(`(?i)Kategorie:\s*Lied\s+(?P<year>\d{1,4})\s*`)
+func GetReleaseYear(category models.Category) (uint, error) {
+	regex := regexp.MustCompile(`(?i)Catégorie:\s*(Chanson de|Single musical sorti en)\s+(?P<year>\d{1,4})\s*`)
 	matches := helpers.GetNamedMatchesForRegex(regex, category.Title)
 
 	if len(matches) == 0 {
