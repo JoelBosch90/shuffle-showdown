@@ -7,8 +7,13 @@ import (
 	"errors"
 	"time"
 
+	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
+
+type CheckedTracksCount struct {
+	TracksChecked uint `json:"tracks_checked"`
+}
 
 type PlayerState struct {
 	Id          uuid.UUID         `json:"id"`
@@ -19,17 +24,18 @@ type PlayerState struct {
 }
 
 type GameState struct {
-	SentAt      time.Time       `json:"sentAt"`
-	CreatedAt   time.Time       `json:"createdAt"`
-	UpdatedAt   time.Time       `json:"updatedAt"`
-	Playlist    models.Playlist `json:"playlist"`
-	Id          uuid.UUID       `json:"id"`
-	HasStarted  bool            `json:"hasStarted"`
-	HasFinished bool            `json:"hasFinished"`
-	SongsToWin  uint            `json:"songsToWin"`
-	Owner       models.Player   `json:"owner"`
-	Players     []PlayerState   `json:"players"`
-	Rounds      []models.Round  `json:"rounds"`
+	SentAt         time.Time       `json:"sentAt"`
+	CreatedAt      time.Time       `json:"createdAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+	Playlist       models.Playlist `json:"playlist"`
+	Id             uuid.UUID       `json:"id"`
+	IsReadyToStart bool            `json:"isReadyToStart"`
+	HasStarted     bool            `json:"hasStarted"`
+	HasFinished    bool            `json:"hasFinished"`
+	SongsToWin     uint            `json:"songsToWin"`
+	Owner          models.Player   `json:"owner"`
+	Players        []PlayerState   `json:"players"`
+	Rounds         []models.Round  `json:"rounds"`
 }
 
 func isConnected(playerId uuid.UUID, lobby map[*Client]struct{}) bool {
@@ -79,6 +85,23 @@ func hideTrackDetailsFromCurrentRound(rounds []models.Round) []models.Round {
 	return rounds
 }
 
+func isReadyToStart(game models.Game, players []PlayerState, database *gorm.DB) bool {
+	playerCount := uint(len(players))
+	checkedTracksCount := CheckedTracksCount{}
+	countsError := database.Raw(`
+		SELECT
+			SUM(CASE WHEN check_completed_at IS NOT NULL THEN 1 ELSE 0 END) AS tracks_checked
+		FROM tracks
+		JOIN playlist_tracks ON tracks.id = playlist_tracks.track_id
+		WHERE playlist_tracks.playlist_id = ?
+	`, game.PlaylistId).Scan(&checkedTracksCount).Error
+	if countsError != nil {
+		return false
+	}
+
+	return checkedTracksCount.TracksChecked >= playerCount*game.SongsToWin
+}
+
 func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error) {
 	var game models.Game
 
@@ -99,17 +122,18 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 	}
 
 	return GameState{
-		SentAt:      time.Now(),
-		CreatedAt:   game.CreatedAt,
-		UpdatedAt:   game.UpdatedAt,
-		Playlist:    game.Playlist,
-		Id:          game.Id,
-		HasStarted:  game.HasStarted,
-		HasFinished: game.HasFinished,
-		SongsToWin:  game.SongsToWin,
-		Owner:       game.Owner,
-		Players:     players,
-		Rounds:      rounds,
+		SentAt:         time.Now(),
+		CreatedAt:      game.CreatedAt,
+		UpdatedAt:      game.UpdatedAt,
+		Playlist:       game.Playlist,
+		Id:             game.Id,
+		IsReadyToStart: isReadyToStart(game, players, database),
+		HasStarted:     game.HasStarted,
+		HasFinished:    game.HasFinished,
+		SongsToWin:     game.SongsToWin,
+		Owner:          game.Owner,
+		Players:        players,
+		Rounds:         rounds,
 	}, nil
 }
 

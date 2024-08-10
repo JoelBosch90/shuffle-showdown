@@ -13,6 +13,7 @@
 	let url: string | null = null;
 	let session: GameSession | void | null = null;
 	let isLoading = false;
+	let isDisabled = true;
 
 	let owner: Player | null;
 	$: owner = players.find((player) => player.isOwner) ?? null;
@@ -62,6 +63,7 @@
 			me = newMe;
 			players = newGame?.players ?? [];
 			isLoading = false;
+			isDisabled = !(newGame?.isReadyToStart ?? false);
 			playlistName = newGame?.playlist?.name ?? '';
 
 			if (newGame?.hasStarted) return goto(`/${gameId}/play`);
@@ -130,7 +132,7 @@
 
 			<div class="button-row">
 				{#if me?.isOwner}
-					<LoadingButton {isLoading} {onClick}>Start game</LoadingButton>
+					<LoadingButton {isLoading} {isDisabled} {onClick}>Start game</LoadingButton>
 				{:else}
 					<p>Wait for {owner?.name ?? 'the owner'} to start the game.</p>
 				{/if}
@@ -217,8 +219,8 @@
 			h3 {
 				margin: 0;
 				height: var(--share-title-height);
-        display: flex;
-        flex-direction: row;
+				display: flex;
+				flex-direction: row;
 			}
 
 			canvas,
@@ -241,6 +243,7 @@
 				.share-url {
 					display: -webkit-box;
 					font-size: 0.75rem;
+					line-clamp: 2;
 					-webkit-line-clamp: 2;
 					-webkit-box-orient: vertical;
 					word-break: break-all;

@@ -8,6 +8,7 @@ export interface GameUpdate {
   playlist: Playlist;
   songsToWin: number;
   owner: Player;
+  isReadyToStart: boolean;
   hasStarted: boolean;
   hasFinished: boolean;
 }

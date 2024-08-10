@@ -47,6 +47,8 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 	unverifiedTrackId := ""
 	verifiedTrackId := ""
 
+	defer sendCheckingUpdate()
+
 	for {
 		transactionError := database.Transaction(func(transaction *gorm.DB) error {
 			if verifiedTrackId != "" {
@@ -54,7 +56,6 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 				if completeError != nil {
 					return completeError
 				}
-				sendCheckingUpdate()
 			}
 
 			checkStartTimeStamp := time.Now()
@@ -74,6 +75,7 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 				return startError
 			}
 
+			sendCheckingUpdate()
 			return nil
 		})
 
@@ -86,10 +88,9 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 
 			if verifiedTrackId != "" {
 				completeError := completeCheck(database, verifiedTrackId)
-				if completeError == nil {
-					sendCheckingUpdate()
+				if completeError != nil {
+					return completeError
 				}
-				return completeError
 			}
 
 			return nil
