@@ -1,14 +1,14 @@
-package english
+package german
 
 import (
 	helpers "api/lib/helpers"
 	languageModels "api/lib/wikipedia/languages/models"
-	formatters "api/lib/wikipedia/languages/packs/english/formatters"
 	genericFormatters "api/lib/wikipedia/languages/packs/generic/formatters"
+	formatters "api/lib/wikipedia/languages/packs/german/formatters"
 	models "api/lib/wikipedia/models"
 )
 
-var linkBasedFormatters = []languageModels.LinkBasedFormatter{genericFormatters.FindLinkWithOtherCapitalization, formatters.FindLinkWithSongSuffix, formatters.FindLinkWithArtistsSuffix, formatters.FindLinkWithAnyArtistSuffix}
+var linkBasedFormatters = []languageModels.LinkBasedFormatter{genericFormatters.FindLinkWithOtherCapitalization, formatters.FindLinkWithSongSuffix}
 
 func GetLinkSuggestions(page models.Page, trackTitle string, artistNames []string) []string {
 	var linkSuggestions []string = []string{trackTitle}

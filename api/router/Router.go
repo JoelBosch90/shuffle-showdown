@@ -13,12 +13,14 @@ import (
 
 func testVerification(context *gin.Context) {
 	database := database.Get()
-	trackTitle := "Door De Wind"
+	trackTitle := "Herz über Kopf"
 
-	var track models.Track
-	database.Model(&models.Track{}).Where("name = ?", trackTitle).First(&track)
+	var tracks []models.Track
+	database.Model(&models.Track{}).Where("name = ?", trackTitle).Scan(&tracks)
 
-	verification.VerifyTrack(database, track.Id)
+	for _, track := range tracks {
+		verification.VerifyTrack(database, track.Id)
+	}
 }
 
 func Run() {

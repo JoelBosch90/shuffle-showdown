@@ -10,7 +10,9 @@ import (
  * 	regardless of how the link is capitalized.
  */
 func parseLinkForCapitalization(link models.Link, trackTitle string) string {
-	regex := regexp.MustCompile("(?i)^\\s*" + regexp.QuoteMeta(trackTitle) + "\\s*$")
+	sanitizedTrackTitle := regexp.QuoteMeta(trackTitle)
+	withWildcardsForNonWordCharacters := regexp.MustCompile(`\w+`).ReplaceAllString(sanitizedTrackTitle, `\\w+`)
+	regex := regexp.MustCompile("(?i)^\\s*" + withWildcardsForNonWordCharacters + "\\s*$")
 	match := regex.FindStringSubmatch(link.Title)
 
 	if match == nil {

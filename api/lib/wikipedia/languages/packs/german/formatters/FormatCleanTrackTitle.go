@@ -4,9 +4,6 @@ import (
 	"api/lib/helpers"
 	"regexp"
 	"strings"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func trimDashedSuffix(trackTitle string) string {
@@ -59,9 +56,9 @@ func trimCommaSuffix(trackTitle string) string {
 
 func uncapitalizeArticles(trackTitle string) string {
 	/**
-	 *	\b(?i)(a|an|the)\b	Matches the articles
+	 *	\b(?i)(die|der|das|ein|eine)\b	Matches the articles
 	 */
-	regex := regexp.MustCompile(`\b(?i)(de|het|een|door|van)\b`)
+	regex := regexp.MustCompile(`\b(?i)(die|der|das|ein|eine)\b`)
 	return regex.ReplaceAllStringFunc(trackTitle, func(match string) string {
 		return strings.ToLower(match)
 	})
@@ -72,8 +69,7 @@ func FormatCleanTrackTitle(trackTitle string, _ []string) string {
 	withoutBracketedSuffix := trimBracketedSuffix(withoutDashedSuffix)
 	withoutCommaSuffix := trimCommaSuffix(withoutBracketedSuffix)
 	withTrimmedSpaces := strings.TrimSpace(withoutCommaSuffix)
-	withTitleCapitalization := cases.Title(language.Dutch).String(withTrimmedSpaces)
-	withUncapitalizedArticles := uncapitalizeArticles(withTitleCapitalization)
+	withUncapitalizedArticles := uncapitalizeArticles(withTrimmedSpaces)
 
 	return withUncapitalizedArticles
 }

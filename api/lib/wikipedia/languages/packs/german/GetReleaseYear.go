@@ -1,10 +1,11 @@
-package dutch
+package german
 
 import (
 	languageModels "api/lib/wikipedia/languages/models"
-	parsers "api/lib/wikipedia/languages/packs/dutch/parsers"
+	parsers "api/lib/wikipedia/languages/packs/german/parsers"
 	wikipediaModels "api/lib/wikipedia/models"
 	"errors"
+	"log"
 )
 
 var releaseYearParsers = []languageModels.ReleaseYearParser{parsers.GetReleaseYearFromSinglesCategory}
@@ -56,30 +57,37 @@ func GetReleaseYear(response wikipediaModels.Response, artistNames []string) (ui
 
 	for _, category := range response.Query.Pages[0].Categories {
 		if isRedirectPage(category) {
+			log.Println("IS REDIRECT PAGE")
 			return 0, errors.New("redirect page")
 		}
 
 		foundReleaseYear, releaseYearError := getReleaseYearFromCategory(category)
+		log.Println("FOUND RELEASE YEAR", foundReleaseYear, releaseYearError)
 		if releaseYearError == nil && foundReleaseYear != 0 {
 			if releaseYear == 0 {
+				log.Println("RELEASE YEAR FOUND", foundReleaseYear)
 				releaseYear = uint(foundReleaseYear)
 			} else {
+				log.Println("MULTIPLE RELEASE YEARS FOUND")
 				return 0, errors.New("multiple release years found")
 			}
 		}
 
 		for _, artistName := range artistNames {
 			if categoryConfirmsArtist(category, artistName) {
+				log.Println("CONFIRMED ARTIST", artistName)
 				confirmedArtists = append(confirmedArtists, artistName)
 			}
 		}
 	}
 
 	if len(confirmedArtists) == 0 {
+		log.Println("ARTISTS NOT CONFIRMED")
 		return 0, errors.New("artists not confirmed")
 	}
 
 	if releaseYear == 0 {
+		log.Println("NO RELEASE YEAR FOUND")
 		return 0, errors.New("no release year found")
 	}
 
