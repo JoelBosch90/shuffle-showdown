@@ -10,7 +10,7 @@ import (
 )
 
 var MAX_PROCESSING_TIME = time.Minute * 5
-var RETRY_INTERVAL = time.Millisecond * 200
+var RETRY_INTERVAL = time.Millisecond * 25
 
 func isVerificationInProgress(database *gorm.DB) bool {
 	maxProcessingTimeAgo := time.Now().Add(-MAX_PROCESSING_TIME)
@@ -38,6 +38,7 @@ func fetchOldestUnverifiedTrack(database *gorm.DB) (models.Track, error) {
 
 func VerifyTracks() error {
 	database := database.Get()
+	unverifiedTrackId := ""
 	verifiedTrackId := ""
 
 	for {
@@ -49,7 +50,8 @@ func VerifyTracks() error {
 				}
 			}
 
-			if isVerificationInProgress(transaction) {
+			inProgress := isVerificationInProgress(transaction)
+			if inProgress {
 				return errors.New("verification in progress")
 			}
 
@@ -58,8 +60,8 @@ func VerifyTracks() error {
 				return fetchError
 			}
 
-			verifiedTrackId = oldestUnverifiedTrack.Id
-			startError := startCheck(transaction, verifiedTrackId)
+			unverifiedTrackId = oldestUnverifiedTrack.Id
+			startError := startCheck(transaction, unverifiedTrackId)
 			if startError != nil {
 				return startError
 			}
@@ -69,6 +71,7 @@ func VerifyTracks() error {
 
 		if transactionError != nil {
 			if transactionError.Error() == "database is locked" {
+				unverifiedTrackId = ""
 				time.Sleep(RETRY_INTERVAL)
 				continue
 			}
@@ -80,6 +83,7 @@ func VerifyTracks() error {
 			return nil
 		}
 
-		VerifyTrack(database, verifiedTrackId)
+		VerifyTrack(database, unverifiedTrackId)
+		verifiedTrackId = unverifiedTrackId
 	}
 }

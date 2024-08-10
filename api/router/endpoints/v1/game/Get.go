@@ -3,6 +3,7 @@ package game
 import (
 	"api/database"
 	"api/database/models"
+	"api/lib/verification"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -18,6 +19,8 @@ func Get(context *gin.Context) {
 		context.JSON(http.StatusNotFound, gin.H{"error": "Game not found"})
 		return
 	}
+
+	go verification.VerifyTracks()
 
 	context.JSON(http.StatusOK, gin.H{"game": game})
 }
