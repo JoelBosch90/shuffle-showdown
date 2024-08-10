@@ -6,7 +6,7 @@ import (
 	formatters "api/lib/wikipedia/languages/packs/dutch/formatters"
 )
 
-var titleBasedFormatters = []languageModels.TitleBasedFormatter{formatters.FormatCleanTrackTitle}
+var titleBasedFormatters = []languageModels.TitleBasedFormatter{formatters.FormatCleanTrackTitle, formatters.FormatCleanTrackTitleWithoutCapitalization, formatters.FormatTrackTitleWithSongSuffix}
 
 func GetTitleSuggestions(trackTitle string, artistNames []string) []string {
 	var titleSuggestions []string = []string{trackTitle}

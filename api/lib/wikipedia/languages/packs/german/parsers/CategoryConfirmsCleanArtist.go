@@ -1,7 +1,7 @@
 package parsers
 
 import (
-	"api/lib/wikipedia/languages/packs/german/helpers"
+	helpers "api/lib/wikipedia/languages/packs/generic/helpers"
 	"api/lib/wikipedia/models"
 )
 

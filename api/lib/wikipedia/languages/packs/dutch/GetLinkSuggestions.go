@@ -8,7 +8,7 @@ import (
 	models "api/lib/wikipedia/models"
 )
 
-var linkBasedFormatters = []languageModels.LinkBasedFormatter{genericFormatters.FindLinkWithOtherCapitalization, formatters.FindLinkWithSongSuffix}
+var linkBasedFormatters = []languageModels.LinkBasedFormatter{genericFormatters.FindLinkWithOtherCapitalization, formatters.FindLinkWithSongSuffix, formatters.FindLinkWithArtistsSuffix, formatters.FindLinkWithAnyArtistSuffix}
 
 func GetLinkSuggestions(page models.Page, trackTitle string, artistNames []string) []string {
 	var linkSuggestions []string = []string{trackTitle}
