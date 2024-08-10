@@ -3,7 +3,9 @@ package game
 import (
 	"api/database"
 	models "api/database/models"
+	"errors"
 
+	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
 
@@ -14,7 +16,7 @@ func AwardTrack(gameId uuid.UUID, track models.Track, player models.Player) erro
 	if result.RowsAffected != 0 {
 		return nil
 	}
-	if result.Error != nil && result.Error.Error() != "record not found" {
+	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return result.Error
 	}
 

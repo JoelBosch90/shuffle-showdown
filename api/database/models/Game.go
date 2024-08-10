@@ -10,6 +10,7 @@ type Game struct {
 	Id            uuid.UUID    `json:"id" gorm:"type:uuid; primaryKey;"`
 	CreatedAt     time.Time    `json:"createdAt"`
 	UpdatedAt     time.Time    `json:"updatedAt"`
+	CountryCode   string       `json:"countryCode" gorm:"type:string;"`
 	PlaylistId    string       `json:"-" gorm:"type:string;"`
 	Playlist      Playlist     `json:"playlist" gorm:"foreignKey:PlaylistId;references:Id;"`
 	HasStarted    bool         `json:"hasStarted" gorm:"type:bool;"`

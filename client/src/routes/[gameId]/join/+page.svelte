@@ -20,18 +20,18 @@
 		else await API.patchPlayer(playerName);
 		isLoading = false;
 
-		if (!game?.id) goto("/");
+		if (!game?.id) goto('/');
 
 		await goto(`/${game?.id}/lobby`);
 	};
 
 	onMount(async () => {
 		game = await API.getGame(gameId);
-		if (!game) goto("/");
+		if (!game) goto('/');
 
 		// Prefill the player's name if possible.
 		player = await API.getPlayer();
-		playerName = player?.name ?? "";
+		playerName = player?.name ?? '';
 		isOwner = player?.id === game?.owner.id;
 	});
 </script>
@@ -48,11 +48,12 @@
 	<h1>Join the lobby</h1>
 
 	<p>
-		You are joining the lobby to play a game of Shuffle Showdown. Name yourself to join your friends and play!
+		You are joining the lobby to play a game of Shuffle Showdown. Name yourself to join your friends
+		and play!
 	</p>
 
 	<ul>
-		<li>Playlist name: {game?.playlist.name}</li>
+		<li>Playlist name: {game?.playlist.name || 'unknown'}</li>
 		{#if isOwner}
 			<li>This is your game!</li>
 		{:else}
@@ -62,14 +63,12 @@
 
 	<form on:submit|preventDefault={createPlayer}>
 		<label>
-			<span>Your name</span><br/>
+			<span>Your name</span><br />
 			<input type="text" placeholder="David Bowie" bind:value={playerName} />
 		</label>
 
 		<div class="button-row">
-      <LoadingButton type="submit" isLoading={isLoading}>
-        Join lobby
-      </LoadingButton>
+			<LoadingButton type="submit" {isLoading}>Join lobby</LoadingButton>
 		</div>
 	</form>
 </section>

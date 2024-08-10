@@ -9,6 +9,8 @@ const (
 	ServerMessageTypeGameSessionUpdate     ServerMessageType = "game-session-update"
 	ServerMessageTypeKickedPlayer          ServerMessageType = "kicked-player"
 	ServerMessageTypeError                 ServerMessageType = "error"
+	ServerMessageTypePlaylistLoadingUpdate ServerMessageType = "playlist-loading-update"
+	ServerMessageTypePlaylistLoaded        ServerMessageType = "playlist-loaded"
 )
 
 type ServerMessage struct {

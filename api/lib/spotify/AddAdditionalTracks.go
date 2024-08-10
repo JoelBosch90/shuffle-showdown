@@ -17,7 +17,7 @@ func getCountryParam(params []Param) Param {
 	return Param{}
 }
 
-func AddAdditionalTracks(playListInfo *spotifyModels.Playlist, path string, playListHeaders []Header, playListParams []Param) ([]spotifyModels.Item, error) {
+func AddAdditionalTracks(playListInfo *spotifyModels.Playlist, path string, playListHeaders []Header, playListParams []Param, sendUpdate func(additionalTracksLoaded int)) ([]spotifyModels.Item, error) {
 	allAdditionalTrackItems := []spotifyModels.Item{}
 	tracksParams := []Param{
 		getCountryParam(playListParams),
@@ -44,6 +44,7 @@ func AddAdditionalTracks(playListInfo *spotifyModels.Playlist, path string, play
 		}
 
 		allAdditionalTrackItems = append(allAdditionalTrackItems, additionalTracks.Items...)
+		sendUpdate(len(allAdditionalTrackItems))
 
 		offset += playListInfo.Tracks.Limit
 	}

@@ -6,6 +6,7 @@ import (
 	"api/lib/websocket"
 	"errors"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/jinzhu/gorm"
@@ -26,7 +27,6 @@ func WebSocket(context *gin.Context) {
 	if secretError != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": "Unknown player"})
 		return
-
 	}
 
 	player := &models.Player{}
@@ -57,9 +57,11 @@ func WebSocket(context *gin.Context) {
 		OutgoingMessages: make(chan websocket.ServerMessage, 256),
 		GameId:           game.Id,
 		PlayerId:         player.Id,
+		Mutex:            &sync.Mutex{},
 	}
 	connectionPool.Register <- client
 
+	go websocket.LoadPlaylist(client)
 	go client.Read()
 	go client.Write()
 }

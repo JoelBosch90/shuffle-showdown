@@ -25,15 +25,13 @@ func Post(context *gin.Context) {
 		return
 	}
 
-	database := database.Get()
 	playlistId := spotify.ExtractPlaylistId(input.Playlist)
-
-	playlist, playlistError := spotify.GetRecentPlaylist(playlistId, input.CountryCode)
-	if playlistError != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": "Error getting playlist"})
+	if playlistId == "" {
+		context.JSON(http.StatusBadRequest, gin.H{"error": "Invalid playlist"})
 		return
 	}
 
+	database := database.Get()
 	player := models.Player{}
 	if input.PlayerId != uuid.Nil {
 		database.Where("id = ?", input.PlayerId).First(&player)
@@ -47,7 +45,7 @@ func Post(context *gin.Context) {
 		}
 	}
 
-	game, gameError := gameHelpers.CreateGame(playlist, player, database)
+	game, gameError := gameHelpers.CreateGame(playlistId, input.CountryCode, player, database)
 	if gameError != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 	}

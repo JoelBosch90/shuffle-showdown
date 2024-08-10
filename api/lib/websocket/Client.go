@@ -1,6 +1,7 @@
 package websocket
 
 import (
+	"sync"
 	"time"
 
 	gorilla "github.com/gorilla/websocket"
@@ -20,6 +21,7 @@ type Client struct {
 	GameId           uuid.UUID
 	PlayerId         uuid.UUID
 	OutgoingMessages chan ServerMessage
+	Mutex            *sync.Mutex
 }
 
 type ErrorMessagePayload struct {
@@ -41,6 +43,26 @@ func setConnectionSettings(connection *gorilla.Conn) {
 		connection.SetReadDeadline(getReadDeadline())
 		return nil
 	})
+}
+
+func writeMessage(client *Client, message int, data []byte) error {
+	client.Mutex.Lock()
+	defer client.Mutex.Unlock()
+
+	connection := client.Connection
+	connection.SetWriteDeadline(getWriteDeadline())
+
+	return connection.WriteMessage(message, data)
+}
+
+func writeJSON(client *Client, message ServerMessage) error {
+	client.Mutex.Lock()
+	defer client.Mutex.Unlock()
+
+	connection := client.Connection
+	connection.SetWriteDeadline(getWriteDeadline())
+
+	return connection.WriteJSON(message)
 }
 
 func (client *Client) Read() {
@@ -65,8 +87,8 @@ func (client *Client) Read() {
 		messageError := connection.ReadJSON(&message)
 
 		if messageError != nil {
-			connection.WriteJSON(ServerMessage{
-				Type:    "error",
+			writeJSON(client, ServerMessage{
+				Type:    ServerMessageTypeError,
 				Payload: "Error reading message",
 			})
 			return
@@ -90,20 +112,18 @@ func (client *Client) Write() {
 		select {
 		// Send pending messages to the client.
 		case message, ok := <-client.OutgoingMessages:
-			connection.SetWriteDeadline(getWriteDeadline())
 			if !ok {
-				connection.WriteMessage(gorilla.CloseMessage, []byte{})
+				writeMessage(client, gorilla.CloseMessage, []byte{})
 				return
 			} else {
-				writeError := connection.WriteJSON(message)
+				writeError := writeJSON(client, message)
 				if writeError != nil {
 					break
 				}
 			}
 		// Send pings to check the connection at each interval. This helps keep the connection alive.
 		case <-pingTimer.C:
-			connection.SetWriteDeadline(getWriteDeadline())
-			pingError := connection.WriteMessage(gorilla.PingMessage, nil)
+			pingError := writeMessage(client, gorilla.PingMessage, nil)
 			if pingError != nil {
 				return
 			}

@@ -29,23 +29,23 @@ func getRecentPlaylistFromDatabase(playlistId string, countryCode string) (model
 	return playlist, nil
 }
 
-func GetRecentPlaylist(playlistId string, countryCode string) (models.Playlist, error) {
+func LoadFreshPlaylist(playlistId string, countryCode string, sendLoadingUpdate func(tracksLoaded int, tracksTotal int)) error {
 	database := database.Get()
 
-	playlist, playlistError := getRecentPlaylistFromDatabase(playlistId, countryCode)
+	_, playlistError := getRecentPlaylistFromDatabase(playlistId, countryCode)
 	if playlistError == nil {
-		return playlist, nil
+		return nil
 	}
 
-	info, infoError := RequestPlaylistInfo(playlistId, countryCode)
+	info, infoError := RequestPlaylistInfo(playlistId, countryCode, sendLoadingUpdate)
 	if infoError != nil {
-		return models.Playlist{}, infoError
+		return infoError
 	}
 
-	newPlaylist, newPlaylistError := CreatePlaylist(info, countryCode, database)
+	_, newPlaylistError := CreatePlaylist(info, countryCode, database)
 	if newPlaylistError != nil {
-		return models.Playlist{}, newPlaylistError
+		return newPlaylistError
 	}
 
-	return newPlaylist, nil
+	return nil
 }
