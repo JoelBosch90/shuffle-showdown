@@ -32,14 +32,14 @@ func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPoo
 		return errors.New("game is not ready to start")
 	}
 
-	awardInitialTracksError := game.AwardInitialTracks(client.GameId)
-	if awardInitialTracksError != nil {
-		return errors.New("could not award initial tracks")
-	}
-
 	randomizePlayerError := game.ShufflePlayers(client.GameId)
 	if randomizePlayerError != nil {
 		return errors.New("could not randomize player order")
+	}
+
+	awardInitialTracksError := game.AwardInitialTracks(client.GameId)
+	if awardInitialTracksError != nil {
+		return errors.New("could not award initial tracks")
 	}
 
 	createRoundError := game.CreateNextRound(client.GameId)

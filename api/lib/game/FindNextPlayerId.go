@@ -34,9 +34,6 @@ func FindNextPlayerId(gameId uuid.UUID) (uuid.UUID, error) {
 	if loadGameError != nil {
 		return uuid.UUID{}, errors.New("could not load game")
 	}
-	if len(game.GamePlayers) < 2 {
-		return uuid.UUID{}, errors.New("too few players")
-	}
 
 	nextPlayerOrder := uint(0)
 

@@ -13,8 +13,6 @@
 	import { findPlayerInGameSessionUpdate } from '$lib/helpers/findPlayerInGameSessionUpdate';
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
 	import { debounce } from '$lib/helpers/debounce';
-	import { showToast } from '$lib/store/toasts';
-	import { ToastType } from '$lib/enums/ToastType';
 
 	const DEBOUNCE_WAIT_MILLISECONDS = 150;
 	const gameId = $page.params.gameId;
@@ -36,8 +34,6 @@
 	$: isPlaying = false;
 
 	let isLoading = false;
-	let isPlaylistLoaded = false;
-	let isPlaylistChecked = false;
 
 	let selectedAnswer: Answer | null = null;
 
@@ -110,23 +106,6 @@
 		session.onUpdate((gameUpdate) => {
 			celebrate(gameUpdate);
 			updatePage(gameUpdate);
-		});
-		session.onPlaylistLoadingUpdate(({ playlistLoadingUpdate }) => {
-			if (!isPlaylistLoaded && playlistLoadingUpdate?.finishedLoading) {
-				showToast({
-					message: `Loaded ${playlistLoadingUpdate?.tracksLoaded} out of ${playlistLoadingUpdate?.tracksTotal} total tracks`,
-					type: ToastType.Success
-				});
-				isPlaylistLoaded = true;
-			}
-
-			if (!isPlaylistChecked && playlistLoadingUpdate?.finishedChecking) {
-				showToast({
-					message: `Verified ${playlistLoadingUpdate?.tracksVerified} out of ${playlistLoadingUpdate?.tracksLoaded} loaded tracks`,
-					type: ToastType.Success
-				});
-				isPlaylistChecked = true;
-			}
 		});
 		session.onAnswerSelectionUpdate(({ answerSelectionUpdate }) => {
 			if (

@@ -3,50 +3,34 @@ package game
 import (
 	database "api/database"
 	"api/database/models"
+	"api/lib/helpers"
 	"errors"
 	"math/rand"
-	"slices"
 
 	uuid "github.com/satori/go.uuid"
 )
 
-func includesString(haystack []string, needle string) bool {
-	for _, text := range haystack {
-		if text == needle {
-			return true
-		}
-	}
-	return false
-}
-
-func withoutDuplicates(withDuplicates []string) []string {
-	unique := withDuplicates
-	slices.Sort(unique)
-
-	return slices.Compact(unique)
+func pickRandomTrack(tracks []models.Track) models.Track {
+	return tracks[rand.Intn(len(tracks))]
 }
 
 func SelectNextTrack(gameId uuid.UUID) (models.Track, error) {
 	database := database.Get()
 	var game models.Game
 
-	loadGameError := database.Preload("Rounds").Preload("WonTracks").Preload("Playlist").Preload("Playlist.Tracks", "check_completed_at IS NOT NULL").Where("id = ?", gameId).First(&game).Error
+	loadGameError := database.Preload("WonTracks").Preload("Playlist").Preload("Playlist.Tracks", "check_completed_at IS NOT NULL").Where("id = ?", gameId).First(&game).Error
 	if loadGameError != nil {
 		return models.Track{}, errors.New("could not load game")
 	}
 
-	usedTrackIds := []string{}
-	for _, round := range game.Rounds {
-		usedTrackIds = append(usedTrackIds, round.TrackId)
-	}
+	wonTrackIds := []string{}
 	for _, wonTrack := range game.WonTracks {
-		usedTrackIds = append(usedTrackIds, wonTrack.TrackId)
+		wonTrackIds = append(wonTrackIds, wonTrack.TrackId)
 	}
 
-	usedTrackIds = withoutDuplicates(usedTrackIds)
 	availableTracks := []models.Track{}
 	for _, track := range game.Playlist.Tracks {
-		if !includesString(usedTrackIds, track.Id) {
+		if !helpers.IncludesString(wonTrackIds, track.Id) {
 			availableTracks = append(availableTracks, track)
 		}
 	}
@@ -55,5 +39,5 @@ func SelectNextTrack(gameId uuid.UUID) (models.Track, error) {
 		return models.Track{}, errors.New("no tracks left")
 	}
 
-	return availableTracks[rand.Intn(len(availableTracks))], nil
+	return pickRandomTrack(availableTracks), nil
 }
