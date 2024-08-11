@@ -3,6 +3,7 @@ package websocket
 import (
 	"api/database"
 	"api/database/models"
+	gameHelpers "api/lib/game"
 	"api/lib/spotify"
 	"api/lib/verification"
 	"time"
@@ -35,11 +36,7 @@ func LoadPlaylist(client *Client) {
 
 	databaseError := database.Where("id = ?", gameId).First(&game).Error
 	if databaseError != nil {
-		pool.Broadcast <- ServerMessage{
-			Type:    ServerMessageTypeError,
-			Payload: "Game not found",
-			GameId:  client.GameId,
-		}
+		client.SendError("Game not found")
 		return
 	}
 
@@ -84,19 +81,22 @@ func LoadPlaylist(client *Client) {
 
 	playlistError := spotify.LoadFreshPlaylist(game.PlaylistId, game.CountryCode, sendLoadingUpdate)
 	if playlistError != nil {
-		pool.Broadcast <- ServerMessage{
-			Type:    ServerMessageTypeError,
-			Payload: "Error loading playlist",
-			GameId:  client.GameId,
-		}
+		client.SendError("Error loading playlist")
 		return
 	}
 
 	go verification.VerifyTracks(sendCheckingUpdate)
 
+	if !gameHelpers.HasEnoughTracks(client.GameId) {
+		client.SendError("Too few tracks in playlist")
+		return
+	}
+
 	pool.Broadcast <- ServerMessage{
-		Type:    ServerMessageTypePlaylistLoaded,
-		Payload: "Playlist loaded",
-		GameId:  client.GameId,
+		Type: ServerMessageTypePlaylistLoaded,
+		Payload: ErrorMessagePayload{
+			Message: "Playlist loaded",
+		},
+		GameId: client.GameId,
 	}
 }

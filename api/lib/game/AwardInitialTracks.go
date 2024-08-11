@@ -8,7 +8,7 @@ import (
 	uuid "github.com/satori/go.uuid"
 )
 
-func AwardInitialTrack(gameId uuid.UUID, playerId uuid.UUID) error {
+func AwardInitialTracks(gameId uuid.UUID) error {
 	database := database.Get()
 	var game models.Game
 
@@ -16,18 +16,14 @@ func AwardInitialTrack(gameId uuid.UUID, playerId uuid.UUID) error {
 	if gameLoadError != nil {
 		return errors.New("could not load game")
 	}
-
-	for _, wonTrack := range game.WonTracks {
-		if wonTrack.PlayerId == playerId {
-			return nil
-		}
+	if len(game.Players) == 0 {
+		return errors.New("no players in game")
+	}
+	if len(game.WonTracks) > 0 {
+		return errors.New("game already has won tracks")
 	}
 
 	for _, player := range game.Players {
-		if player.Id != playerId {
-			continue
-		}
-
 		track, selectTrackError := SelectNextTrack(gameId)
 		if selectTrackError != nil {
 			return selectTrackError

@@ -3,7 +3,7 @@ package websocket
 import (
 	"api/database"
 	"api/database/models"
-	gameHelpers "api/lib/game"
+	"api/lib/game"
 	"errors"
 
 	uuid "github.com/satori/go.uuid"
@@ -28,12 +28,21 @@ func runGame(gameId uuid.UUID) error {
 }
 
 func StartGameHandler(message ClientMessage, client *Client, pool *ConnectionPool) error {
-	randomizePlayerError := gameHelpers.ShufflePlayers(client.GameId)
+	if !game.IsReadyToStart(client.GameId) {
+		return errors.New("game is not ready to start")
+	}
+
+	awardInitialTracksError := game.AwardInitialTracks(client.GameId)
+	if awardInitialTracksError != nil {
+		return errors.New("could not award initial tracks")
+	}
+
+	randomizePlayerError := game.ShufflePlayers(client.GameId)
 	if randomizePlayerError != nil {
 		return errors.New("could not randomize player order")
 	}
 
-	createRoundError := gameHelpers.CreateNextRound(client.GameId)
+	createRoundError := game.CreateNextRound(client.GameId)
 	if createRoundError != nil {
 		return errors.New("could not create round")
 	}

@@ -24,10 +24,6 @@ type Client struct {
 	Mutex            *sync.Mutex
 }
 
-type ErrorMessagePayload struct {
-	Message string `json:"message"`
-}
-
 func getReadDeadline() time.Time {
 	return time.Now().Add(maxPongWait)
 }
@@ -87,10 +83,7 @@ func (client *Client) Read() {
 		messageError := connection.ReadJSON(&message)
 
 		if messageError != nil {
-			writeJSON(client, ServerMessage{
-				Type:    ServerMessageTypeError,
-				Payload: "Error reading message",
-			})
+			client.SendError("Error reading message")
 			return
 		}
 
@@ -139,11 +132,9 @@ func (client *Client) Notify(message ServerMessage) {
 	client.OutgoingMessages <- message
 }
 
-func (client *Client) SendError(message string) error {
+func (client *Client) SendError(message string) {
 	client.Notify(ServerMessage{
 		Type:    ServerMessageTypeError,
 		Payload: ErrorMessagePayload{Message: message},
 	})
-
-	return nil
 }

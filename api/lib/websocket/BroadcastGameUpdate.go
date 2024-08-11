@@ -7,13 +7,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/jinzhu/gorm"
 	uuid "github.com/satori/go.uuid"
 )
-
-type CheckedTracksCount struct {
-	TracksChecked uint `json:"tracks_checked"`
-}
 
 type PlayerState struct {
 	Id          uuid.UUID         `json:"id"`
@@ -85,23 +80,6 @@ func hideTrackDetailsFromCurrentRound(rounds []models.Round) []models.Round {
 	return rounds
 }
 
-func isReadyToStart(game models.Game, players []PlayerState, database *gorm.DB) bool {
-	playerCount := uint(len(players))
-	checkedTracksCount := CheckedTracksCount{}
-	countsError := database.Raw(`
-		SELECT
-			SUM(CASE WHEN check_completed_at IS NOT NULL THEN 1 ELSE 0 END) AS tracks_checked
-		FROM tracks
-		JOIN playlist_tracks ON tracks.id = playlist_tracks.track_id
-		WHERE playlist_tracks.playlist_id = ?
-	`, game.PlaylistId).Scan(&checkedTracksCount).Error
-	if countsError != nil {
-		return false
-	}
-
-	return checkedTracksCount.TracksChecked >= playerCount*game.SongsToWin
-}
-
 func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error) {
 	var game models.Game
 
@@ -127,7 +105,7 @@ func createGameUpdate(gameId uuid.UUID, pool *ConnectionPool) (GameState, error)
 		UpdatedAt:      game.UpdatedAt,
 		Playlist:       game.Playlist,
 		Id:             game.Id,
-		IsReadyToStart: isReadyToStart(game, players, database),
+		IsReadyToStart: gameHelpers.IsReadyToStart(game.Id),
 		HasStarted:     game.HasStarted,
 		HasFinished:    game.HasFinished,
 		SongsToWin:     game.SongsToWin,

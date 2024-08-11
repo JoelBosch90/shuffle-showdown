@@ -13,6 +13,10 @@ const (
 	ServerMessageTypePlaylistLoaded        ServerMessageType = "playlist-loaded"
 )
 
+type ErrorMessagePayload struct {
+	Message string `json:"message"`
+}
+
 type ServerMessage struct {
 	Type    ServerMessageType `json:"type"`
 	Payload interface{}       `json:"payload"`
