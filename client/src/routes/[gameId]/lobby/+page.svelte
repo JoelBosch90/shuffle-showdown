@@ -116,7 +116,9 @@
 				{/if}
 			</h3>
 
-			<canvas bind:this={canvas}></canvas>
+			<button on:click={copyUrl}>
+				<canvas bind:this={canvas}></canvas>
+			</button>
 
 			<button class="copy" on:click={copyUrl}>
 				<span class="share-url">{url}</span>
@@ -233,20 +235,11 @@
 			--share-url-height: 1.25rem;
 			--min-qr-code-size: 120px;
 			--max-qr-code-size: 400px;
-			$vertical-text-height: calc(
-				3 * var(--gap) + var(--title-height) + var(--share-title-height) + var(--share-url-height)
-			);
-			$qr-code-size: clamp(
-				var(--min-qr-code-size),
-				min(80cqw, min(50cqw, calc(50cqh - $vertical-text-height))),
-				var(--max-qr-code-size)
-			);
 
 			grid-area: share-options;
 			container-name: share-options;
 			min-height: min-content;
 			min-width: min-content;
-			width: $qr-code-size;
 
 			h3 {
 				margin: 0;
@@ -255,12 +248,19 @@
 				flex-direction: row;
 			}
 
-			canvas,
 			button {
 				margin: 0.5rem;
 			}
 
 			canvas {
+				$vertical-text-height: calc(
+					3 * var(--gap) + var(--share-title-height) + var(--share-url-height)
+				);
+				$qr-code-size: clamp(
+					var(--min-qr-code-size),
+					min(80cqw, min(50cqw, calc(50cqh - $vertical-text-height))),
+					var(--max-qr-code-size)
+				);
 				max-width: $qr-code-size;
 				max-height: $qr-code-size;
 			}
@@ -390,22 +390,6 @@
 				'share-options game-options'
 				'progress-bars progress-bars';
 			grid-template-columns: 1fr 1fr;
-
-			.share-options {
-				$vertical-text-height: calc(
-					3 * var(--gap) + var(--title-height) + var(--share-title-height) + var(--share-url-height)
-				);
-				$qr-code-size: clamp(
-					var(--min-qr-code-size),
-					min(80cqw, min(50cqmin, calc(100cqh - $vertical-text-height))),
-					var(--max-qr-code-size)
-				);
-
-				canvas {
-					max-width: $qr-code-size;
-					max-height: $qr-code-size;
-				}
-			}
 
 			.game-options {
 				box-sizing: border-box;
