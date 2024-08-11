@@ -170,14 +170,14 @@
 			class="card {card.isGuess ? 'guess' : ''}"
 			style="--normalized-index: {cardIndex - guessIndex};"
 		>
-			<h2>{card.releaseYear}</h2>
+			<h2 title={card.releaseYear}>{card.releaseYear}</h2>
 
 			{#if card.name}
-				<p class="track">{card.name}</p>
+				<p class="track" title={card.name}>{card.name}</p>
 			{/if}
 
 			{#if card.artists}
-				<p class="artist">{card.artists}</p>
+				<p class="artist" title={card.artists}>{card.artists}</p>
 			{/if}
 		</li>
 	{/each}
