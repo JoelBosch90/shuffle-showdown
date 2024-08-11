@@ -69,10 +69,6 @@
 
 			&::-moz-progress-bar {
 				background: var(--fill-color);
-				transition: padding-bottom 1s;
-				transform-origin: 0 0;
-				transform: rotate(-90deg) translateX(-100%);
-				padding-bottom: var(--progress);
 			}
 		}
 
