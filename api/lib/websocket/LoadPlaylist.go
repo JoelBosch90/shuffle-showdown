@@ -6,6 +6,7 @@ import (
 	gameHelpers "api/lib/game"
 	"api/lib/spotify"
 	"api/lib/verification"
+	"log"
 	"time"
 )
 
@@ -103,6 +104,7 @@ func LoadPlaylist(client *Client) {
 
 	playlistError := spotify.LoadFreshPlaylist(game.PlaylistId, game.CountryCode, sendLoadingUpdate)
 	if playlistError != nil {
+		log.Println("ERROR LOADING PLAYLIST", playlistError)
 		client.SendError("Error loading playlist")
 		return
 	}

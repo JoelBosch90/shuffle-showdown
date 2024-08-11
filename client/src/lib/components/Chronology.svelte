@@ -338,6 +338,7 @@
 
 			p {
 				display: -webkit-box;
+				line-clamp: 2;
 				-webkit-line-clamp: 2;
 				-webkit-box-orient: vertical;
 				font-size: var(--card-font-size);
@@ -348,7 +349,8 @@
 			}
 
 			h2 {
-				font-size: calc(var(--card-font-size) * 3.75);
+				font-size: calc(var(--card-font-size) * 3.5);
+				padding: 0.1em;
 			}
 
 			&.time-hint {
