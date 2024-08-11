@@ -86,23 +86,6 @@
 			if (newGame?.hasStarted) return goto(`/${gameId}/play`);
 		});
 		session.onPlaylistLoadingUpdate(({ playlistLoadingUpdate }) => {
-			if (!latestPlaylistLoadingUpdate?.finishedLoading && playlistLoadingUpdate?.finishedLoading) {
-				showToast({
-					message: `Loaded ${playlistLoadingUpdate?.tracksLoaded} out of ${playlistLoadingUpdate?.tracksTotal} total tracks`,
-					type: ToastType.Success
-				});
-			}
-
-			if (
-				!latestPlaylistLoadingUpdate?.finishedChecking &&
-				playlistLoadingUpdate?.finishedChecking
-			) {
-				showToast({
-					message: `Verified ${playlistLoadingUpdate?.tracksVerified} out of ${playlistLoadingUpdate?.tracksLoaded} loaded tracks`,
-					type: ToastType.Success
-				});
-			}
-
 			latestPlaylistLoadingUpdate = playlistLoadingUpdate;
 		});
 

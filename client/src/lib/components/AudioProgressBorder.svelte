@@ -197,7 +197,7 @@
 			var(--orange) 83.333%,
 			var(--red) 100%
 		);
-		animation: rainbow-twirl 3s linear infinite;
+		animation: rainbow-twirl 10s linear infinite;
 		animation-play-state: var(--play-state);
 
 		.progress-slider-top,
