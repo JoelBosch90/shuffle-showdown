@@ -35,6 +35,7 @@ func LoadPlaylist(client *Client) {
 	gameId := client.GameId
 	game := models.Game{}
 	pool := client.Pool
+	isReady := false
 
 	databaseError := database.Where("id = ?", gameId).First(&game).Error
 	if databaseError != nil {
@@ -91,6 +92,12 @@ func LoadPlaylist(client *Client) {
 				TracksTotal:      uint(tracksTotal.TracksTotal),
 			},
 			GameId: client.GameId,
+		}
+
+		nowReady := gameHelpers.IsReadyToStart(client.GameId)
+		if isReady != nowReady {
+			isReady = nowReady
+			BroadcastGameUpdate(client, pool)
 		}
 	}
 
