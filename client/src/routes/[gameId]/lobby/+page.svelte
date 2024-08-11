@@ -8,8 +8,6 @@
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import QRCode from 'qrcode';
-	import { showToast } from '$lib/store/toasts';
-	import { ToastType } from '$lib/enums/ToastType';
 
 	const gameId = $page.params.gameId;
 
@@ -19,16 +17,14 @@
 	let isLoading = false;
 	let isDisabled = true;
 	let latestPlaylistLoadingUpdate: PlaylistLoadingUpdate | null = null;
-	let tracksTotal = 0;
-	let tracksLoaded = 0;
-	let tracksChecked = 0;
-	let doneLoading = false;
-	let doneChecking = false;
 	$: tracksTotal = latestPlaylistLoadingUpdate?.tracksTotal ?? 0;
 	$: tracksLoaded = latestPlaylistLoadingUpdate?.tracksLoaded ?? 0;
 	$: tracksChecked = latestPlaylistLoadingUpdate?.tracksChecked ?? 0;
 	$: tracksLoadingLabel = `Loaded ${tracksLoaded} out of ${tracksTotal} tracks`;
 	$: tracksCheckingLabel = `Checked release dates for ${tracksChecked} out of ${tracksLoaded} tracks`;
+	$: tracksLoadingLabelRight = tracksLoaded
+		? `${tracksTotal - tracksLoaded} tracks could not be loaded`
+		: '';
 	$: doneLoading = latestPlaylistLoadingUpdate?.finishedLoading ?? false;
 	$: doneChecking = latestPlaylistLoadingUpdate?.finishedChecking ?? false;
 
@@ -164,6 +160,7 @@
 				bind:total={tracksTotal}
 				bind:current={tracksLoaded}
 				bind:label={tracksLoadingLabel}
+				bind:labelRight={tracksLoadingLabelRight}
 				bind:done={doneLoading}
 			/>
 			<ProgressBar

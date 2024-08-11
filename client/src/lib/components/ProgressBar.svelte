@@ -2,12 +2,17 @@
 	export let total = 0;
 	export let current = 0;
 	export let label = '';
+	export let labelRight = '';
 	export let done = false;
 	let id = `${label}-progress-bar`;
+	$: title = labelRight ? `${label} (${labelRight})` : label;
 </script>
 
 <div class="progress-bar" class:done>
-	<label for={id} title={label}>{label}</label>
+	<label for={id} {title}>
+		<span>{label}</span>
+		<span>{labelRight}</span>
+	</label>
 	<progress {id} value={current} max={total} style={`--progress: ${(current / total) * 100}%;`} />
 </div>
 
@@ -30,10 +35,17 @@
 			transform: translateY(-50%);
 			z-index: calc(var(--default-level) + 1);
 
-			color: var(--white);
+			width: 100%;
+			display: flex;
+			justify-content: space-between;
 			overflow: hidden;
-			white-space: nowrap;
-			text-overflow: ellipsis;
+			color: var(--white);
+
+			span {
+				white-space: nowrap;
+				overflow: hidden;
+				text-overflow: ellipsis;
+			}
 		}
 
 		progress {
