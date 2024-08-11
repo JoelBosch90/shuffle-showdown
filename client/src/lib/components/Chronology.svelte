@@ -344,12 +344,12 @@
 				font-size: var(--card-font-size);
 
 				&.track {
-					font-size: calc(var(--card-font-size) * 1.5);
+					font-size: calc(var(--card-font-size) * 1.15);
 				}
 			}
 
 			h2 {
-				font-size: calc(var(--card-font-size) * 3.5);
+				font-size: calc(var(--card-font-size) * 3.2);
 				padding: 0.1em;
 			}
 
