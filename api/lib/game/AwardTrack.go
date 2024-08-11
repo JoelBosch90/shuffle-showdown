@@ -16,7 +16,7 @@ func AwardTrack(gameId uuid.UUID, track models.Track, player models.Player) erro
 	if result.RowsAffected != 0 {
 		return nil
 	}
-	if result.Error != nil && errors.Is(result.Error, gorm.ErrRecordNotFound) {
+	if result.Error != nil && !errors.Is(result.Error, gorm.ErrRecordNotFound) {
 		return result.Error
 	}
 

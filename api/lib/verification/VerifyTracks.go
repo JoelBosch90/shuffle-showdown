@@ -9,13 +9,13 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-var MAX_PROCESSING_TIME = time.Minute * 5
+var MAX_PROCESSING_TIME = time.Second * 30
 var RETRY_INTERVAL = time.Millisecond * 25
 
 func isVerificationInProgress(database *gorm.DB, now time.Time) bool {
 	maxProcessingTimeAgo := now.Add(-MAX_PROCESSING_TIME)
 	trackInProgress := models.Track{}
-	databaseError := database.Model(&models.Track{}).Where("(check_started_at IS NOT NULL OR check_started_at >= ?) AND check_completed_at IS NULL", maxProcessingTimeAgo).First(&trackInProgress).Error
+	databaseError := database.Model(&models.Track{}).Where("check_started_at >= ? AND check_completed_at IS NULL", maxProcessingTimeAgo).First(&trackInProgress).Error
 	if errors.Is(databaseError, gorm.ErrRecordNotFound) {
 		return false
 	}

@@ -1,5 +1,6 @@
 import { type GameSessionUpdate } from './GameSessionUpdate';
 import { type AnswerSelectionUpdate } from './AnswerSelectionUpdate';
+import { type PlaylistLoadingUpdate } from './PlaylistLoadingUpdate';
 import { ServerMessageType } from '$lib/enums/ServerMessageType';
 
 export interface ServerMessage {
@@ -15,7 +16,7 @@ export interface ErrorMessage extends ServerMessage {
   };
 }
 
-export const isErrorMessage = (message: ServerMessage) : message is ErrorMessage => {
+export const isErrorMessage = (message: ServerMessage): message is ErrorMessage => {
   return message.type === ServerMessageType.Error;
 }
 
@@ -26,7 +27,7 @@ export interface PlayerKickedMessage extends ServerMessage {
   };
 }
 
-export const isPlayerKickedMessage = (message: ServerMessage) : message is PlayerKickedMessage => {
+export const isPlayerKickedMessage = (message: ServerMessage): message is PlayerKickedMessage => {
   return message.type === ServerMessageType.PlayerKicked;
 }
 
@@ -35,7 +36,7 @@ export interface GameSessionUpdateMessage extends ServerMessage {
   payload: GameSessionUpdate;
 }
 
-export const isGameSessionUpdateMessage = (message: ServerMessage) : message is GameSessionUpdateMessage => {
+export const isGameSessionUpdateMessage = (message: ServerMessage): message is GameSessionUpdateMessage => {
   return message.type === ServerMessageType.GameSessionUpdate;
 }
 
@@ -44,6 +45,15 @@ export interface AnswerSelectionUpdateMessage extends ServerMessage {
   payload: AnswerSelectionUpdate;
 }
 
-export const isAnswerSelectionUpdateMessage = (message: ServerMessage) : message is AnswerSelectionUpdateMessage => {
+export const isAnswerSelectionUpdateMessage = (message: ServerMessage): message is AnswerSelectionUpdateMessage => {
   return message.type === ServerMessageType.AnswerSelectionUpdate;
+}
+
+export interface PlaylistLoadingUpdateMessage extends ServerMessage {
+  type: ServerMessageType.PlaylistLoadingUpdate;
+  payload: PlaylistLoadingUpdate;
+}
+
+export const isPlaylistLoadingUpdateMessage = (message: ServerMessage): message is PlaylistLoadingUpdateMessage => {
+  return message.type === ServerMessageType.PlaylistLoadingUpdate;
 }

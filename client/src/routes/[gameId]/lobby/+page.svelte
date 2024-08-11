@@ -6,6 +6,8 @@
 	import type { Player } from '$lib/types/Player';
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
 	import QRCode from 'qrcode';
+	import { showToast } from '$lib/store/toasts';
+	import { ToastType } from '$lib/enums/ToastType';
 
 	const gameId = $page.params.gameId;
 
@@ -13,6 +15,8 @@
 	let url: string | null = null;
 	let session: GameSession | void | null = null;
 	let isLoading = false;
+	let isPlaylistLoaded = false;
+	let isPlaylistChecked = false;
 	let isDisabled = true;
 
 	let owner: Player | null;
@@ -67,6 +71,23 @@
 			playlistName = newGame?.playlist?.name ?? '';
 
 			if (newGame?.hasStarted) return goto(`/${gameId}/play`);
+		});
+		session.onPlaylistLoadingUpdate(({ playlistLoadingUpdate }) => {
+			if (!isPlaylistLoaded && playlistLoadingUpdate?.finishedLoading) {
+				showToast({
+					message: `Loaded ${playlistLoadingUpdate?.tracksLoaded} out of ${playlistLoadingUpdate?.tracksTotal} total tracks`,
+					type: ToastType.Success
+				});
+				isPlaylistLoaded = true;
+			}
+
+			if (!isPlaylistChecked && playlistLoadingUpdate?.finishedChecking) {
+				showToast({
+					message: `Verified ${playlistLoadingUpdate?.tracksVerified} out of ${playlistLoadingUpdate?.tracksLoaded} loaded tracks`,
+					type: ToastType.Success
+				});
+				isPlaylistChecked = true;
+			}
 		});
 
 		await session.initialize();

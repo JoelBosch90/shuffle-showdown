@@ -30,7 +30,7 @@ func SelectNextTrack(gameId uuid.UUID) (models.Track, error) {
 	database := database.Get()
 	var game models.Game
 
-	loadGameError := database.Preload("Rounds").Preload("WonTracks").Preload("Playlist").Preload("Playlist.Tracks").Where("id = ?", gameId).First(&game).Error
+	loadGameError := database.Preload("Rounds").Preload("WonTracks").Preload("Playlist").Preload("Playlist.Tracks", "check_completed_at IS NOT NULL").Where("id = ?", gameId).First(&game).Error
 	if loadGameError != nil {
 		return models.Track{}, errors.New("could not load game")
 	}
