@@ -11,6 +11,7 @@ import (
 
 type PlaylistLoadingUpdate struct {
 	SentAt           time.Time `json:"sentAt"`
+	LiveUpdate       bool      `json:"liveUpdate"`
 	FinishedLoading  bool      `json:"finishedLoading"`
 	FinishedChecking bool      `json:"finishedChecking"`
 	TracksChecked    uint      `json:"tracksChecked"`
@@ -41,7 +42,7 @@ func LoadPlaylist(client *Client) {
 		return
 	}
 
-	sendUpdate := func() {
+	sendUpdate := func(isLiveUpdate bool) {
 		counts := PlaylistCheckingCount{}
 		countsError := database.Raw(`
 			SELECT
@@ -66,6 +67,7 @@ func LoadPlaylist(client *Client) {
 			Type: ServerMessageTypePlaylistLoadingUpdate,
 			Payload: PlaylistLoadingUpdate{
 				SentAt:           time.Now(),
+				LiveUpdate:       isLiveUpdate,
 				FinishedLoading:  counts.TracksChecked > 0,
 				FinishedChecking: counts.TracksChecked == counts.TracksLoaded,
 				TracksChecked:    uint(counts.TracksChecked),
@@ -90,5 +92,5 @@ func LoadPlaylist(client *Client) {
 		return
 	}
 
-	sendUpdate()
+	sendUpdate(false)
 }

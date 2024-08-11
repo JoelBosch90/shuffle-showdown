@@ -42,7 +42,7 @@ func fetchOldestUnverifiedTrack(database *gorm.DB, now time.Time) (models.Track,
 	return oldestUnverifiedTrack, fetchError
 }
 
-func VerifyTracks(sendCheckingUpdate func()) error {
+func VerifyTracks(sendCheckingUpdate func(isLiveUpdate bool)) error {
 	database := database.Get()
 	unverifiedTrackId := ""
 	verifiedTrackId := ""
@@ -51,7 +51,7 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 		transactionError := database.Transaction(func(transaction *gorm.DB) error {
 			if verifiedTrackId != "" {
 				completeError := completeCheck(transaction, verifiedTrackId)
-				sendCheckingUpdate()
+				sendCheckingUpdate(true)
 				if completeError != nil {
 					return completeError
 				}
@@ -74,7 +74,7 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 				return startError
 			}
 
-			sendCheckingUpdate()
+			sendCheckingUpdate(true)
 			return nil
 		})
 
@@ -87,7 +87,7 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 
 			if verifiedTrackId != "" {
 				completeError := completeCheck(database, verifiedTrackId)
-				sendCheckingUpdate()
+				sendCheckingUpdate(true)
 				if completeError != nil {
 					return completeError
 				}

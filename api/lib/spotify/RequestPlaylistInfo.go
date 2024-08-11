@@ -8,7 +8,7 @@ import (
 	"net/url"
 )
 
-func RequestPlaylistInfo(playlistId string, countryCode string, sendUpdate func()) (spotifyModels.Playlist, error) {
+func RequestPlaylistInfo(playlistId string, countryCode string, sendUpdate func(isLiveUpdate bool)) (spotifyModels.Playlist, error) {
 	path := "v1/playlists/" + url.QueryEscape(playlistId)
 
 	headers := []Header{}
@@ -33,13 +33,13 @@ func RequestPlaylistInfo(playlistId string, countryCode string, sendUpdate func(
 		return spotifyModels.Playlist{}, errors.New("playlist empty")
 	}
 
-	sendUpdate()
+	sendUpdate(true)
 	if playlistInfo.Tracks.Limit >= playlistInfo.Tracks.Total {
 		return playlistInfo, nil
 	}
 
 	sendAdditionalUpdate := func(additionalTracksLoaded int) {
-		sendUpdate()
+		sendUpdate(true)
 	}
 
 	// Get the next page of tracks
@@ -49,6 +49,6 @@ func RequestPlaylistInfo(playlistId string, countryCode string, sendUpdate func(
 	}
 	playlistInfo.Tracks.Items = append(playlistInfo.Tracks.Items, additionalTrackItems...)
 
-	sendUpdate()
+	sendUpdate(true)
 	return playlistInfo, nil
 }
