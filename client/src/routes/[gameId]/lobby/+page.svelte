@@ -4,7 +4,9 @@
 	import { goto } from '$app/navigation';
 	import { GameSession } from '$lib/services/GameSession';
 	import type { Player } from '$lib/types/Player';
+	import type { PlaylistLoadingUpdate } from '$lib/types/PlaylistLoadingUpdate';
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
+	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import QRCode from 'qrcode';
 	import { showToast } from '$lib/store/toasts';
 	import { ToastType } from '$lib/enums/ToastType';
@@ -15,9 +17,20 @@
 	let url: string | null = null;
 	let session: GameSession | void | null = null;
 	let isLoading = false;
-	let isPlaylistLoaded = false;
-	let isPlaylistChecked = false;
 	let isDisabled = true;
+	let latestPlaylistLoadingUpdate: PlaylistLoadingUpdate | null = null;
+	let tracksTotal = 0;
+	let tracksLoaded = 0;
+	let tracksChecked = 0;
+	let doneLoading = false;
+	let doneChecking = false;
+	$: tracksTotal = latestPlaylistLoadingUpdate?.tracksTotal ?? 0;
+	$: tracksLoaded = latestPlaylistLoadingUpdate?.tracksLoaded ?? 0;
+	$: tracksChecked = latestPlaylistLoadingUpdate?.tracksChecked ?? 0;
+	$: tracksLoadingLabel = `Loaded ${tracksLoaded} out of ${tracksTotal} tracks`;
+	$: tracksCheckingLabel = `Checked release dates for ${tracksChecked} out of ${tracksLoaded} tracks`;
+	$: doneLoading = latestPlaylistLoadingUpdate?.finishedLoading ?? false;
+	$: doneChecking = latestPlaylistLoadingUpdate?.finishedChecking ?? false;
 
 	let owner: Player | null;
 	$: owner = players.find((player) => player.isOwner) ?? null;
@@ -73,21 +86,24 @@
 			if (newGame?.hasStarted) return goto(`/${gameId}/play`);
 		});
 		session.onPlaylistLoadingUpdate(({ playlistLoadingUpdate }) => {
-			if (!isPlaylistLoaded && playlistLoadingUpdate?.finishedLoading) {
+			if (!latestPlaylistLoadingUpdate?.finishedLoading && playlistLoadingUpdate?.finishedLoading) {
 				showToast({
 					message: `Loaded ${playlistLoadingUpdate?.tracksLoaded} out of ${playlistLoadingUpdate?.tracksTotal} total tracks`,
 					type: ToastType.Success
 				});
-				isPlaylistLoaded = true;
 			}
 
-			if (!isPlaylistChecked && playlistLoadingUpdate?.finishedChecking) {
+			if (
+				!latestPlaylistLoadingUpdate?.finishedChecking &&
+				playlistLoadingUpdate?.finishedChecking
+			) {
 				showToast({
 					message: `Verified ${playlistLoadingUpdate?.tracksVerified} out of ${playlistLoadingUpdate?.tracksLoaded} loaded tracks`,
 					type: ToastType.Success
 				});
-				isPlaylistChecked = true;
 			}
+
+			latestPlaylistLoadingUpdate = playlistLoadingUpdate;
 		});
 
 		await session.initialize();
@@ -159,6 +175,21 @@
 				{/if}
 			</div>
 		</div>
+
+		<div class="progress-bars">
+			<ProgressBar
+				bind:total={tracksTotal}
+				bind:current={tracksLoaded}
+				bind:label={tracksLoadingLabel}
+				bind:done={doneLoading}
+			/>
+			<ProgressBar
+				bind:total={tracksLoaded}
+				bind:current={tracksChecked}
+				bind:label={tracksCheckingLabel}
+				bind:done={doneChecking}
+			/>
+		</div>
 	</div>
 </section>
 
@@ -193,11 +224,12 @@
 	}
 
 	.content {
-		display: flex;
-		flex-grow: 1;
-		flex-shrink: 2;
-		flex-direction: column;
-		align-items: center;
+		display: grid;
+		grid-template-areas:
+			'share-options'
+			'game-options'
+			'progress-bars';
+		justify-items: center;
 		gap: var(--gap);
 
 		box-sizing: border-box;
@@ -230,9 +262,8 @@
 				var(--max-qr-code-size)
 			);
 
+			grid-area: share-options;
 			container-name: share-options;
-			flex-shrink: 1;
-			flex-grow: 1;
 			min-height: min-content;
 			min-width: min-content;
 			width: $qr-code-size;
@@ -284,8 +315,7 @@
 		}
 
 		.game-options {
-			flex-shrink: 2;
-			flex-grow: 1;
+			grid-area: game-options;
 			gap: 1rem;
 			justify-content: space-around;
 
@@ -353,6 +383,15 @@
 				}
 			}
 		}
+
+		.progress-bars {
+			grid-area: progress-bars;
+			display: flex;
+			flex-direction: column;
+			gap: 0.25rem;
+			width: 100%;
+			box-sizing: border-box;
+		}
 	}
 
 	.icon {
@@ -367,6 +406,9 @@
 			box-sizing: border-box;
 
 			display: grid;
+			grid-template-areas:
+				'share-options game-options'
+				'progress-bars progress-bars';
 			grid-template-columns: 1fr 1fr;
 
 			.share-options {
