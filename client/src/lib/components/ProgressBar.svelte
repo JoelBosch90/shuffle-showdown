@@ -31,11 +31,10 @@
 			position: absolute;
 			top: 50%;
 			left: calc(var(--padding) + 1ch);
-			max-width: calc(100% - 2 * var(--padding) - 1ch);
 			transform: translateY(-50%);
 			z-index: calc(var(--default-level) + 1);
 
-			width: 100%;
+			width: calc(100% - 2 * var(--padding) - 2ch);
 			display: flex;
 			justify-content: space-between;
 			overflow: hidden;
