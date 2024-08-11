@@ -42,7 +42,22 @@ func LoadPlaylist(client *Client) {
 		return
 	}
 
-	sendUpdate := func(isLiveUpdate bool) {
+	sendLoadingUpdate := func(tracksLoaded int, tracksTotal int) {
+		pool.Broadcast <- ServerMessage{
+			Type: ServerMessageTypePlaylistLoadingUpdate,
+			Payload: PlaylistLoadingUpdate{
+				SentAt:           time.Now(),
+				LiveUpdate:       true,
+				FinishedLoading:  false,
+				FinishedChecking: false,
+				TracksLoaded:     uint(tracksLoaded),
+				TracksTotal:      uint(tracksTotal),
+			},
+			GameId: client.GameId,
+		}
+	}
+
+	sendCheckingUpdate := func(isLiveUpdate bool) {
 		counts := PlaylistCheckingCount{}
 		countsError := database.Raw(`
 			SELECT
@@ -79,18 +94,18 @@ func LoadPlaylist(client *Client) {
 		}
 	}
 
-	playlistError := spotify.LoadFreshPlaylist(game.PlaylistId, game.CountryCode, sendUpdate)
+	playlistError := spotify.LoadFreshPlaylist(game.PlaylistId, game.CountryCode, sendLoadingUpdate)
 	if playlistError != nil {
 		client.SendError("Error loading playlist")
 		return
 	}
 
-	go verification.VerifyTracks(sendUpdate)
+	go verification.VerifyTracks(sendCheckingUpdate)
 
 	if !gameHelpers.HasEnoughTracks(client.GameId) {
 		client.SendError("Too few tracks in playlist")
 		return
 	}
 
-	sendUpdate(false)
+	sendCheckingUpdate(false)
 }

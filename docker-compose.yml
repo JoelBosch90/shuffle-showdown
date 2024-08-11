@@ -89,6 +89,10 @@ services:
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       GIN_MODE: release
 
+    # We want to mount the database file to the container.
+    volumes:
+      - ./database:/api/sqlite3
+
     # We can expose the api service in the container network.
     expose:
       - "80"

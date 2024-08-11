@@ -29,7 +29,7 @@ func getRecentPlaylistFromDatabase(playlistId string, countryCode string) (model
 	return playlist, nil
 }
 
-func LoadFreshPlaylist(playlistId string, countryCode string, sendUpdate func(isLiveUpdate bool)) error {
+func LoadFreshPlaylist(playlistId string, countryCode string, sendUpdate func(tracksLoaded int, tracksTotal int)) error {
 	database := database.Get()
 
 	_, playlistError := getRecentPlaylistFromDatabase(playlistId, countryCode)

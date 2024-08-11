@@ -36,7 +36,21 @@ jobs:
     # files.
     - uses: actions/checkout@v2
 
-    # First, we need to make sure that the virtual private server is updated to
+    # First, we need to remove the old code, as the scp-action will not take care
+    # of that. 
+    - name: Execute remote command through SSH
+      uses: appleboy/ssh-action@master
+      with:
+        HOST: ${{ secrets.HOST }}
+        USERNAME: ${{ secrets.USER }}
+        PORT: ${{ secrets.PORT }}
+        KEY: ${{ secrets.KEY }}
+        script: |
+          cd /var/www/shuffle-showdown
+          rm -rf api
+          rm -rf client
+
+    # Second, we need to make sure that the virtual private server is updated to
     # the latest version of the repository.
     - name: Copy repository contents through SCP
       uses: appleboy/scp-action@master
