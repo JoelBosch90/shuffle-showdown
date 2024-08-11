@@ -47,12 +47,11 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 	unverifiedTrackId := ""
 	verifiedTrackId := ""
 
-	defer sendCheckingUpdate()
-
 	for {
 		transactionError := database.Transaction(func(transaction *gorm.DB) error {
 			if verifiedTrackId != "" {
 				completeError := completeCheck(transaction, verifiedTrackId)
+				sendCheckingUpdate()
 				if completeError != nil {
 					return completeError
 				}
@@ -88,6 +87,7 @@ func VerifyTracks(sendCheckingUpdate func()) error {
 
 			if verifiedTrackId != "" {
 				completeError := completeCheck(database, verifiedTrackId)
+				sendCheckingUpdate()
 				if completeError != nil {
 					return completeError
 				}

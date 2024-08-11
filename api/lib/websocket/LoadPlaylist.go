@@ -89,6 +89,4 @@ func LoadPlaylist(client *Client) {
 		client.SendError("Too few tracks in playlist")
 		return
 	}
-
-	sendUpdate()
 }
