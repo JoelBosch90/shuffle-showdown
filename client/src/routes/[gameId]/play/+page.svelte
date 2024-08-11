@@ -112,7 +112,7 @@
 		session.onPlaylistLoadingUpdate(({ playlistLoadingUpdate }) => {
 			if (!playlistLoadingUpdate?.liveUpdate) return;
 
-			if (playlistLoadingUpdate?.finishedLoading) {
+			if (playlistLoadingUpdate?.finishedLoading && playlistLoadingUpdate?.tracksVerified === 0) {
 				showToast({
 					message: `Loaded ${playlistLoadingUpdate?.tracksLoaded} out of ${playlistLoadingUpdate?.tracksTotal} total tracks`,
 					type: ToastType.Success
