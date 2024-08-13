@@ -59,12 +59,9 @@ func getColumnNamesPlaceholdersAndConflictHandlers(exampleRow interface{}, prima
 	// Loop through the column names and values to build the query.
 	for index, columnName := range columnNames {
 
-		// Get the column name, value placeholder, and conflict handler.
 		isLastColumn := index == len(columnNames)-1
 		columnName, valuePlaceholder, conflictHandler := getColumnNamePlaceholderAndConflictHandler(columnName, primaryKeyName, isLastColumn)
 
-		// Append the column name, value placeholder, and conflict handler
-		// to the query.
 		allColumnNames += columnName
 		allColumnValuePlaceholders += valuePlaceholder
 		allColumnConflictHandlers += conflictHandler
@@ -76,7 +73,6 @@ func getColumnNamesPlaceholdersAndConflictHandlers(exampleRow interface{}, prima
 func repeatColumnValuePlaceholders(columnValuePlaceholders string, rowAmount int) string {
 	repeatedColumnValuePlaceholders := ""
 
-	// Repeat the column value placeholders for each row.
 	for index := 0; index < rowAmount; index++ {
 		repeatedColumnValuePlaceholders += columnValuePlaceholders
 
@@ -98,7 +94,6 @@ func getRowValues(instances []interface{}) []interface{} {
 		// Get the column values from the instance.
 		columnValues := []interface{}{}
 
-		// Add created_at and updated_at values if the model has those fields.
 		if upsert.HasCreatedAtField(instance) {
 			columnValues = append(columnValues, now)
 		}
@@ -106,10 +101,7 @@ func getRowValues(instances []interface{}) []interface{} {
 			columnValues = append(columnValues, now)
 		}
 
-		// Append the column values to the row values.
 		columnValues = append(columnValues, upsert.GetModelColumnValues(instance)...)
-
-		// Append the column values to the row values.
 		rows = append(rows, columnValues...)
 	}
 
@@ -148,10 +140,7 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	modelType := reflect.TypeOf(firstInstance).Elem()
 	tableName := upsert.PascalToSnake(modelType.Name()) + "s"
 
-	// Get the primary key name of the instance.
 	primaryKeyName := upsert.GetPrimaryKeyFieldName(modelType)
-
-	// Get the column names, value placeholders, and conflict handlers.
 	allColumnNames, allColumnValuePlaceholders, allConflictHandlers := getColumnNamesPlaceholdersAndConflictHandlers(firstInstance, primaryKeyName)
 
 	var query string
@@ -164,13 +153,10 @@ func Upsert(database *gorm.DB, instances []interface{}) ([]interface{}, error) {
 	}
 	query += "RETURNING *;"
 
-	// Get a pointer with the correct model type to scan the results into.
 	resultsPointer := getModelInterface(modelType)
 
-	// Execute the query.
 	database.Raw(query, getRowValues(instances)...).Scan(resultsPointer.Interface())
 
-	// Convert the results back to a slice of interfaces.
 	results := resultsPointer.Elem()
 	upsertedRows := convertResultsToInterfaces(results)
 
