@@ -3,19 +3,31 @@
  *  colors.
  */
 :root {
-  --purple: rgba(100, 44, 169, 1);
-  --purple-light: rgba(179, 141, 226, 1);
-  --purple-dark: rgba(79, 0, 128, 1);
   --white: rgba(240, 242, 239, 1);
   --black: rgba(0, 0, 0, 1);
   --gray: rgba(160, 160, 160, 1);
   --gray-light: rgba(224, 224, 224, 1);
   --gray-dark: rgba(145, 145, 145, 1);
+
+  --purple: rgba(100, 44, 169, 1);
+  --purple-light: rgba(179, 141, 226, 1);
+  --purple-dark: rgba(79, 0, 128, 1);
   --red: rgba(224, 54, 22, 1);
   --orange: rgba(250, 121, 33, 1);
   --green: rgba(71, 160, 37, 1);
   --yellow: rgba(227, 205, 41, 1);
   --blue: rgba(42, 125, 225, 1);
+
+  --player-folly: rgba(255, 71, 96);
+  --player-celestial-blue: rgba(77, 157, 224, 1);
+  --player-persian-green: rgba(27, 157, 142, 1);
+  --player-emerald: rgba(33, 192, 99, 1);
+  --player-satin-sheen-gold: rgba(171, 149, 73, 1);
+  --player-verdigris: rgba(79, 186, 185, 1);
+  --player-tropical-indigo: rgba(147, 124, 223, 1);
+  --player-princeton-orange: rgba(255, 150, 31, 1);
+  --player-claret: rgba(139, 30, 63, 1);
+  --player-indigo-dye: rgba(21, 59, 80, 1);
 
   --rainbow-line: linear-gradient(90deg,
       var(--red),

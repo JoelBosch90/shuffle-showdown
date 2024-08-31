@@ -4,10 +4,13 @@
 	import { goto } from '$app/navigation';
 	import { GameSession } from '$lib/services/GameSession';
 	import type { Player } from '$lib/types/Player';
+	import type { PlayerWithIconAndColor } from '$lib/types/PlayerWithIconAndColor';
 	import type { PlaylistLoadingUpdate } from '$lib/types/PlaylistLoadingUpdate';
 	import LoadingButton from '$lib/components/LoadingButton.svelte';
 	import ProgressBar from '$lib/components/ProgressBar.svelte';
 	import QRCode from 'qrcode';
+	import { getPlayerColor } from '$lib/helpers/getPlayerColor';
+	import { getPlayerIcon } from '$lib/helpers/getPlayerIcon';
 
 	const gameId = $page.params.gameId;
 
@@ -34,7 +37,7 @@
 	let me: Player | null;
 	$: me = null;
 
-	let players: Player[];
+	let players: PlayerWithIconAndColor[];
 	$: players = [];
 
 	let playlistName = '';
@@ -74,7 +77,11 @@
 
 		session.onUpdate(({ game: newGame, me: newMe }) => {
 			me = newMe;
-			players = newGame?.players ?? [];
+			players = (newGame?.players ?? []).map((player) => ({
+				...player,
+				color: getPlayerColor(player.id),
+				icon: getPlayerIcon(player.id)
+			}));
 			isLoading = false;
 			isDisabled = !(newGame?.isReadyToStart ?? false);
 			playlistName = newGame?.playlist?.name ?? '';
@@ -131,18 +138,22 @@
 				<ul class="players">
 					{#each players as player}
 						<li style="--connection-color: var(--{player.isConnected ? 'green' : 'red'});">
+							<i
+								class={`fa-solid fa-${player.icon} icon player-icon`}
+								style={`color: var(--player-${player.color});`}
+							></i>
+
+							<span>
+								<span class:anonymous={!player.name}>{player.name || 'Anonymous'}</span>
+							</span>
+
 							{#if me?.isOwner && player.id !== me?.id}
 								<button on:click={() => session?.kickPlayer(player)}>
 									<i class="fa-solid fa-ban kick icon"></i>
 								</button>
 							{:else if player?.isOwner}
 								<i class="fa-solid fa-crown crown icon"></i>
-							{:else}
-								<i class="fa-solid fa-user me icon"></i>
 							{/if}
-							<span>
-								<span class:anonymous={!player.name}>{player.name || 'Anonymous'}</span>
-							</span>
 						</li>
 					{/each}
 				</ul>
@@ -301,7 +312,7 @@
 
 			.players {
 				display: grid;
-				grid-template-columns: min-content max-content;
+				grid-template-columns: min-content max-content min-content;
 				row-gap: 0.5rem;
 				column-gap: 1rem;
 				list-style-type: none;
@@ -321,14 +332,11 @@
 						color: var(--yellow);
 					}
 
-					.kick,
-					.me {
+					.kick {
 						color: var(--purple);
 					}
 
-					.crown,
-					.kick,
-					.me {
+					.player-icon {
 						position: relative;
 						min-width: calc(1em + 1ch);
 						min-height: 1em;

@@ -4,6 +4,8 @@
 	import type { Answer } from '$lib/types/Answer';
 	import { onMount } from 'svelte';
 
+	export let cardColor: string = '';
+	export let cardIcon: string = '';
 	export let disabled: boolean = false;
 	export let wonTracks: WonTrack[] = [];
 	export let onSelect: (answer: Answer) => void;
@@ -168,8 +170,9 @@
 	{#each cards as card, cardIndex}
 		<li
 			class="card {card.isGuess ? 'guess' : ''}"
-			style="--normalized-index: {cardIndex - guessIndex};"
+			style="--normalized-index: {cardIndex - guessIndex}; background-color: var({cardColor});"
 		>
+			<i class={`fa-solid fa-${cardIcon} player-icon`}></i>
 			<h2 title={card.releaseYear}>{card.releaseYear}</h2>
 
 			{#if card.name}
@@ -366,7 +369,8 @@
 				padding: var(--card-padding);
 				border-radius: var(--card-padding);
 				box-shadow: 0 0 var(--card-box-shadow-space) rgba(0, 0, 0, 0.25);
-				background-color: var(--white);
+				color: var(--white);
+				background-color: var(--card-color, --white);
 				overflow: hidden;
 
 				transition:
@@ -379,6 +383,12 @@
 				&.guess {
 					opacity: 50%;
 					border: 2px dashed var(--gray-dark);
+				}
+
+				.player-icon {
+					position: absolute;
+					top: var(--card-padding);
+					font-size: var(--card-font-size);
 				}
 			}
 		}

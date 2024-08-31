@@ -6,6 +6,7 @@
 	import Chronology from '$lib/components/Chronology.svelte';
 	import Celebration from '$lib/components/Celebration.svelte';
 	import type { Player } from '$lib/types/Player';
+	import type { PlayerWithIconAndColor } from '$lib/types/PlayerWithIconAndColor';
 	import type { Round } from '$lib/types/Round';
 	import type { GameSessionUpdate } from '$lib/types/GameSessionUpdate';
 	import type { Answer } from '$lib/types/Answer';
@@ -15,6 +16,8 @@
 	import { debounce } from '$lib/helpers/debounce';
 	import { showToast } from '$lib/store/toasts';
 	import { ToastType } from '$lib/enums/ToastType';
+	import { getPlayerColor } from '$lib/helpers/getPlayerColor';
+	import { getPlayerIcon } from '$lib/helpers/getPlayerIcon';
 
 	const DEBOUNCE_WAIT_MILLISECONDS = 150;
 	const gameId = $page.params.gameId;
@@ -26,7 +29,7 @@
 	let currentRound: Round | null;
 	$: currentRound = null;
 
-	let currentPlayer: Player | null;
+	let currentPlayer: PlayerWithIconAndColor | null;
 	$: currentPlayer = null;
 
 	let me: Player | null;
@@ -93,10 +96,17 @@
 		game: GameSessionUpdate | null;
 		me: Player | null;
 	}) => {
+		const player = findPlayerInGameSessionUpdate(update, currentRound?.playerId);
 		gameUpdate = update;
 		me = newMe;
 		currentRound = getCurrentRound(update);
-		currentPlayer = findPlayerInGameSessionUpdate(update, currentRound?.playerId);
+		currentPlayer = player
+			? {
+					...player,
+					color: getPlayerColor(player.id),
+					icon: getPlayerIcon(player.id)
+				}
+			: null;
 		isPlaying = !!currentPlayer && currentPlayer.id === me?.id;
 		isLoading = false;
 
@@ -158,6 +168,8 @@
 			this={Chronology}
 			bind:this={chronology}
 			wonTracks={currentPlayer?.wonTracks}
+			cardColor={`--player-${currentPlayer?.color}`}
+			cardIcon={currentPlayer?.icon}
 			onSelect={onAnswerSelect}
 			disabled={!isPlaying}
 		/>
