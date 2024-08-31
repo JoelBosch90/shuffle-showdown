@@ -7,8 +7,8 @@
   transition-timing-function: var(--animation-timing);
 
   // Set a few different animation speeds for different applications.
-  --animation-speed-quick: 200ms;
-  --animation-speed-slow: 500ms;
+  --animation-speed-quick: 150ms;
+  --animation-speed-slow: 1s;
 
   // Target users that prefer less motion.
   @media (prefers-reduced-motion) {

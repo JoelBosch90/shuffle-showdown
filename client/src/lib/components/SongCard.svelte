@@ -5,10 +5,12 @@
 	export let cardIcon: string = '';
 	export let disabled: boolean = false;
 	export let normalizedIndex: number = 0;
-	export let isGuess: boolean = false;
 	export let releaseYear: string = '???';
 	export let trackName: string = '';
 	export let artists: Artist[] = [];
+	export let isGuess: boolean = false;
+	export let isRevealing: boolean = false;
+	export let isWon: boolean = false;
 
 	const joinArtists = (artists: Artist[] = []) => {
 		return artists.map((artist) => artist.name).join(', ');
@@ -19,10 +21,15 @@
 
 <li
 	class:disabled
-	class="card {isGuess ? 'guess' : ''}"
-	style="--normalized-index: {normalizedIndex}; background-color: var({cardColor});"
+	class="{isGuess ? 'guess' : ''} {isRevealing ? 'revealing' : ''} {isRevealing && isWon
+		? 'correct'
+		: ''} {isRevealing && !isWon ? 'wrong' : ''}"
+	style="--normalized-index: {normalizedIndex}; --card-color: var({cardColor}, --gray-dark);"
 >
-	<i class={`fa-solid fa-${cardIcon} player-icon`}></i>
+	{#if cardIcon}
+		<i class={`fa-solid fa-${cardIcon} player-icon`}></i>
+	{/if}
+
 	<h2 title={releaseYear}>{releaseYear}</h2>
 
 	{#if trackName}
@@ -44,6 +51,7 @@
 		--card-max-height: 16rem;
 		--card-aspect-ratio: 1 / 1.25;
 		--card-box-shadow-space: 0.75rem;
+		--card-color: var(--gray-dark);
 		--center-card-margin-percentage: 0.33;
 
 		$normalized-index: var(--normalized-index);
@@ -69,12 +77,17 @@
 		height: $card-height;
 		z-index: calc(var(--card-level) - $distance-from-guess-card);
 
+		padding: var(--card-padding);
+		border-radius: var(--card-padding);
+		box-shadow: 0 0 var(--card-box-shadow-space) rgba(0, 0, 0, 0.25);
+		color: var(--white);
+		background-color: var(--card-color, --white);
+		overflow: hidden;
+
 		transition:
-			transform var(--animation-speed-quick),
-			z-index var(--animation-speed-quick),
-			opacity var(--animation-speed-quick),
-			border var(--animation-speed-quick),
-			color var(--animation-speed-quick);
+			transform var(--animation-speed-quick) ease-in,
+			z-index var(--animation-speed-quick) ease-in,
+			opacity var(--animation-speed-quick) ease-in;
 
 		$direction: clamp(-1, $normalized-index, 1);
 		$non-zero-index: calc($distance-from-guess-card + var(--center-card-margin-percentage));
@@ -163,10 +176,6 @@
 			-webkit-line-clamp: 2;
 			-webkit-box-orient: vertical;
 			font-size: var(--card-font-size);
-
-			&.track {
-				font-size: calc(var(--card-font-size) * 1.15);
-			}
 		}
 
 		h2 {
@@ -178,31 +187,26 @@
 			color: var(--gray-dark);
 		}
 
-		&.card {
-			list-style: none;
-			padding: var(--card-padding);
-			border-radius: var(--card-padding);
-			box-shadow: 0 0 var(--card-box-shadow-space) rgba(0, 0, 0, 0.25);
-			color: var(--white);
-			background-color: var(--card-color, --white);
-			overflow: hidden;
+		&.guess {
+			opacity: 50%;
+		}
 
+		.player-icon {
+			position: absolute;
+			top: var(--card-padding);
+			font-size: var(--card-font-size);
+		}
+
+		&.revealing {
 			transition:
-				transform var(--animation-speed-quick),
-				z-index var(--animation-speed-quick),
-				opacity var(--animation-speed-quick),
-				border var(--animation-speed-quick),
-				color var(--animation-speed-quick);
+				background-color var(--animation-speed-quick) ease-out var(--animation-speed-slow),
+				transform var(--animation-speed-slow) cubic-bezier(0, 0.25, 1, 0.25),
+				opacity var(--animation-speed-quick) ease-out;
 
-			&.guess {
-				opacity: 50%;
-				border: 2px dashed var(--gray-dark);
-			}
+			transform: $vertical-transform $horizontal-transform scale(calc($size-scale + 0.5));
 
-			.player-icon {
-				position: absolute;
-				top: var(--card-padding);
-				font-size: var(--card-font-size);
+			&.wrong {
+				background-color: var(--red);
 			}
 		}
 	}

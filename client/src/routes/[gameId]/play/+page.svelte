@@ -18,6 +18,7 @@
 	import { ToastType } from '$lib/enums/ToastType';
 	import { getPlayerColor } from '$lib/helpers/getPlayerColor';
 	import { getPlayerIcon } from '$lib/helpers/getPlayerIcon';
+	import { wait } from '$lib/helpers/wait';
 
 	const DEBOUNCE_WAIT_MILLISECONDS = 150;
 	const gameId = $page.params.gameId;
@@ -74,18 +75,31 @@
 		audioPlayer?.pause();
 	};
 
-	const celebrate = ({
+	const revealAnswer = ({
 		game: update,
 		me: newMe
 	}: {
 		game: GameSessionUpdate | null;
 		me: Player | null;
 	}) => {
-		celebration?.update({
-			oldUpdate: gameUpdate,
-			newUpdate: update,
-			oldMe: me,
-			newMe
+		if (gameUpdate?.rounds.length === update?.rounds.length) {
+			return;
+		}
+
+		const trackToReveal = update?.rounds.find(
+			(round) => round.number === currentRound?.number
+		)?.track;
+		const trackWon = update?.players
+			?.find((player) => player.id === currentRound?.playerId)
+			?.wonTracks?.find((wonTrack) => wonTrack.track.name === trackToReveal?.name);
+
+		if (!trackToReveal) return;
+
+		chronology?.reveal({
+			releaseYear: trackToReveal.releaseYear?.toString() ?? '???',
+			name: trackToReveal.name ?? '',
+			artists: trackToReveal.artists ?? [],
+			isWon: !!trackWon
 		});
 	};
 
@@ -115,8 +129,9 @@
 
 	onMount(async () => {
 		if (!session) session = new GameSession(gameId);
-		session.onUpdate((gameUpdate) => {
-			celebrate(gameUpdate);
+		session.onUpdate(async (gameUpdate) => {
+			revealAnswer(gameUpdate);
+			await wait(5000);
 			updatePage(gameUpdate);
 		});
 		session.onPlaylistLoadingUpdate(({ playlistLoadingUpdate }) => {

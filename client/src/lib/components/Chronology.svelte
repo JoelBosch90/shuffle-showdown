@@ -16,16 +16,20 @@
 		name?: string;
 		artists?: Artist[];
 		isGuess?: boolean;
+		isWon?: boolean;
+		isRevealing?: boolean;
 	}
-
-	let container: HTMLOListElement;
 
 	const RATIO_OF_SCREEN_FOR_FULL_MOVE = 0.8;
 	const INDEX_CHANGE_FOR_FULL_MOVE = 4;
 	const UNKNOWN_RELEASE_YEAR = '???';
-	const guessCard: Card = {
-		releaseYear: UNKNOWN_RELEASE_YEAR,
-		isGuess: true
+	const DEFAULT_GUESS_CARD: Card = { releaseYear: UNKNOWN_RELEASE_YEAR, isGuess: true };
+
+	let container: HTMLOListElement;
+	let guessCard: Card = DEFAULT_GUESS_CARD;
+
+	const resetGuessCard = () => {
+		guessCard = DEFAULT_GUESS_CARD;
 	};
 
 	const selectAnswer = () => {
@@ -127,6 +131,19 @@
 
 		guessIndex = newIndex;
 	};
+	export const reveal = async ({
+		releaseYear,
+		name,
+		artists,
+		isWon
+	}: {
+		releaseYear: string;
+		name: string;
+		artists: Artist[];
+		isWon: boolean;
+	}) => {
+		guessCard = { releaseYear, name, artists, isWon, isRevealing: true };
+	};
 
 	$: wonTracks,
 		(() => {
@@ -137,18 +154,11 @@
 
 	let trackCards: Card[] = [];
 	let guessIndex: number = 0;
-	let beforeTextIndex: number;
-	let afterTextIndex: number;
-	let isBeforeTextShown: boolean;
-	let isAfterTextShown: boolean;
 
 	let cards: Card[];
 	$: cards = [...trackCards?.slice(0, guessIndex), guessCard, ...trackCards?.slice(guessIndex)];
 	$: cards, selectAnswer();
-	$: cards, (beforeTextIndex = -1 * guessIndex - 1), (isBeforeTextShown = beforeTextIndex === -1);
-	$: cards,
-		(afterTextIndex = cards?.length - guessIndex),
-		(isAfterTextShown = afterTextIndex === 1);
+	$: cards, resetGuessCard();
 
 	onMount(() => {
 		container.addEventListener('wheel', onWheelEvent);
@@ -165,6 +175,8 @@
 			{disabled}
 			normalizedIndex={cardIndex - guessIndex}
 			isGuess={card.isGuess}
+			isRevealing={card.isRevealing}
+			isWon={card.isWon}
 			releaseYear={card.releaseYear}
 			trackName={card.name}
 			artists={card.artists}
