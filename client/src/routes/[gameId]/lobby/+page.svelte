@@ -117,17 +117,17 @@
 			<h3>
 				Invite link
 				{#if canShare()}
-					<button class="share" on:click={shareUrl}>
+					<button class="share" on:click={shareUrl} title="Click to share invite link">
 						<i class="fa-solid fa-share-nodes icon"></i>
 					</button>
 				{/if}
 			</h3>
 
-			<button on:click={copyUrl}>
+			<button on:click={copyUrl} title="Click to copy invite link">
 				<canvas bind:this={canvas}></canvas>
 			</button>
 
-			<button class="copy" on:click={copyUrl}>
+			<button class="copy" on:click={copyUrl} title="Click to copy invite link">
 				<span class="share-url">{url}</span>
 				<i class="fa-solid fa-copy icon"></i>
 			</button>
@@ -148,7 +148,7 @@
 							</span>
 
 							{#if me?.isOwner && player.id !== me?.id}
-								<button on:click={() => session?.kickPlayer(player)}>
+								<button on:click={() => session?.kickPlayer(player)} title="Click to kick player">
 									<i class="fa-solid fa-ban kick icon"></i>
 								</button>
 							{:else if player?.isOwner}
@@ -161,7 +161,9 @@
 
 			<div class="button-row">
 				{#if me?.isOwner}
-					<LoadingButton {isLoading} {isDisabled} {onClick}>Start game</LoadingButton>
+					<LoadingButton {isLoading} {isDisabled} {onClick} title="Click to start game"
+						>Start game</LoadingButton
+					>
 				{:else}
 					<p>Wait for {owner?.name ?? 'the owner'} to start the game.</p>
 				{/if}

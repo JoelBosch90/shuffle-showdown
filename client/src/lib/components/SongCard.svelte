@@ -183,10 +183,6 @@
 			padding: 0.1em;
 		}
 
-		&.disabled {
-			color: var(--gray-dark);
-		}
-
 		&.guess {
 			opacity: 50%;
 		}

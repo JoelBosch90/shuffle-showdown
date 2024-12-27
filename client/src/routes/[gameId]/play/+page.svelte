@@ -4,7 +4,6 @@
 	import { goto } from '$app/navigation';
 	import AudioPlayer from '$lib/components/AudioPlayer.svelte';
 	import Chronology from '$lib/components/Chronology.svelte';
-	import Celebration from '$lib/components/Celebration.svelte';
 	import type { Player } from '$lib/types/Player';
 	import type { PlayerWithIconAndColor } from '$lib/types/PlayerWithIconAndColor';
 	import type { Round } from '$lib/types/Round';
@@ -22,6 +21,8 @@
 
 	const DEBOUNCE_WAIT_MILLISECONDS = 150;
 	const gameId = $page.params.gameId;
+	const updatePromise = Promise.resolve();
+
 	let session: GameSession | void | null = null;
 
 	let gameUpdate: GameSessionUpdate | null;
@@ -46,8 +47,6 @@
 	let audioPlayer: AudioPlayer | null = null;
 
 	let chronology: Chronology | null = null;
-
-	let celebration: Celebration | null = null;
 
 	const getCurrentRound = (update: GameSessionUpdate | null): Round | null => {
 		if (!update) return null;
@@ -75,13 +74,7 @@
 		audioPlayer?.pause();
 	};
 
-	const revealAnswer = ({
-		game: update,
-		me: newMe
-	}: {
-		game: GameSessionUpdate | null;
-		me: Player | null;
-	}) => {
+	const revealAnswer = (update: GameSessionUpdate | null) => {
 		if (gameUpdate?.rounds.length === update?.rounds.length) {
 			return;
 		}
@@ -130,9 +123,11 @@
 	onMount(async () => {
 		if (!session) session = new GameSession(gameId);
 		session.onUpdate(async (gameUpdate) => {
-			revealAnswer(gameUpdate);
-			await wait(5000);
-			updatePage(gameUpdate);
+			updatePromise.then(async () => {
+				revealAnswer(gameUpdate.game);
+				await wait(5000);
+				updatePage(gameUpdate);
+			});
 		});
 		session.onPlaylistLoadingUpdate(({ playlistLoadingUpdate }) => {
 			if (!playlistLoadingUpdate?.liveUpdate) return;
@@ -183,20 +178,26 @@
 			this={Chronology}
 			bind:this={chronology}
 			wonTracks={currentPlayer?.wonTracks}
+			currentRoundNumber={currentRound?.number}
 			cardColor={`--player-${currentPlayer?.color}`}
 			cardIcon={currentPlayer?.icon}
 			onSelect={onAnswerSelect}
 			disabled={!isPlaying}
 		/>
 
-		<h2 class="round-info">Round {currentRound?.number}</h2>
+		<div class="round-info">
+			<h2>
+				Round {currentRound?.number}
+			</h2>
 
-		{#if currentPlayer}
-			<p class="player-info">
-				Now playing: {isPlaying ? 'you' : currentPlayer.name} ({currentPlayer.wonTracks
-					?.length}/{gameUpdate?.songsToWin})
-			</p>
-		{/if}
+			{#if currentPlayer}
+				<span class="player-info" style="--player-color:var(--player-{currentPlayer?.color})">
+					<i class={`fa-solid fa-${currentPlayer?.icon} player-icon`} />
+					{currentPlayer?.name}
+					({currentPlayer.wonTracks?.length}/{gameUpdate?.songsToWin})
+				</span>
+			{/if}
+		</div>
 	</div>
 
 	<div class="controls">
@@ -207,11 +208,15 @@
 			source={currentRound?.track.previewUrl}
 		/>
 
-		<LoadingButton {isLoading} onClick={onAnswerSubmit} isDisabled={!isPlaying}>
+		<LoadingButton
+			{isLoading}
+			onClick={onAnswerSubmit}
+			isDisabled={!isPlaying}
+			title="Click to select this answer"
+		>
 			Select answer
 		</LoadingButton>
 	</div>
-	<svelte:component this={Celebration} bind:this={celebration} />
 </div>
 
 <style lang="scss">
@@ -234,22 +239,22 @@
 			display: flex;
 			width: 100%;
 
-			.round-info,
-			.player-info {
+			.round-info {
 				position: absolute;
 				pointer-events: none;
-			}
-
-			.round-info {
-				top: 0;
 				left: 0;
+				top: 0;
 				margin: var(--margin-small) 0 0 var(--margin-small);
-			}
 
-			.player-info {
-				right: 0;
-				bottom: 0;
-				margin: 0 var(--margin-small) var(--margin-small) 0;
+				h2 {
+					margin: 0;
+				}
+
+				.player-info {
+					i {
+						color: var(--player-color, inherit);
+					}
+				}
 			}
 		}
 

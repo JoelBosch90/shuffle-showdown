@@ -5,10 +5,11 @@
 	export let isLoading = true;
 	export let onClick = () => {};
 	export let type: ButtonTypes = 'button';
+	export let title = '';
 </script>
 
 <div class={`button-wrapper ${isLoading ? 'loading' : ''}`}>
-	<button {type} class="filled" disabled={isLoading || isDisabled} on:click={onClick}>
+	<button {type} class="filled" disabled={isLoading || isDisabled} on:click={onClick} {title}>
 		<slot />
 	</button>
 </div>

@@ -9,6 +9,7 @@
 	export let cardIcon: string = '';
 	export let disabled: boolean = false;
 	export let wonTracks: WonTrack[] = [];
+	export let currentRoundNumber: number = 0;
 	export let onSelect: (answer: Answer) => void;
 
 	interface Card {
@@ -29,6 +30,7 @@
 	let guessCard: Card = DEFAULT_GUESS_CARD;
 
 	const resetGuessCard = () => {
+		console.log('resetGuessCard');
 		guessCard = DEFAULT_GUESS_CARD;
 	};
 
@@ -158,7 +160,7 @@
 	let cards: Card[];
 	$: cards = [...trackCards?.slice(0, guessIndex), guessCard, ...trackCards?.slice(guessIndex)];
 	$: cards, selectAnswer();
-	$: cards, resetGuessCard();
+	$: currentRoundNumber, resetGuessCard();
 
 	onMount(() => {
 		container.addEventListener('wheel', onWheelEvent);
