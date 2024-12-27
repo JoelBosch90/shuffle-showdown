@@ -32,6 +32,15 @@
 </svelte:head>
 
 <section>
+	<div class="notice">
+		<h2>Warning!</h2>
+		<p>
+			Due to recent changes in the Spotify API, Shuffle Showdown is currently not playable. The
+			solution will require a large rework of the project which will take time, but Shuffle Showdown
+			will be back!
+		</p>
+	</div>
+
 	<div class="most-played">
 		<h1>Most played</h1>
 		<ol>
@@ -98,5 +107,13 @@
 			box-sizing: border-box;
 			width: 100%;
 		}
+	}
+
+	.notice {
+		color: var(--white);
+
+		border-radius: 2em;
+		padding: 1em 2em;
+		background-color: var(--red);
 	}
 </style>
